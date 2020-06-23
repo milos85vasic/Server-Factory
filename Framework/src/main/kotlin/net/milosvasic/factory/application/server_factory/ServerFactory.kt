@@ -155,7 +155,8 @@ abstract class ServerFactory(val arguments: List<String> = listOf()) : Applicati
             terminators.add(installer)
             terminators.add(DatabaseManager)
 
-            val dockerFlow = getDockerFlow(docker)
+            val terminationFlow = getTerminationFlow(ssh)
+            val dockerFlow = getDockerFlow(docker, terminationFlow)
             val dockerInitFlow = getDockerInitFlow(docker, dockerFlow)
             val nextFlow = getInstallationFlow(installer, dockerInitFlow) ?: dockerInitFlow
             val initFlow = getInitializationFlow(installer, nextFlow)
@@ -289,7 +290,7 @@ abstract class ServerFactory(val arguments: List<String> = listOf()) : Applicati
                 .onFinish(dieCallback)
     }
 
-    private fun getDockerFlow(docker: Docker): InstallationFlow {
+    private fun getDockerFlow(docker: Docker, terminationFlow: FlowBuilder<*, *, *>): InstallationFlow {
 
         val dockerFlow = InstallationFlow(docker)
         containersConfigurations.forEach { softwareConfiguration ->
@@ -304,8 +305,17 @@ abstract class ServerFactory(val arguments: List<String> = listOf()) : Applicati
                 )
             }
         }
-        dockerFlow.onFinish(TerminationCallback(this))
+
+        dockerFlow.connect(terminationFlow)
         return dockerFlow
+    }
+
+    protected open fun getTerminationFlow(ssh: Connection): FlowBuilder<*, *, *> {
+
+        return CommandFlow()
+                .width(ssh.getTerminal())
+                .perform(EchoCommand("Finishing"))
+                .onFinish(TerminationCallback(this))
     }
 
     private fun getDockerInitFlow(docker: Docker, dockerFlow: InstallationFlow): InitializationFlow {
