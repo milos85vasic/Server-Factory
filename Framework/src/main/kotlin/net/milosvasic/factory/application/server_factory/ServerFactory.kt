@@ -310,10 +310,10 @@ abstract class ServerFactory(val arguments: List<String> = listOf()) : Applicati
         return dockerFlow
     }
 
-    protected open fun getTerminationFlow(ssh: Connection): FlowBuilder<*, *, *> {
+    protected open fun getTerminationFlow(connection: Connection): FlowBuilder<*, *, *> {
 
         return CommandFlow()
-                .width(ssh.getTerminal())
+                .width(connection.getTerminal())
                 .perform(EchoCommand("Finishing"))
                 .onFinish(TerminationCallback(this))
     }
