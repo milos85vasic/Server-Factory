@@ -27,12 +27,12 @@ class DatabaseStep(val path: String) : RemoteOperationInstallationStep<SSH>() {
         const val defaultConfigurationFile = "configuration.json"
     }
 
-    @Throws(IllegalArgumentException::class)
+    @Throws(IllegalArgumentException::class, IllegalStateException::class)
     override fun getFlow(): CommandFlow {
 
         connection?.let { conn ->
 
-            val manager = DatabaseManager
+            val manager = DatabaseManager.instantiate() ?: throw IllegalStateException("Invalid database manager")
             var config: DatabaseConfiguration? = null
             val configurationFile = "$path${File.separator}$defaultConfigurationFile"
 

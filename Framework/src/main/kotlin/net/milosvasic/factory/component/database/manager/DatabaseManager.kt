@@ -1,36 +1,47 @@
 package net.milosvasic.factory.component.database.manager
 
 import net.milosvasic.factory.common.Registration
-import net.milosvasic.factory.common.busy.Busy
-import net.milosvasic.factory.common.busy.BusyException
 import net.milosvasic.factory.common.busy.BusyWorker
 import net.milosvasic.factory.common.initialization.Initializer
 import net.milosvasic.factory.common.initialization.Termination
+import net.milosvasic.factory.common.obtain.Instantiate
 import net.milosvasic.factory.common.obtain.ObtainParametrized
 import net.milosvasic.factory.component.database.*
 import net.milosvasic.factory.execution.flow.callback.FlowCallback
-import net.milosvasic.factory.execution.flow.implementation.CommandFlow
 import net.milosvasic.factory.execution.flow.implementation.initialization.InitializationFlow
 import net.milosvasic.factory.log
 import net.milosvasic.factory.operation.OperationResult
-import net.milosvasic.factory.operation.OperationResultListener
+import net.milosvasic.factory.remote.Connection
 import net.milosvasic.factory.validation.Validator
 import java.util.concurrent.ConcurrentHashMap
-import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.concurrent.atomic.AtomicBoolean
 
-object DatabaseManager :
+class DatabaseManager(entryPoint: Connection) :
+        BusyWorker<DatabaseManager>(entryPoint),
         ObtainParametrized<DatabaseRequest, Database>,
         Registration<DatabaseRegistration>,
         Initializer,
         Termination {
 
-    private val busy = Busy()
     private val initialized = AtomicBoolean()
     private var registration: DatabaseRegistration? = null
     private val operation = DatabaseRegistrationOperation()
-    private val subscribers = ConcurrentLinkedQueue<OperationResultListener>()
     private val databases = ConcurrentHashMap<Type, MutableMap<String, Database>>()
+
+    companion object : Instantiate<DatabaseManager?> {
+
+        private var manager: DatabaseManager? = null
+
+        @Throws(IllegalStateException::class)
+        override fun instantiate(): DatabaseManager? {
+
+            if (manager == null) {
+
+                throw IllegalStateException("Database manager is not initialized")
+            }
+            return manager
+        }
+    }
 
     private val initFlowCallback = object : FlowCallback {
         override fun onFinish(success: Boolean) {
@@ -60,6 +71,29 @@ object DatabaseManager :
             registration = null
             free()
         }
+    }
+
+    @Synchronized
+    @Throws(IllegalStateException::class)
+    override fun initialize() {
+        checkInitialized()
+        busy()
+
+        manager?.let {
+
+            initialized.set(true)
+            free()
+            log.i("Database manager has been initialized")
+            notify(true)
+            return
+        }
+
+        // TODO: Command flow with data handler and onFinish callback
+        manager = this
+        initialized.set(true)
+        free()
+        log.i("Database manager has been initialized")
+        notify(true)
     }
 
     @Synchronized
@@ -110,21 +144,6 @@ object DatabaseManager :
 
     @Synchronized
     @Throws(IllegalStateException::class)
-    override fun initialize() {
-        checkInitialized()
-        busy()
-
-        // TODO: Command flow with data handler and onFinish callback
-        initialized.set(true)
-        free()
-        log.i("Database manager has been initialized")
-        val operation = DatabaseManagerInitializationOperation()
-        val result = OperationResult(operation, true)
-        notify(result)
-    }
-
-    @Synchronized
-    @Throws(IllegalStateException::class)
     override fun checkInitialized() {
         if (isInitialized()) {
             throw IllegalStateException("Installer has been already initialized")
@@ -140,23 +159,6 @@ object DatabaseManager :
     }
 
     override fun isInitialized() = initialized.get()
-
-    override fun subscribe(what: OperationResultListener) {
-        subscribers.add(what)
-    }
-
-    override fun unsubscribe(what: OperationResultListener) {
-        subscribers.remove(what)
-    }
-
-    @Synchronized
-    override fun notify(data: OperationResult) {
-        val iterator = subscribers.iterator()
-        while (iterator.hasNext()) {
-            val listener = iterator.next()
-            listener.onOperationPerformed(data)
-        }
-    }
 
     @Synchronized
     @Throws(IllegalStateException::class)
@@ -182,18 +184,21 @@ object DatabaseManager :
         free()
     }
 
-    @Synchronized
-    @Throws(BusyException::class)
-    private fun busy() {
-        BusyWorker.busy(busy)
-    }
-
-    @Synchronized
-    private fun free() {
-        BusyWorker.free(busy)
-    }
-
     private fun unRegister(type: Type, name: String) {
         databases[type]?.remove(name)?.terminate()
+    }
+
+    override fun notify(success: Boolean) {
+        val operation = DatabaseManagerInitializationOperation()
+        val result = OperationResult(operation, true)
+        notify(result)
+    }
+
+    override fun onSuccessResult() {
+        free(true)
+    }
+
+    override fun onFailedResult() {
+        free(false)
     }
 }

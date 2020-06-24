@@ -8,6 +8,7 @@ import net.milosvasic.factory.common.busy.BusyDelegation
 import net.milosvasic.factory.common.busy.BusyException
 import net.milosvasic.factory.common.busy.BusyWorker
 import net.milosvasic.factory.common.exception.EmptyDataException
+import net.milosvasic.factory.common.initialization.Initializer
 import net.milosvasic.factory.common.initialization.Termination
 import net.milosvasic.factory.component.database.manager.DatabaseManager
 import net.milosvasic.factory.component.docker.Docker
@@ -150,16 +151,18 @@ abstract class ServerFactory(val arguments: List<String> = listOf()) : Applicati
             val ssh = getConnection()
             val docker = instantiateDocker(ssh)
             val installer = instantiateInstaller(ssh)
+            val databaseManager = DatabaseManager(ssh)
 
             terminators.add(docker)
             terminators.add(installer)
-            terminators.add(DatabaseManager)
+            terminators.add(databaseManager)
 
             val terminationFlow = getTerminationFlow(ssh)
             val dockerFlow = getDockerFlow(docker, terminationFlow)
             val dockerInitFlow = getDockerInitFlow(docker, dockerFlow)
             val nextFlow = getInstallationFlow(installer, dockerInitFlow) ?: dockerInitFlow
-            val initFlow = getInitializationFlow(installer, nextFlow)
+            val initializers = listOf<Initializer>(installer, databaseManager)
+            val initFlow = getInitializationFlow(initializers, nextFlow)
             val commandFlow = getCommandFlow(ssh, initFlow)
 
             commandFlow.run()
@@ -327,14 +330,25 @@ abstract class ServerFactory(val arguments: List<String> = listOf()) : Applicati
                 .onFinish(initCallback)
     }
 
-    private fun getInitializationFlow(installer: Installer, installFlow: FlowBuilder<*, *, *>): InitializationFlow {
+    @Throws(IllegalArgumentException::class)
+    private fun getInitializationFlow(
+            initializers: List<Initializer>,
+            installFlow: FlowBuilder<*, *, *>
+
+    ): InitializationFlow {
+
+        if (initializers.isEmpty()) {
+
+            throw IllegalArgumentException("Initializers are not provided")
+        }
 
         val initCallback = InstallerInitializationFlowCallback()
-        return InitializationFlow()
-                .width(installer)
-                .width(DatabaseManager)
-                .connect(installFlow)
-                .onFinish(initCallback)
+        val flow = InitializationFlow()
+        initializers.forEach {
+            flow.width(it)
+        }
+        flow.connect(installFlow).onFinish(initCallback)
+        return flow
     }
 
     @Throws(IllegalArgumentException::class, IllegalStateException::class)
