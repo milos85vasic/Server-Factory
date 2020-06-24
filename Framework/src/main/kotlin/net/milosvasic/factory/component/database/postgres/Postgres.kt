@@ -43,9 +43,9 @@ class Postgres(name: String, connection: DatabaseConnection) : Database(name, co
         return flow
     }
 
-    override fun getSqlCommand(sql: String) = PostgresDatabaseSqlCommand(this, sql)
+    override fun getSqlCommand(sql: String) = PostgresSqlCommand(this, sql)
 
-    private fun checkCommand() = PostgresDatabaseCheckCommand(this)
+    private fun checkCommand() = PostgresCheckCommand(this)
 
-    private fun createCommand() = PostgresDatabaseCreateCommand(this)
+    private fun createCommand() = PostgresCreateCommand(this)
 }
