@@ -9,6 +9,7 @@ import net.milosvasic.factory.common.initialization.Termination
 import net.milosvasic.factory.common.obtain.ObtainParametrized
 import net.milosvasic.factory.component.database.*
 import net.milosvasic.factory.execution.flow.callback.FlowCallback
+import net.milosvasic.factory.execution.flow.implementation.CommandFlow
 import net.milosvasic.factory.execution.flow.implementation.initialization.InitializationFlow
 import net.milosvasic.factory.log
 import net.milosvasic.factory.operation.OperationResult
@@ -113,7 +114,7 @@ object DatabaseManager :
         checkInitialized()
         busy()
 
-        // TODO:
+        // TODO: Command flow with data handler and onFinish callback
         initialized.set(true)
         free()
         log.i("Database manager has been initialized")
