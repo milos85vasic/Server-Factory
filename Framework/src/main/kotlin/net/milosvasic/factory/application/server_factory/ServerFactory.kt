@@ -9,7 +9,7 @@ import net.milosvasic.factory.common.busy.BusyException
 import net.milosvasic.factory.common.busy.BusyWorker
 import net.milosvasic.factory.common.exception.EmptyDataException
 import net.milosvasic.factory.common.initialization.Termination
-import net.milosvasic.factory.component.database.DatabaseManager
+import net.milosvasic.factory.component.database.manager.DatabaseManager
 import net.milosvasic.factory.component.docker.Docker
 import net.milosvasic.factory.component.docker.DockerInitializationFlowCallback
 import net.milosvasic.factory.component.installer.Installer
@@ -332,6 +332,7 @@ abstract class ServerFactory(val arguments: List<String> = listOf()) : Applicati
         val initCallback = InstallerInitializationFlowCallback()
         return InitializationFlow()
                 .width(installer)
+                .width(DatabaseManager)
                 .connect(installFlow)
                 .onFinish(initCallback)
     }

@@ -1,26 +1,34 @@
-package net.milosvasic.factory.component.database
+package net.milosvasic.factory.component.database.manager
 
 import net.milosvasic.factory.common.Registration
 import net.milosvasic.factory.common.busy.Busy
 import net.milosvasic.factory.common.busy.BusyException
 import net.milosvasic.factory.common.busy.BusyWorker
+import net.milosvasic.factory.common.initialization.Initializer
 import net.milosvasic.factory.common.initialization.Termination
 import net.milosvasic.factory.common.obtain.ObtainParametrized
+import net.milosvasic.factory.component.database.*
 import net.milosvasic.factory.execution.flow.callback.FlowCallback
 import net.milosvasic.factory.execution.flow.implementation.initialization.InitializationFlow
 import net.milosvasic.factory.log
 import net.milosvasic.factory.operation.OperationResult
+import net.milosvasic.factory.operation.OperationResultListener
 import net.milosvasic.factory.validation.Validator
 import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.ConcurrentLinkedQueue
+import java.util.concurrent.atomic.AtomicBoolean
 
 object DatabaseManager :
         ObtainParametrized<DatabaseRequest, Database>,
         Registration<DatabaseRegistration>,
+        Initializer,
         Termination {
 
     private val busy = Busy()
+    private val initialized = AtomicBoolean()
     private var registration: DatabaseRegistration? = null
     private val operation = DatabaseRegistrationOperation()
+    private val subscribers = ConcurrentLinkedQueue<OperationResultListener>()
     private val databases = ConcurrentHashMap<Type, MutableMap<String, Database>>()
 
     private val initFlowCallback = object : FlowCallback {
@@ -97,6 +105,56 @@ object DatabaseManager :
             return it
         }
         throw IllegalArgumentException("No database registered for the type: ${type.type}")
+    }
+
+    @Synchronized
+    @Throws(IllegalStateException::class)
+    override fun initialize() {
+        checkInitialized()
+        busy()
+
+        // TODO:
+        initialized.set(true)
+        free()
+        log.i("Database manager has been initialized")
+        val operation = DatabaseManagerInitializationOperation()
+        val result = OperationResult(operation, true)
+        notify(result)
+    }
+
+    @Synchronized
+    @Throws(IllegalStateException::class)
+    override fun checkInitialized() {
+        if (isInitialized()) {
+            throw IllegalStateException("Installer has been already initialized")
+        }
+    }
+
+    @Synchronized
+    @Throws(IllegalStateException::class)
+    override fun checkNotInitialized() {
+        if (!isInitialized()) {
+            throw IllegalStateException("Installer has not been initialized")
+        }
+    }
+
+    override fun isInitialized() = initialized.get()
+
+    override fun subscribe(what: OperationResultListener) {
+        subscribers.add(what)
+    }
+
+    override fun unsubscribe(what: OperationResultListener) {
+        subscribers.remove(what)
+    }
+
+    @Synchronized
+    override fun notify(data: OperationResult) {
+        val iterator = subscribers.iterator()
+        while (iterator.hasNext()) {
+            val listener = iterator.next()
+            listener.onOperationPerformed(data)
+        }
     }
 
     @Synchronized
