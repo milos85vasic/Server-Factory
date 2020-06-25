@@ -175,9 +175,10 @@ class DatabaseManager(entryPoint: Connection) :
                                                     val factory = DatabaseFactory(databaseType, db, dbConnection)
                                                     val database = factory.build()
                                                     val registration = DatabaseRegistration(database, callback)
-                                                    register(registration)
+                                                    doRegister(registration)
 
                                                 } catch (e: IllegalStateException) {
+
                                                     log.e(e)
                                                 }
                                             }
@@ -204,13 +205,7 @@ class DatabaseManager(entryPoint: Connection) :
     @Throws(IllegalStateException::class)
     override fun register(what: DatabaseRegistration) {
         busy()
-
-        registration = what
-        val db = what.database
-        InitializationFlow()
-                .width(db)
-                .onFinish(initFlowCallback)
-                .run()
+        doRegister(what)
     }
 
     @Throws(IllegalArgumentException::class)
@@ -305,5 +300,15 @@ class DatabaseManager(entryPoint: Connection) :
 
     override fun onFailedResult() {
         free(false)
+    }
+
+    private fun doRegister(what: DatabaseRegistration) {
+
+        registration = what
+        val db = what.database
+        InitializationFlow()
+                .width(db)
+                .onFinish(initFlowCallback)
+                .run()
     }
 }
