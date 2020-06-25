@@ -23,7 +23,7 @@ open class Certificate(val name: String) : RemoteOperationInstallationStep<SSH>(
         connection?.let { conn ->
 
             val hostname = conn.getRemoteOS().getHostname()
-            val keyHome = VariableKey.CERTIFICATES.key
+            val keyHome = VariableKey.Certificates.key
             val ctxServer = VariableContext.Server.context
             val ctxSeparator = VariableNode.contextSeparator
             val ctxCertification = VariableContext.Certification.context

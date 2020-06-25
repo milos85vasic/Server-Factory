@@ -124,9 +124,9 @@ class DatabaseManager(entryPoint: Connection) :
 
                     val configuration = ConfigurationManager.getConfiguration()
                     val dbCtx = VariableContext.Database.context
-                    val keyUser = VariableKey.DB_USER.key
-                    val keyPort = VariableKey.DB_PORT.key
-                    val keyPassword = VariableKey.DB_PASSWORD.key
+                    val keyUser = VariableKey.DbUser.key
+                    val keyPort = VariableKey.DbPort.key
+                    val keyPassword = VariableKey.DbPassword.key
 
                     val host = localhost
                     val sep = VariableNode.contextSeparator

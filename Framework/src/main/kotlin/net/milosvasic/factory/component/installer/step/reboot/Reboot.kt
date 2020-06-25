@@ -49,7 +49,7 @@ class Reboot(private val timeoutInSeconds: Int = 120) : RemoteOperationInstallat
         var rebootAllowed = false
         try {
             val configuration = ConfigurationManager.getConfiguration()
-            val rebootKey = "${VariableContext.Server.context}${VariableNode.contextSeparator}${VariableKey.REBOOT_ALLOWED}"
+            val rebootKey = "${VariableContext.Server.context}${VariableNode.contextSeparator}${VariableKey.RebootAllowed}"
             val rebootValue = configuration.getVariableParsed(rebootKey)
             rebootValue?.let {
                 when (it) {
