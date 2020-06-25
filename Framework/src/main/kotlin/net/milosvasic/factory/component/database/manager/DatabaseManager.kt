@@ -9,9 +9,14 @@ import net.milosvasic.factory.common.obtain.Instantiate
 import net.milosvasic.factory.common.obtain.ObtainParametrized
 import net.milosvasic.factory.component.database.*
 import net.milosvasic.factory.component.database.postgres.PostgresDatabasesIdentificationCommand
+import net.milosvasic.factory.configuration.ConfigurationManager
+import net.milosvasic.factory.configuration.Variable
+import net.milosvasic.factory.configuration.VariableContext
+import net.milosvasic.factory.configuration.VariableKey
 import net.milosvasic.factory.execution.flow.callback.FlowCallback
 import net.milosvasic.factory.execution.flow.implementation.CommandFlow
 import net.milosvasic.factory.execution.flow.implementation.initialization.InitializationFlow
+import net.milosvasic.factory.localhost
 import net.milosvasic.factory.log
 import net.milosvasic.factory.operation.OperationResult
 import net.milosvasic.factory.remote.Connection
@@ -77,7 +82,7 @@ class DatabaseManager(entryPoint: Connection) :
     }
 
     @Synchronized
-    @Throws(IllegalStateException::class)
+    @Throws(IllegalStateException::class, IllegalArgumentException::class)
     override fun initialize() {
         checkInitialized()
         busy()
@@ -119,10 +124,17 @@ class DatabaseManager(entryPoint: Connection) :
             when (databaseType) {
                 Type.Postgres -> {
 
-                    val host = ""
-                    val port = 0
-                    val user = ""
-                    val password = ""
+                    val configuration = ConfigurationManager.getConfiguration()
+                            ?: throw IllegalStateException("No configuration available")
+
+                    val dbCtx = VariableContext.Database.context
+                    val keyUser = VariableKey.DB_USER.key
+                    val keyPort = VariableKey.DB_PORT.key
+                    val keyPassword = VariableKey.DB_PASSWORD.key
+                    val host = localhost
+                    val port = (configuration.getVariableParsed("$dbCtx.$keyPort") as String).toInt()
+                    val user = configuration.getVariableParsed("$dbCtx.$keyUser") as String
+                    val password = configuration.getVariableParsed("$dbCtx.$keyPassword") as String
                     val command = PostgresDatabasesIdentificationCommand(host, port, user, password)
                     val handler = object : DataHandler<OperationResult> {
 

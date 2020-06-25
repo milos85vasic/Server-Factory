@@ -10,5 +10,6 @@ enum class VariableKey(val key: String) {
     REBOOT_ALLOWED("REBOOT_ALLOWED"),
     DOCKER_COMPOSE_PATH("DOCKER_COMPOSE_PATH"),
     DB_PORT("DB_PORT"),
+    DB_USER("DB_USER"),
     DB_PASSWORD("DB_PASSWORD")
 }
