@@ -16,6 +16,7 @@ import net.milosvasic.factory.execution.flow.implementation.initialization.Initi
 import net.milosvasic.factory.localhost
 import net.milosvasic.factory.log
 import net.milosvasic.factory.operation.OperationResult
+import net.milosvasic.factory.operation.OperationResultListener
 import net.milosvasic.factory.remote.Connection
 import net.milosvasic.factory.validation.Validator
 import java.util.concurrent.ConcurrentHashMap
@@ -150,7 +151,35 @@ class DatabaseManager(entryPoint: Connection) :
                                         data?.let {
                                             it.data.split("\n").forEach { db ->
 
-                                                log.i("> > > > $db")
+                                                try {
+                                                    val callback = object : OperationResultListener {
+                                                        override fun onOperationPerformed(result: OperationResult) {
+                                                            when (result.operation) {
+                                                                is DatabaseRegistrationOperation -> {
+
+                                                                    if (!result.success) {
+                                                                        log.e("Database registration failed: $db")
+                                                                    }
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+
+                                                    val dbConnection = DatabaseConnection(
+                                                            host,
+                                                            prt.toInt(),
+                                                            usr,
+                                                            pwd,
+                                                            entryPoint
+                                                    )
+                                                    val factory = DatabaseFactory(databaseType, db, dbConnection)
+                                                    val database = factory.build()
+                                                    val registration = DatabaseRegistration(database, callback)
+                                                    register(registration)
+
+                                                } catch (e: IllegalStateException) {
+                                                    log.e(e)
+                                                }
                                             }
                                         }
                                     }
