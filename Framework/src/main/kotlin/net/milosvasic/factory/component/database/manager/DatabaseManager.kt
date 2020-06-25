@@ -66,7 +66,7 @@ class DatabaseManager(entryPoint: Connection) :
                         databases[type] = dbs
                     }
                     dbs[name] = it.database
-                    log.i("$type database initialized: '$name'")
+                    log.v("$type database initialized: '$name'")
                 } else {
 
                     log.e("Database initialization failed for ${type.type} database")
