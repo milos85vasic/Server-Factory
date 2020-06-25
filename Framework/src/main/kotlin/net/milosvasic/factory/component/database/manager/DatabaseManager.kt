@@ -147,10 +147,11 @@ class DatabaseManager(entryPoint: Connection) :
                                 val handler = object : DataHandler<OperationResult> {
 
                                     override fun onData(data: OperationResult?) {
-
                                         data?.let {
+                                            it.data.split("\n").forEach { db ->
 
-                                            log.i("> > > > ${it.data}")
+                                                log.i("> > > > $db")
+                                            }
                                         }
                                     }
                                 }
