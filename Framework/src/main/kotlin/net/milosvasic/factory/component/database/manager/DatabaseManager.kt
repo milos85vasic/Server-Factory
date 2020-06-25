@@ -139,7 +139,7 @@ class DatabaseManager(entryPoint: Connection) :
 
                                 val command = PostgresDatabasesIdentificationCommand(
                                         host,
-                                        prt as Int,
+                                        (prt as String).toInt(),
                                         usr as String,
                                         pwd as String
                                 )
