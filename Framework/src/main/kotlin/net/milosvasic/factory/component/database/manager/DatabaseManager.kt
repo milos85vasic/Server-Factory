@@ -86,24 +86,32 @@ class DatabaseManager(entryPoint: Connection) :
 
             initialized.set(true)
             log.i("Database manager has been initialized")
-            onSuccessResult()
+
+            free()
+            val operation = DatabaseManagerInitializationOperation()
+            val operationResult = OperationResult(operation, true)
+            notify(operationResult)
             return
         }
 
         val flowCallback = object : FlowCallback {
 
             override fun onFinish(success: Boolean) {
+
                 if (success) {
 
                     manager = this@DatabaseManager
                     initialized.set(true)
                     log.i("Database manager has been initialized")
-                    onSuccessResult()
                 } else {
 
                     log.e("Could not initialize database manager")
-                    onFailedResult()
                 }
+
+                free()
+                val operation = DatabaseManagerInitializationOperation()
+                val operationResult = OperationResult(operation, success)
+                notify(operationResult)
             }
         }
         val flow = CommandFlow().width(entryPoint).onFinish(flowCallback)
