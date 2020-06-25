@@ -8,7 +8,7 @@ import net.milosvasic.factory.common.initialization.Termination
 import net.milosvasic.factory.common.obtain.Instantiate
 import net.milosvasic.factory.common.obtain.ObtainParametrized
 import net.milosvasic.factory.component.database.*
-import net.milosvasic.factory.component.database.postgres.PostgresDatabasesIdentificationCommand
+import net.milosvasic.factory.component.database.postgres.PostgresDatabasesListCommand
 import net.milosvasic.factory.configuration.*
 import net.milosvasic.factory.execution.flow.callback.FlowCallback
 import net.milosvasic.factory.execution.flow.implementation.CommandFlow
@@ -137,7 +137,7 @@ class DatabaseManager(entryPoint: Connection) :
                         user?.let { usr ->
                             password?.let { pwd ->
 
-                                val command = PostgresDatabasesIdentificationCommand(
+                                val command = PostgresDatabasesListCommand(
                                         host,
                                         (prt as String).toInt(),
                                         usr as String,

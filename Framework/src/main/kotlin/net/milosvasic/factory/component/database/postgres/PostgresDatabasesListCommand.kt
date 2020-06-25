@@ -2,7 +2,7 @@ package net.milosvasic.factory.component.database.postgres
 
 import net.milosvasic.factory.terminal.TerminalCommand
 
-class PostgresDatabasesIdentificationCommand(
+class PostgresDatabasesListCommand(
 
         host: String,
         port: Int,
@@ -12,6 +12,6 @@ class PostgresDatabasesIdentificationCommand(
 
         StringBuilder("PGPASSWORD=$password ${PostgresCommand.PSQL.obtain()}")
                 .append(" --host=$host --port=$port --user=$user")
-                .append(" --list")
+                .append(" -t -A -c 'SELECT datname FROM pg_database'")
                 .toString()
 )
