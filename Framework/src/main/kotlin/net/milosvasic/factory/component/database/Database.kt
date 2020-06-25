@@ -39,7 +39,7 @@ abstract class Database(val name: String, val connection: DatabaseConnection) :
     @Throws(IllegalStateException::class)
     override fun checkInitialized() {
         if (isInitialized()) {
-            throw IllegalStateException("Installer has been already initialized")
+            throw IllegalStateException("Database has been already initialized")
         }
     }
 
@@ -47,7 +47,7 @@ abstract class Database(val name: String, val connection: DatabaseConnection) :
     @Throws(IllegalStateException::class)
     override fun checkNotInitialized() {
         if (!isInitialized()) {
-            throw IllegalStateException("Installer has not been initialized")
+            throw IllegalStateException("Database has not been initialized")
         }
     }
 

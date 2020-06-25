@@ -82,42 +82,24 @@ class DatabaseManager(entryPoint: Connection) :
     @Synchronized
     @Throws(IllegalStateException::class, IllegalArgumentException::class)
     override fun initialize() {
+
         checkInitialized()
         busy()
-
-        manager?.let {
-
-            initialized.set(true)
-            log.i("Database manager has been initialized")
-
-            free()
-            val operation = DatabaseManagerInitializationOperation()
-            val operationResult = OperationResult(operation, true)
-            notify(operationResult)
-            return
+        if (manager == null) {
+            manager = this
         }
+        initialized.set(true)
+        log.i("Database manager has been initialized")
+        free()
+        val operation = DatabaseManagerInitializationOperation()
+        val operationResult = OperationResult(operation, true)
+        notify(operationResult)
+    }
 
-        val flowCallback = object : FlowCallback {
+    @Throws(IllegalStateException::class)
+    fun loadDatabasesFlow(): CommandFlow {
 
-            override fun onFinish(success: Boolean) {
-
-                if (success) {
-
-                    manager = this@DatabaseManager
-                    initialized.set(true)
-                    log.i("Database manager has been initialized")
-                } else {
-
-                    log.e("Could not initialize database manager")
-                }
-
-                free()
-                val operation = DatabaseManagerInitializationOperation()
-                val operationResult = OperationResult(operation, success)
-                notify(operationResult)
-            }
-        }
-        val flow = CommandFlow().width(entryPoint).onFinish(flowCallback)
+        val flow = CommandFlow().width(entryPoint)
         Type.values().forEach { databaseType ->
             when (databaseType) {
                 Type.Postgres -> {
@@ -198,7 +180,7 @@ class DatabaseManager(entryPoint: Connection) :
                 }
             }
         }
-        flow.run()
+        return flow
     }
 
     @Synchronized
@@ -245,7 +227,7 @@ class DatabaseManager(entryPoint: Connection) :
     @Throws(IllegalStateException::class)
     override fun checkInitialized() {
         if (isInitialized()) {
-            throw IllegalStateException("Installer has been already initialized")
+            throw IllegalStateException("Database manager is already initialized")
         }
     }
 
@@ -253,7 +235,7 @@ class DatabaseManager(entryPoint: Connection) :
     @Throws(IllegalStateException::class)
     override fun checkNotInitialized() {
         if (!isInitialized()) {
-            throw IllegalStateException("Installer has not been initialized")
+            throw IllegalStateException("Database manager has not been initialized")
         }
     }
 

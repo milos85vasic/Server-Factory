@@ -158,11 +158,12 @@ abstract class ServerFactory(val arguments: List<String> = listOf()) : Applicati
             terminators.add(databaseManager)
 
             val terminationFlow = getTerminationFlow(ssh)
-            val dbInitFlow = getInitializationFlow(databaseManager, terminationFlow)
-            val dockerFlow = getDockerFlow(docker, dbInitFlow)
+            val loadDbsFlow = databaseManager.loadDatabasesFlow().connect(terminationFlow)
+            val dockerFlow = getDockerFlow(docker, loadDbsFlow)
             val dockerInitFlow = getDockerInitFlow(docker, dockerFlow)
             val installationFlow = getInstallationFlow(installer, dockerInitFlow) ?: dockerInitFlow
-            val initFlow = getInitializationFlow(installer, installationFlow)
+            val initializers = listOf<Initializer>(installer, databaseManager)
+            val initFlow = getInitializationFlow(initializers, installationFlow)
             val commandFlow = getCommandFlow(ssh, initFlow)
 
             commandFlow.run()
