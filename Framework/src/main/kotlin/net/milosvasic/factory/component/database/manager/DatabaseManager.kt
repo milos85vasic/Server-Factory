@@ -1,5 +1,6 @@
 package net.milosvasic.factory.component.database.manager
 
+import net.milosvasic.factory.common.DataHandler
 import net.milosvasic.factory.common.Registration
 import net.milosvasic.factory.common.busy.BusyWorker
 import net.milosvasic.factory.common.initialization.Initializer
@@ -7,7 +8,9 @@ import net.milosvasic.factory.common.initialization.Termination
 import net.milosvasic.factory.common.obtain.Instantiate
 import net.milosvasic.factory.common.obtain.ObtainParametrized
 import net.milosvasic.factory.component.database.*
+import net.milosvasic.factory.component.database.postgres.PostgresDatabasesIdentificationCommand
 import net.milosvasic.factory.execution.flow.callback.FlowCallback
+import net.milosvasic.factory.execution.flow.implementation.CommandFlow
 import net.milosvasic.factory.execution.flow.implementation.initialization.InitializationFlow
 import net.milosvasic.factory.log
 import net.milosvasic.factory.operation.OperationResult
@@ -88,12 +91,48 @@ class DatabaseManager(entryPoint: Connection) :
             return
         }
 
-        // TODO: Command flow with data handler and onFinish callback
-        manager = this
-        initialized.set(true)
-        free()
-        log.i("Database manager has been initialized")
-        notify(true)
+
+        val flowCallback = object : FlowCallback {
+
+            override fun onFinish(success: Boolean) {
+                if (success) {
+
+                    manager = this@DatabaseManager
+                    initialized.set(true)
+                    log.i("Database manager has been initialized")
+                    onSuccessResult()
+                } else {
+
+                    log.e("Could not initialize database manager")
+                    onFailedResult()
+                }
+            }
+        }
+        val flow = CommandFlow().width(entryPoint).onFinish(flowCallback)
+        Type.values().forEach { databaseType ->
+            when (databaseType) {
+                Type.Postgres -> {
+
+                    val command = PostgresDatabasesIdentificationCommand()
+                    val handler = object : DataHandler<OperationResult> {
+
+                        override fun onData(data: OperationResult?) {
+
+                            data?.let {
+
+                                log.i("> > > > ${it.data}")
+                            }
+                        }
+                    }
+                    flow.perform(command, handler)
+                }
+                else -> {
+
+                    log.v("Skipping '$databaseType' database type: not supported yet.")
+                }
+            }
+        }
+        flow.run()
     }
 
     @Synchronized
