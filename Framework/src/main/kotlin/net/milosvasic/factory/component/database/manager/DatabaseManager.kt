@@ -9,10 +9,7 @@ import net.milosvasic.factory.common.obtain.Instantiate
 import net.milosvasic.factory.common.obtain.ObtainParametrized
 import net.milosvasic.factory.component.database.*
 import net.milosvasic.factory.component.database.postgres.PostgresDatabasesIdentificationCommand
-import net.milosvasic.factory.configuration.ConfigurationManager
-import net.milosvasic.factory.configuration.Variable
-import net.milosvasic.factory.configuration.VariableContext
-import net.milosvasic.factory.configuration.VariableKey
+import net.milosvasic.factory.configuration.*
 import net.milosvasic.factory.execution.flow.callback.FlowCallback
 import net.milosvasic.factory.execution.flow.implementation.CommandFlow
 import net.milosvasic.factory.execution.flow.implementation.initialization.InitializationFlow
@@ -125,28 +122,42 @@ class DatabaseManager(entryPoint: Connection) :
                 Type.Postgres -> {
 
                     val configuration = ConfigurationManager.getConfiguration()
-                            ?: throw IllegalStateException("No configuration available")
-
                     val dbCtx = VariableContext.Database.context
                     val keyUser = VariableKey.DB_USER.key
                     val keyPort = VariableKey.DB_PORT.key
                     val keyPassword = VariableKey.DB_PASSWORD.key
+
                     val host = localhost
-                    val port = (configuration.getVariableParsed("$dbCtx.$keyPort") as String).toInt()
-                    val user = configuration.getVariableParsed("$dbCtx.$keyUser") as String
-                    val password = configuration.getVariableParsed("$dbCtx.$keyPassword") as String
-                    val command = PostgresDatabasesIdentificationCommand(host, port, user, password)
-                    val handler = object : DataHandler<OperationResult> {
+                    val sep = VariableNode.contextSeparator
+                    val port = configuration.getVariableParsed("$dbCtx$sep$keyPort")
+                    val user = configuration.getVariableParsed("$dbCtx$sep$keyUser")
+                    val password = configuration.getVariableParsed("$dbCtx$sep$keyPassword")
 
-                        override fun onData(data: OperationResult?) {
+                    port?.let { prt ->
+                        user?.let { usr ->
+                            password?.let { pwd ->
 
-                            data?.let {
+                                val command = PostgresDatabasesIdentificationCommand(
+                                        host,
+                                        prt as Int,
+                                        usr as String,
+                                        pwd as String
+                                )
 
-                                log.i("> > > > ${it.data}")
+                                val handler = object : DataHandler<OperationResult> {
+
+                                    override fun onData(data: OperationResult?) {
+
+                                        data?.let {
+
+                                            log.i("> > > > ${it.data}")
+                                        }
+                                    }
+                                }
+                                flow.perform(command, handler)
                             }
                         }
                     }
-                    flow.perform(command, handler)
                 }
                 else -> {
 
