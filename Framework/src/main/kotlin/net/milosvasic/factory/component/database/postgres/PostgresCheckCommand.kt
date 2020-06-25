@@ -1,16 +1,15 @@
 package net.milosvasic.factory.component.database.postgres
 
-import net.milosvasic.factory.component.database.Database
-import net.milosvasic.factory.component.database.command.DatabaseSqlCommand
+import net.milosvasic.factory.component.database.command.DatabaseCheckCommand
 
-class PostgresDatabaseSqlCommand(database: Database, sql: String) : DatabaseSqlCommand(database, sql) {
+class PostgresCheckCommand(database: Postgres) : DatabaseCheckCommand(database) {
 
     override fun getDatabaseCommand(): String {
 
         val connection = database.connection
         return StringBuilder("PGPASSWORD=${connection.password} ${PostgresCommand.PSQL.obtain()}")
                 .append(" --host=${connection.host} --port=${connection.port} --user=${connection.user}")
-                .append(" ${database.name} < $sql")
+                .append(" --list | grep ${database.name}")
                 .toString()
     }
 }

@@ -8,8 +8,9 @@ import net.milosvasic.factory.common.busy.BusyDelegation
 import net.milosvasic.factory.common.busy.BusyException
 import net.milosvasic.factory.common.busy.BusyWorker
 import net.milosvasic.factory.common.exception.EmptyDataException
+import net.milosvasic.factory.common.initialization.Initializer
 import net.milosvasic.factory.common.initialization.Termination
-import net.milosvasic.factory.component.database.DatabaseManager
+import net.milosvasic.factory.component.database.manager.DatabaseManager
 import net.milosvasic.factory.component.docker.Docker
 import net.milosvasic.factory.component.docker.DockerInitializationFlowCallback
 import net.milosvasic.factory.component.installer.Installer
@@ -150,15 +151,19 @@ abstract class ServerFactory(val arguments: List<String> = listOf()) : Applicati
             val ssh = getConnection()
             val docker = instantiateDocker(ssh)
             val installer = instantiateInstaller(ssh)
+            val databaseManager = DatabaseManager(ssh)
 
             terminators.add(docker)
             terminators.add(installer)
-            terminators.add(DatabaseManager)
+            terminators.add(databaseManager)
 
-            val dockerFlow = getDockerFlow(docker)
+            val terminationFlow = getTerminationFlow(ssh)
+            val loadDbsFlow = databaseManager.loadDatabasesFlow().connect(terminationFlow)
+            val dockerFlow = getDockerFlow(docker, loadDbsFlow)
             val dockerInitFlow = getDockerInitFlow(docker, dockerFlow)
-            val nextFlow = getInstallationFlow(installer, dockerInitFlow) ?: dockerInitFlow
-            val initFlow = getInitializationFlow(installer, nextFlow)
+            val installationFlow = getInstallationFlow(installer, dockerInitFlow) ?: dockerInitFlow
+            val initializers = listOf<Initializer>(installer, databaseManager)
+            val initFlow = getInitializationFlow(initializers, installationFlow)
             val commandFlow = getCommandFlow(ssh, initFlow)
 
             commandFlow.run()
@@ -289,7 +294,7 @@ abstract class ServerFactory(val arguments: List<String> = listOf()) : Applicati
                 .onFinish(dieCallback)
     }
 
-    private fun getDockerFlow(docker: Docker): InstallationFlow {
+    private fun getDockerFlow(docker: Docker, terminationFlow: FlowBuilder<*, *, *>): InstallationFlow {
 
         val dockerFlow = InstallationFlow(docker)
         containersConfigurations.forEach { softwareConfiguration ->
@@ -304,8 +309,17 @@ abstract class ServerFactory(val arguments: List<String> = listOf()) : Applicati
                 )
             }
         }
-        dockerFlow.onFinish(TerminationCallback(this))
+
+        dockerFlow.connect(terminationFlow)
         return dockerFlow
+    }
+
+    protected open fun getTerminationFlow(connection: Connection): FlowBuilder<*, *, *> {
+
+        return CommandFlow()
+                .width(connection.getTerminal())
+                .perform(EchoCommand("Finishing"))
+                .onFinish(TerminationCallback(this))
     }
 
     private fun getDockerInitFlow(docker: Docker, dockerFlow: InstallationFlow): InitializationFlow {
@@ -317,13 +331,32 @@ abstract class ServerFactory(val arguments: List<String> = listOf()) : Applicati
                 .onFinish(initCallback)
     }
 
-    private fun getInitializationFlow(installer: Installer, installFlow: FlowBuilder<*, *, *>): InitializationFlow {
+    @Throws(IllegalArgumentException::class)
+    private fun getInitializationFlow(
+            initializer: Initializer,
+            nextFlow: FlowBuilder<*, *, *>
+
+    ) = getInitializationFlow(listOf(initializer), nextFlow)
+
+    @Throws(IllegalArgumentException::class)
+    private fun getInitializationFlow(
+            initializers: List<Initializer>,
+            nextFlow: FlowBuilder<*, *, *>
+
+    ): InitializationFlow {
+
+        if (initializers.isEmpty()) {
+
+            throw IllegalArgumentException("Initializers are not provided")
+        }
 
         val initCallback = InstallerInitializationFlowCallback()
-        return InitializationFlow()
-                .width(installer)
-                .connect(installFlow)
-                .onFinish(initCallback)
+        val flow = InitializationFlow()
+        initializers.forEach {
+            flow.width(it)
+        }
+        flow.connect(nextFlow).onFinish(initCallback)
+        return flow
     }
 
     @Throws(IllegalArgumentException::class, IllegalStateException::class)
@@ -363,7 +396,7 @@ abstract class ServerFactory(val arguments: List<String> = listOf()) : Applicati
         configuration?.let {
 
             val sep = VariableNode.contextSeparator
-            val key = "${VariableContext.Server.context}$sep${VariableKey.HOSTNAME.key}"
+            val key = "${VariableContext.Server.context}$sep${VariableKey.Hostname.key}"
             it.getVariableParsed(key)?.let { hName ->
                 hostname = hName as String
             }

@@ -47,7 +47,7 @@ enum class DockerCommand : Obtain<String> {
         override fun obtain(): String {
 
             val context = VariableContext.Docker.context
-            val dockerComposePath = VariableKey.DOCKER_COMPOSE_PATH.key
+            val dockerComposePath = VariableKey.DockerComposePath.key
             val configuration = ConfigurationManager.getConfiguration()
             val key = "$context${VariableNode.contextSeparator}$dockerComposePath"
             val variable = configuration.getVariableParsed(key)

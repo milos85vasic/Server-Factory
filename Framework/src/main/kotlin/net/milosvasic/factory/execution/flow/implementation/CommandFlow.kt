@@ -3,6 +3,7 @@ package net.milosvasic.factory.execution.flow.implementation
 import net.milosvasic.factory.common.DataHandler
 import net.milosvasic.factory.common.busy.BusyException
 import net.milosvasic.factory.common.execution.Executor
+import net.milosvasic.factory.common.obtain.Obtain
 import net.milosvasic.factory.execution.flow.FlowBuilder
 import net.milosvasic.factory.execution.flow.FlowPerformBuilder
 import net.milosvasic.factory.execution.flow.callback.FlowCallback
@@ -26,6 +27,12 @@ class CommandFlow : FlowPerformBuilder<Executor<TerminalCommand>, TerminalComman
 
     @Throws(BusyException::class)
     override fun perform(what: TerminalCommand): CommandFlow {
+        super.perform(what)
+        return this
+    }
+
+    @Throws(BusyException::class)
+    override fun perform(what: Obtain<TerminalCommand>): CommandFlow {
         super.perform(what)
         return this
     }

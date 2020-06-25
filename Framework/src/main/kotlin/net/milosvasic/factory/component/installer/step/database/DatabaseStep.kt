@@ -5,6 +5,7 @@ import com.google.gson.JsonParseException
 import net.milosvasic.factory.common.DataHandler
 import net.milosvasic.factory.common.obtain.Obtain
 import net.milosvasic.factory.component.database.*
+import net.milosvasic.factory.component.database.manager.DatabaseManager
 import net.milosvasic.factory.component.installer.step.RemoteOperationInstallationStep
 import net.milosvasic.factory.execution.flow.implementation.CommandFlow
 import net.milosvasic.factory.execution.flow.implementation.InstallationStepFlow
@@ -26,12 +27,12 @@ class DatabaseStep(val path: String) : RemoteOperationInstallationStep<SSH>() {
         const val defaultConfigurationFile = "configuration.json"
     }
 
-    @Throws(IllegalArgumentException::class)
+    @Throws(IllegalArgumentException::class, IllegalStateException::class)
     override fun getFlow(): CommandFlow {
 
         connection?.let { conn ->
 
-            val manager = DatabaseManager
+            val manager = DatabaseManager.instantiate() ?: throw IllegalStateException("Invalid database manager")
             var config: DatabaseConfiguration? = null
             val configurationFile = "$path${File.separator}$defaultConfigurationFile"
 
