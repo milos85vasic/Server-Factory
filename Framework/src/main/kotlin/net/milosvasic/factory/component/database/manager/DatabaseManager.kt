@@ -85,12 +85,10 @@ class DatabaseManager(entryPoint: Connection) :
         manager?.let {
 
             initialized.set(true)
-            free()
             log.i("Database manager has been initialized")
-            notify(true)
+            onSuccessResult()
             return
         }
-
 
         val flowCallback = object : FlowCallback {
 
@@ -226,6 +224,7 @@ class DatabaseManager(entryPoint: Connection) :
         pairs.forEach { pair ->
             unRegister(pair.first, pair.second)
         }
+        manager = null
         free()
     }
 
