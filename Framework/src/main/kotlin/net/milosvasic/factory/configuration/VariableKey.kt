@@ -9,8 +9,9 @@ enum class VariableKey(val key: String) {
     Certificates("CERTIFICATES"),
     RebootAllowed("REBOOT_ALLOWED"),
     DockerComposePath("DOCKER_COMPOSE_PATH"),
-    DbHost("DBHOST"),
+    DbHost("DB_HOST"),
     DbPort("DB_PORT"),
     DbUser("DB_USER"),
+    DbName("DB_NAME"),
     DbPassword("DB_PASSWORD")
 }
