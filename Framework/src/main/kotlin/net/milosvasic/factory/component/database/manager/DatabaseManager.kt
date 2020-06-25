@@ -16,6 +16,7 @@ import net.milosvasic.factory.log
 import net.milosvasic.factory.operation.OperationResult
 import net.milosvasic.factory.remote.Connection
 import net.milosvasic.factory.validation.Validator
+import org.omg.CORBA.UNKNOWN
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicBoolean
 
@@ -128,7 +129,9 @@ class DatabaseManager(entryPoint: Connection) :
                 }
                 else -> {
 
-                    log.v("Skipping '$databaseType' database type: not supported yet.")
+                    if (databaseType != Type.Unknown) {
+                        log.v("Skipping '$databaseType' database type: not supported yet.")
+                    }
                 }
             }
         }
