@@ -13,11 +13,11 @@ class PostgresInsertCommand(
 
     override fun getDatabaseCommand(): String {
 
-        val insert = "'INSERT INTO $table ($fields) VALUES ($values) ON CONFLICT DO $onConflictDo;'"
+        val insert = "\"INSERT INTO $table ($fields) VALUES ($values) ON CONFLICT DO $onConflictDo;\""
         val connection = database.connection
         return StringBuilder("PGPASSWORD=${connection.password} ${PostgresCommand.PSQL.obtain()}")
                 .append(" --host=${connection.host} --port=${connection.port} --user=${connection.user}")
-                .append(" -c $insert")
+                .append(" -d ${database.name} -c $insert")
                 .toString()
     }
 }
