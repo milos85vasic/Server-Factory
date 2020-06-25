@@ -45,11 +45,15 @@ class Reboot(private val timeoutInSeconds: Int = 120) : RemoteOperationInstallat
         }
     }
 
+    @Throws(IllegalStateException::class)
     override fun getFlow(): CommandFlow {
         var rebootAllowed = false
         try {
             val configuration = ConfigurationManager.getConfiguration()
-            val rebootKey = "${VariableContext.Server.context}${VariableNode.contextSeparator}${VariableKey.RebootAllowed}"
+            val sep = VariableNode.contextSeparator
+            val ctxServer = VariableContext.Server.context
+            val keyRebootAllowed = VariableKey.RebootAllowed.key
+            val rebootKey = "$ctxServer$sep$keyRebootAllowed"
             val rebootValue = configuration.getVariableParsed(rebootKey)
             rebootValue?.let {
                 when (it) {

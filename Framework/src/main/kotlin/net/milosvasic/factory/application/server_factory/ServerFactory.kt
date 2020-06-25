@@ -158,11 +158,11 @@ abstract class ServerFactory(val arguments: List<String> = listOf()) : Applicati
             terminators.add(databaseManager)
 
             val terminationFlow = getTerminationFlow(ssh)
-            val dockerFlow = getDockerFlow(docker, terminationFlow)
+            val dbInitFlow = getInitializationFlow(databaseManager, terminationFlow)
+            val dockerFlow = getDockerFlow(docker, dbInitFlow)
             val dockerInitFlow = getDockerInitFlow(docker, dockerFlow)
-            val nextFlow = getInstallationFlow(installer, dockerInitFlow) ?: dockerInitFlow
-            val initializers = listOf<Initializer>(installer, databaseManager)
-            val initFlow = getInitializationFlow(initializers, nextFlow)
+            val installationFlow = getInstallationFlow(installer, dockerInitFlow) ?: dockerInitFlow
+            val initFlow = getInitializationFlow(installer, installationFlow)
             val commandFlow = getCommandFlow(ssh, initFlow)
 
             commandFlow.run()
@@ -332,8 +332,15 @@ abstract class ServerFactory(val arguments: List<String> = listOf()) : Applicati
 
     @Throws(IllegalArgumentException::class)
     private fun getInitializationFlow(
+            initializer: Initializer,
+            nextFlow: FlowBuilder<*, *, *>
+
+    ) = getInitializationFlow(listOf(initializer), nextFlow)
+
+    @Throws(IllegalArgumentException::class)
+    private fun getInitializationFlow(
             initializers: List<Initializer>,
-            installFlow: FlowBuilder<*, *, *>
+            nextFlow: FlowBuilder<*, *, *>
 
     ): InitializationFlow {
 
@@ -347,7 +354,7 @@ abstract class ServerFactory(val arguments: List<String> = listOf()) : Applicati
         initializers.forEach {
             flow.width(it)
         }
-        flow.connect(installFlow).onFinish(initCallback)
+        flow.connect(nextFlow).onFinish(initCallback)
         return flow
     }
 
