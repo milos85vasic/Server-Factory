@@ -16,7 +16,6 @@ import net.milosvasic.factory.log
 import net.milosvasic.factory.operation.OperationResult
 import net.milosvasic.factory.remote.Connection
 import net.milosvasic.factory.validation.Validator
-import org.omg.CORBA.UNKNOWN
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicBoolean
 
@@ -114,7 +113,11 @@ class DatabaseManager(entryPoint: Connection) :
             when (databaseType) {
                 Type.Postgres -> {
 
-                    val command = PostgresDatabasesIdentificationCommand()
+                    val host = ""
+                    val port = 0
+                    val user = ""
+                    val password = ""
+                    val command = PostgresDatabasesIdentificationCommand(host, port, user, password)
                     val handler = object : DataHandler<OperationResult> {
 
                         override fun onData(data: OperationResult?) {

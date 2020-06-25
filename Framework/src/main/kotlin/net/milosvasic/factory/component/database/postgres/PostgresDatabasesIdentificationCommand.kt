@@ -1,9 +1,17 @@
 package net.milosvasic.factory.component.database.postgres
 
 import net.milosvasic.factory.terminal.TerminalCommand
-import net.milosvasic.factory.terminal.command.Commands
 
-class PostgresDatabasesIdentificationCommand : TerminalCommand(
+class PostgresDatabasesIdentificationCommand(
 
-        Commands.echo("ZZZZZZZZZZZZZ")
+        host: String,
+        port: Int,
+        user: String,
+        password: String
+) : TerminalCommand(
+
+        StringBuilder("PGPASSWORD=$password ${PostgresCommand.PSQL.obtain()}")
+                .append(" --host=$host --port=$port --user=$user")
+                .append(" --list")
+                .toString()
 )
