@@ -154,7 +154,7 @@ abstract class ServerFactory(val arguments: List<String> = listOf()) : Applicati
             val ssh = getConnection()
             val docker = instantiateDocker(ssh)
             val installer = instantiateInstaller(ssh)
-            val databaseManager = DatabaseManager(ssh)
+            val databaseManager = getDatabaseManager(ssh)
 
             terminators.add(docker)
             terminators.add(installer)
@@ -252,6 +252,8 @@ abstract class ServerFactory(val arguments: List<String> = listOf()) : Applicati
     protected open fun instantiateInstaller(ssh: Connection) = Installer(ssh)
 
     protected open fun getHostInfoCommand(): TerminalCommand = HostInfoCommand()
+
+    protected open fun getDatabaseManager(ssh: Connection) = DatabaseManager(ssh)
 
     protected open fun getHostNameSetCommand(hostname: String): TerminalCommand = HostNameSetCommand(hostname)
 

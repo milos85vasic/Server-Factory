@@ -22,7 +22,7 @@ import net.milosvasic.factory.validation.Validator
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicBoolean
 
-class DatabaseManager(entryPoint: Connection) :
+open class DatabaseManager(entryPoint: Connection) :
         BusyWorker<DatabaseManager>(entryPoint),
         ObtainParametrized<DatabaseRequest, Database>,
         Registration<DatabaseRegistration>,
@@ -97,7 +97,7 @@ class DatabaseManager(entryPoint: Connection) :
     }
 
     @Throws(IllegalStateException::class)
-    fun loadDatabasesFlow(): CommandFlow {
+    open fun loadDatabasesFlow(): CommandFlow {
 
         val flow = CommandFlow().width(entryPoint)
         Type.values().forEach { databaseType ->
