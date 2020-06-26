@@ -119,11 +119,18 @@ object Commands {
         return "$cmd $path${File.separator}$keyName -out $reqKey -subj $params && $verify"
     }
 
+    @Throws(IllegalArgumentException::class, IllegalStateException::class)
     fun importRequestKey(path: String, requestKey: String, name: String): String {
 
+        val homePath = PathBuilder()
+                .addContext(Context.Server)
+                .addContext(Context.Certification)
+                .setKey(Key.Home)
+                .build()
+
+        val home = Variable.get(homePath)
         val key = "$path${File.separator}$requestKey"
-        val cmd = "cd {{SERVER.CERTIFICATION.HOME}} && ./easyrsa import-req $key $name"
-        return Variable.parse(cmd)
+        return "cd $home && ./easyrsa import-req $key $name"
     }
 
     @Throws(IllegalArgumentException::class, IllegalStateException::class)
