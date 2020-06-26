@@ -1,10 +1,10 @@
 package net.milosvasic.factory.configuration.variable
 
-data class Path(private val key: String) {
+class Path(private val builder: PathBuilder) {
 
-    fun getPath() {
+    fun getPath() = builder.build()
 
-        var path = key
-
+    override fun toString(): String {
+        return "Path(path=${getPath()})"
     }
 }
