@@ -40,7 +40,7 @@ enum class DockerCommand : Obtain<String> {
     },
     COMPOSE {
 
-        @Throws(IllegalStateException::class)
+        @Throws(IllegalArgumentException::class, IllegalStateException::class)
         override fun obtain(): String {
 
             val path = PathBuilder()
