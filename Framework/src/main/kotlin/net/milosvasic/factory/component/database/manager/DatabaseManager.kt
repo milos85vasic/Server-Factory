@@ -129,7 +129,7 @@ class DatabaseManager(entryPoint: Connection) :
                             host,
                             port.toInt(),
                             user,
-                            user
+                            password
                     )
 
                     val handler = object : DataHandler<OperationResult> {
