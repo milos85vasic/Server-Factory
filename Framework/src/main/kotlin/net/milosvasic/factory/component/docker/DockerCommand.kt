@@ -2,10 +2,7 @@ package net.milosvasic.factory.component.docker
 
 import net.milosvasic.factory.EMPTY
 import net.milosvasic.factory.common.obtain.Obtain
-import net.milosvasic.factory.configuration.ConfigurationManager
-import net.milosvasic.factory.configuration.variable.Context
-import net.milosvasic.factory.configuration.variable.Key
-import net.milosvasic.factory.configuration.variable.Node
+import net.milosvasic.factory.configuration.variable.*
 import java.io.File
 
 enum class DockerCommand : Obtain<String> {
@@ -46,12 +43,13 @@ enum class DockerCommand : Obtain<String> {
         @Throws(IllegalStateException::class)
         override fun obtain(): String {
 
-            val context = Context.Docker.context
-            val dockerComposePath = Key.DockerComposePath.key
-            val configuration = ConfigurationManager.getConfiguration()
-            val key = "$context${Node.contextSeparator}$dockerComposePath"
-            val variable = configuration.getVariableParsed(key)
-            return if (variable != null && variable != String.EMPTY) {
+            val path = PathBuilder()
+                    .addContext(Context.Docker)
+                    .setKey(Key.DockerComposePath)
+                    .build()
+
+            val variable = Variable.get(path)
+            return if (variable != String.EMPTY) {
                 "$variable${File.separator}docker-compose"
             } else {
                 "docker-compose"
