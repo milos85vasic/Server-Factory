@@ -7,6 +7,7 @@ enum class Key(val key: String) {
     ServerHome("SERVER_HOME"),
     DockerHome("DOCKER_HOME"),
     Certificates("CERTIFICATES"),
+    Passphrase("PASSPHRASE"),
     RebootAllowed("REBOOT_ALLOWED"),
     DockerComposePath("DOCKER_COMPOSE_PATH"),
     DbHost("DB_HOST"),

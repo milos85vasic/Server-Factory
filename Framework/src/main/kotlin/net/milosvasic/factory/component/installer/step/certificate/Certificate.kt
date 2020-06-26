@@ -6,11 +6,7 @@ import net.milosvasic.factory.component.installer.recipe.ConditionRecipe
 import net.milosvasic.factory.component.installer.step.CommandInstallationStep
 import net.milosvasic.factory.component.installer.step.RemoteOperationInstallationStep
 import net.milosvasic.factory.component.installer.step.condition.SkipCondition
-import net.milosvasic.factory.configuration.*
-import net.milosvasic.factory.configuration.variable.Context
-import net.milosvasic.factory.configuration.variable.Key
-import net.milosvasic.factory.configuration.variable.Node
-import net.milosvasic.factory.configuration.variable.Variable
+import net.milosvasic.factory.configuration.variable.*
 import net.milosvasic.factory.execution.flow.implementation.CommandFlow
 import net.milosvasic.factory.execution.flow.implementation.InstallationStepFlow
 import net.milosvasic.factory.remote.ssh.SSH
@@ -27,22 +23,30 @@ open class Certificate(val name: String) : RemoteOperationInstallationStep<SSH>(
         connection?.let { conn ->
 
             val hostname = conn.getRemoteOS().getHostname()
-            val keyHome = Key.Certificates.key
-            val ctxServer = Context.Server.context
-            val ctxSeparator = Node.contextSeparator
-            val ctxCertification = Context.Certification.context
-            val key = "$ctxServer$ctxSeparator$ctxCertification$ctxSeparator$keyHome"
-            val configuration = ConfigurationManager.getConfiguration()
-            val path = configuration.getVariableParsed(key) as String
+
+            val keyPath = PathBuilder()
+                    .addContext(Context.Server)
+                    .addContext(Context.Certification)
+                    .setKey(Key.Certificates)
+                    .build()
+
+            val homeKeyPath = PathBuilder()
+                    .addContext(Context.Server)
+                    .addContext(Context.Certification)
+                    .setKey(Key.Home)
+                    .build()
+
+            val path = Variable.get(keyPath)
+            val certHome = Variable.get(homeKeyPath)
+            val certificates = Variable.get(keyPath)
+
             val permission = Permissions(Permission(6), Permission.NONE, Permission.NONE)
             val perm = permission.obtain()
             val sep = File.separator
             val certificateExtension = ".crt"
             val issued = "${sep}pki${sep}issued$sep"
-            val certHome = "{{SERVER.CERTIFICATION.HOME}}"
-            val certificates = "{{SERVER.CERTIFICATION.CERTIFICATES}}"
-            val linkingPath = Variable.parse("$certificates$sep$hostname$certificateExtension")
-            val verificationPath = Variable.parse("$certHome$issued$hostname$certificateExtension")
+            val linkingPath = "$certificates$sep$hostname$certificateExtension"
+            val verificationPath = "$certHome$issued$hostname$certificateExtension"
             val verificationCommand = TestCommand(verificationPath)
 
             val genPrivate = GeneratePrivateKeyCommand(path, name)

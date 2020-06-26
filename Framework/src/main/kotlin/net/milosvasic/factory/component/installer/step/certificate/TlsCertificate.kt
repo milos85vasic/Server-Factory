@@ -5,6 +5,9 @@ import net.milosvasic.factory.component.installer.recipe.CommandInstallationStep
 import net.milosvasic.factory.component.installer.recipe.ConditionRecipe
 import net.milosvasic.factory.component.installer.step.CommandInstallationStep
 import net.milosvasic.factory.component.installer.step.condition.SkipCondition
+import net.milosvasic.factory.configuration.variable.Context
+import net.milosvasic.factory.configuration.variable.Key
+import net.milosvasic.factory.configuration.variable.PathBuilder
 import net.milosvasic.factory.configuration.variable.Variable
 import net.milosvasic.factory.execution.flow.implementation.CommandFlow
 import net.milosvasic.factory.execution.flow.implementation.InstallationStepFlow
@@ -25,10 +28,24 @@ class TlsCertificate(name: String) : Certificate(name) {
             val sep = File.separator
             val subject = Commands.getOpensslSubject()
             val hostname = conn.getRemoteOS().getHostname()
-            val certificates = "{{SERVER.CERTIFICATION.CERTIFICATES}}"
-            val certificatesPath = Variable.parse(certificates)
-            val passIn = "-passin pass:{{SERVER.CERTIFICATION.PASSPHRASE}}"
-            val passOut = "-passout pass:{{SERVER.CERTIFICATION.PASSPHRASE}}"
+
+            val path = PathBuilder()
+                    .addContext(Context.Server)
+                    .addContext(Context.Certification)
+                    .setKey(Key.Certificates)
+                    .build()
+
+            val pathPassPhrase = PathBuilder()
+                    .addContext(Context.Server)
+                    .addContext(Context.Certification)
+                    .setKey(Key.Passphrase)
+                    .build()
+
+            val certificatesPath = Variable.get(path)
+            val passPhrase = Variable.get(pathPassPhrase)
+
+            val passIn = "-passin pass:$passPhrase"
+            val passOut = "-passout pass:$passPhrase"
             val permission600 = Permissions(Permission(6), Permission.NONE, Permission.NONE).obtain()
 
             val crtVerificationCommand = TestCommand("$certificatesPath$sep$hostname.crt")
