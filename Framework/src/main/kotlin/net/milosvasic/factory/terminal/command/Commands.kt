@@ -126,13 +126,28 @@ object Commands {
         return Variable.parse(cmd)
     }
 
+    @Throws(IllegalArgumentException::class, IllegalStateException::class)
     fun signRequestKey(name: String): String {
 
-        val passIn = "export EASYRSA_PASSIN='pass:{{SERVER.CERTIFICATION.PASSPHRASE}}'"
-        val passOut = "export EASYRSA_PASSOUT='pass:{{SERVER.CERTIFICATION.PASSPHRASE}}'"
+        val path = PathBuilder()
+                .addContext(Context.Server)
+                .addContext(Context.Certification)
+                .setKey(Key.Home)
+                .build()
+
+        val passPhrasePath = PathBuilder()
+                .addContext(Context.Server)
+                .addContext(Context.Certification)
+                .setKey(Key.Passphrase)
+                .build()
+
+        val home = Variable.get(path)
+        val passPhrase = Variable.get(passPhrasePath)
+
+        val passIn = "export EASYRSA_PASSIN='pass:$passPhrase'"
+        val passOut = "export EASYRSA_PASSOUT='pass:$passPhrase'"
         val passwords = "$passIn && $passOut"
-        val cmd = "cd {{SERVER.CERTIFICATION.HOME}} && $passwords && echo 'yes' | ./easyrsa sign-req server $name"
-        return Variable.parse(cmd)
+        return "cd $home && $passwords && echo 'yes' | ./easyrsa sign-req server $name"
     }
 
     @Throws(IllegalArgumentException::class, IllegalStateException::class)
