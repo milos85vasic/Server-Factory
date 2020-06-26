@@ -109,6 +109,7 @@ object Commands {
         return "$openssl genrsa -out $path${File.separator}$keyName"
     }
 
+    @Throws(IllegalArgumentException::class, IllegalStateException::class)
     fun generateRequestKey(path: String, keyName: String, reqName: String): String {
 
         val params = getOpensslSubject()
