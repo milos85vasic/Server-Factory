@@ -65,19 +65,6 @@ abstract class Configuration(
         }
     }
 
-    @Throws(IllegalStateException::class)
-    fun getVariableParsed(key: String): Any? {
-
-        variables?.let { it ->
-            val value = it.get(key)
-            if (value is String) {
-                return Variable.parse(value)
-            }
-            return value
-        }
-        return null
-    }
-
     override fun toString(): String {
         return "Configuration(\nname='$name', \nremote=$remote\n)\n${super.toString()}"
     }
