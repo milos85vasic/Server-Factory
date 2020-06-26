@@ -13,6 +13,7 @@ import net.milosvasic.factory.configuration.*
 import net.milosvasic.factory.configuration.variable.Context
 import net.milosvasic.factory.configuration.variable.Key
 import net.milosvasic.factory.configuration.variable.Node
+import net.milosvasic.factory.configuration.variable.PathBuilder
 import net.milosvasic.factory.execution.flow.callback.FlowCallback
 import net.milosvasic.factory.execution.flow.implementation.CommandFlow
 import net.milosvasic.factory.execution.flow.implementation.initialization.InitializationFlow
@@ -108,20 +109,26 @@ class DatabaseManager(entryPoint: Connection) :
                 Type.Postgres -> {
 
                     val configuration = ConfigurationManager.getConfiguration()
-                    val dbCtx = Context.Database.context
-                    val keyUser = Key.DbUser.key
-                    val keyPort = Key.DbPort.key
-                    val keyPassword = Key.DbPassword.key
-
                     val host = localhost
-                    val sep = Node.contextSeparator
 
-                    // FIXME: Variable refinement:
-                    // Variable.parse("{{ZZZ}}")
-                    val port = configuration.getVariableParsed("$dbCtx$sep$keyPort")
-                    val user = configuration.getVariableParsed("$dbCtx$sep$keyUser")
-                    val password = configuration.getVariableParsed("$dbCtx$sep$keyPassword")
+                    val portPath = PathBuilder()
+                            .addContext(Context.Database)
+                            .setKey(Key.DbPort)
+                            .build()
 
+                    val userPath = PathBuilder()
+                            .addContext(Context.Database)
+                            .setKey(Key.DbUser)
+                            .build()
+
+                    val passPath = PathBuilder()
+                            .addContext(Context.Database)
+                            .setKey(Key.DbPassword)
+                            .build()
+
+                    val port = configuration.getVariableParsed(portPath)
+                    val user = configuration.getVariableParsed(userPath)
+                    val password = configuration.getVariableParsed(passPath)
 
                     port?.let { prt ->
                         user?.let { usr ->

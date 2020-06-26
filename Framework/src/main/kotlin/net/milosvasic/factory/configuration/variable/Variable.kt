@@ -14,6 +14,12 @@ object Variable {
     private fun getPattern() = Pattern.compile(getRegex())
 
     @Throws(IllegalStateException::class)
+    fun parse(path: Path): String {
+
+        return parse("$open$${path.getPath()}$close")
+    }
+
+    @Throws(IllegalStateException::class)
     fun parse(value: String): String {
 
         val pattern = getPattern()
