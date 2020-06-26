@@ -219,16 +219,52 @@ object Commands {
 
     fun portTaken(port: Int) = "${echo("^C")} | $telnet $localhost $port | grep \"Connected\""
 
+    @Throws(IllegalArgumentException::class, IllegalStateException::class)
     fun getOpensslSubject(): String {
 
-        val hostname = "{{SERVER.HOSTNAME}}"
-        val city = "{{SERVER.CERTIFICATION.CITY}}"
-        val country = "{{SERVER.CERTIFICATION.COUNTRY}}"
-        val province = "{{SERVER.CERTIFICATION.PROVINCE}}"
-        val department = "{{SERVER.CERTIFICATION.DEPARTMENT}}"
-        val organisation = "{{SERVER.CERTIFICATION.ORGANISATION}}"
+        val pathHostname = PathBuilder()
+                .addContext(Context.Server)
+                .setKey(Key.Hostname)
+                .build()
+
+        val pathCity = PathBuilder()
+                .addContext(Context.Server)
+                .addContext(Context.Certification)
+                .setKey(Key.City)
+                .build()
+
+        val pathCountry = PathBuilder()
+                .addContext(Context.Server)
+                .addContext(Context.Certification)
+                .setKey(Key.Country)
+                .build()
+
+        val pathProvince = PathBuilder()
+                .addContext(Context.Server)
+                .addContext(Context.Certification)
+                .setKey(Key.Province)
+                .build()
+
+        val pathDepartment = PathBuilder()
+                .addContext(Context.Server)
+                .addContext(Context.Certification)
+                .setKey(Key.Department)
+                .build()
+
+        val pathOrganisation = PathBuilder()
+                .addContext(Context.Server)
+                .addContext(Context.Certification)
+                .setKey(Key.Organisation)
+                .build()
+
+        val hostname = Variable.get(pathHostname)
+        val city = Variable.get(pathCity)
+        val country = Variable.get(pathCountry)
+        val province = Variable.get(pathProvince)
+        val department = Variable.get(pathDepartment)
+        val organisation = Variable.get(pathOrganisation)
         var subject = "/C=$country/ST=$province/L=$city/O=$organisation/OU=$department/CN=$hostname"
-        subject = Variable.parse(subject).replace(" ", "\\ ")
+        subject = subject.replace(" ", "\\ ")
         return subject
     }
 }

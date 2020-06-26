@@ -3,16 +3,21 @@ package net.milosvasic.factory.configuration.variable
 enum class Key(val key: String) {
 
     Home("HOME"),
-    Hostname("HOSTNAME"),
-    ServerHome("SERVER_HOME"),
-    DockerHome("DOCKER_HOME"),
-    Certificates("CERTIFICATES"),
-    Passphrase("PASSPHRASE"),
-    RebootAllowed("REBOOT_ALLOWED"),
-    DockerComposePath("DOCKER_COMPOSE_PATH"),
+    City("CITY"),
     DbHost("DB_HOST"),
     DbPort("DB_PORT"),
     DbUser("DB_USER"),
     DbName("DB_NAME"),
-    DbPassword("DB_PASSWORD")
+    Country("COUNTRY"),
+    Hostname("HOSTNAME"),
+    Province("PROVINCE"),
+    DbPassword("DB_PASSWORD"),
+    Department("DEPARTMENT"),
+    ServerHome("SERVER_HOME"),
+    DockerHome("DOCKER_HOME"),
+    Passphrase("PASSPHRASE"),
+    Organisation("ORGANISATION"),
+    Certificates("CERTIFICATES"),
+    RebootAllowed("REBOOT_ALLOWED"),
+    DockerComposePath("DOCKER_COMPOSE_PATH")
 }
