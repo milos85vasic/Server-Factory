@@ -1,10 +1,7 @@
 package net.milosvasic.factory.component.installer.step.reboot
 
 import net.milosvasic.factory.component.installer.step.RemoteOperationInstallationStep
-import net.milosvasic.factory.configuration.ConfigurationManager
-import net.milosvasic.factory.configuration.variable.Context
-import net.milosvasic.factory.configuration.variable.Key
-import net.milosvasic.factory.configuration.variable.Node
+import net.milosvasic.factory.configuration.variable.*
 import net.milosvasic.factory.execution.flow.implementation.CommandFlow
 import net.milosvasic.factory.log
 import net.milosvasic.factory.operation.OperationResult
@@ -49,26 +46,12 @@ class Reboot(private val timeoutInSeconds: Int = 120) : RemoteOperationInstallat
     override fun getFlow(): CommandFlow {
         var rebootAllowed = false
         try {
-            val configuration = ConfigurationManager.getConfiguration()
-            val sep = Node.contextSeparator
-            val ctxServer = Context.Server.context
-            val keyRebootAllowed = Key.RebootAllowed.key
-            val rebootKey = "$ctxServer$sep$keyRebootAllowed"
-            val rebootValue = configuration.getVariableParsed(rebootKey)
-            rebootValue?.let {
-                when (it) {
-                    is String -> {
-                        rebootAllowed = it.toBoolean()
-                    }
-                    is Boolean -> {
-                        rebootAllowed = it
-                    }
-                    else -> {
-                        log.e("Cannot use 'reboot allowed' setting with value of: $it")
-                        finish(true)
-                    }
-                }
-            }
+            val path = PathBuilder()
+                    .addContext(Context.Server)
+                    .setKey(Key.RebootAllowed)
+                    .build()
+
+            rebootAllowed = Variable.get(path).toBoolean()
         } catch (e: IllegalStateException) {
 
             log.e(e)
