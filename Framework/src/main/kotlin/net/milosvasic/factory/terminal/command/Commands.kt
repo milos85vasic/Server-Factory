@@ -140,9 +140,6 @@ object Commands {
 
         val subject = getOpensslSubject()
         val req = "req -subj $subject -new -x509 -extensions v3_ca -keyout $keyName -out $certName -days 3650"
-        val passIn = "-passin pass:{{SERVER.CERTIFICATION.PASSPHRASE}}"
-        val passOut = "-passout pass:{{SERVER.CERTIFICATION.PASSPHRASE}}"
-        val password = "$passIn $passOut"
 
         val path = PathBuilder()
                 .addContext(Context.Server)
@@ -150,7 +147,20 @@ object Commands {
                 .setKey(Key.Certificates)
                 .build()
 
-        return Variable.parse("cd ${Variable.get(path)} && $openssl $req $password")
+        val passPhrasePath = PathBuilder()
+                .addContext(Context.Server)
+                .addContext(Context.Certification)
+                .setKey(Key.Passphrase)
+                .build()
+
+        val home = Variable.get(path)
+        val passPhrase = Variable.get(passPhrasePath)
+
+        val passIn = "-passin pass:$passPhrase"
+        val passOut = "-passout pass:$passPhrase"
+        val password = "$passIn $passOut"
+
+        return "cd $home && $openssl $req $password"
     }
 
     fun getPrivateKyName(name: String): String {
