@@ -1,6 +1,6 @@
-package net.milosvasic.factory.configuration
+package net.milosvasic.factory.configuration.variable
 
-enum class VariableKey(val key: String) {
+enum class Key(val key: String) {
 
     Home("HOME"),
     Hostname("HOSTNAME"),

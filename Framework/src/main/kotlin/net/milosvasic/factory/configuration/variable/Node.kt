@@ -1,28 +1,28 @@
-package net.milosvasic.factory.configuration
+package net.milosvasic.factory.configuration.variable
 
 import com.google.gson.*
 import net.milosvasic.factory.EMPTY
 import net.milosvasic.factory.common.GsonDeserialization
 import java.lang.reflect.Type
 
-data class VariableNode(
+data class Node(
         val name: String = String.EMPTY,
         val value: Any = String.EMPTY,
-        val children: MutableList<VariableNode> = mutableListOf()
+        val children: MutableList<Node> = mutableListOf()
 ) {
 
-    companion object : GsonDeserialization<VariableNode> {
+    companion object : GsonDeserialization<Node> {
 
         const val contextSeparator = "."
 
-        override fun getDeserializer(): JsonDeserializer<VariableNode> {
-            return object : JsonDeserializer<VariableNode> {
+        override fun getDeserializer(): JsonDeserializer<Node> {
+            return object : JsonDeserializer<Node> {
 
                 override fun deserialize(
                         json: JsonElement?,
                         typeOfT: Type?,
                         context: JsonDeserializationContext?
-                ): VariableNode {
+                ): Node {
 
                     if (json == null) {
                         throw JsonParseException("JSON is null")
@@ -31,7 +31,7 @@ data class VariableNode(
                         is JsonObject -> {
                             val name = String.EMPTY
                             val entrySet = json.entrySet()
-                            val children = mutableListOf<VariableNode>()
+                            val children = mutableListOf<Node>()
                             entrySet.forEach { item ->
 
                                 val itemName = item.key
@@ -58,7 +58,7 @@ data class VariableNode(
                                                 itemValue.asString
                                             }
                                         }
-                                        val child = VariableNode(
+                                        val child = Node(
                                                 name = itemName,
                                                 value = value
                                         )
@@ -66,7 +66,7 @@ data class VariableNode(
                                     }
                                 }
                             }
-                            return VariableNode(
+                            return Node(
                                     name = name,
                                     children = children
                             )
@@ -80,12 +80,12 @@ data class VariableNode(
         }
 
         @Throws(JsonParseException::class)
-        private fun processJsonObject(parent: String, jsonObject: JsonObject): VariableNode {
+        private fun processJsonObject(parent: String, jsonObject: JsonObject): Node {
             if (jsonObject.keySet().isEmpty()) {
                 throw JsonParseException("No keys")
             } else {
                 val entrySet = jsonObject.entrySet()
-                val children = mutableListOf<VariableNode>()
+                val children = mutableListOf<Node>()
                 entrySet.forEach { item ->
                     val itemKey = item.key
                     when (val itemValue = item.value) {
@@ -106,7 +106,7 @@ data class VariableNode(
                                     value = itemValue.asFloat
                                 }
                             }
-                            val child = VariableNode(
+                            val child = Node(
                                     name = itemKey,
                                     value = value
                             )
@@ -117,7 +117,7 @@ data class VariableNode(
                         }
                     }
                 }
-                return VariableNode(
+                return Node(
                         name = parent,
                         children = children
                 )
@@ -125,7 +125,7 @@ data class VariableNode(
         }
     }
 
-    fun append(vararg nodes: VariableNode): VariableNode {
+    fun append(vararg nodes: Node): Node {
 
         nodes.forEach { node ->
             if (node.children.isNotEmpty()) {

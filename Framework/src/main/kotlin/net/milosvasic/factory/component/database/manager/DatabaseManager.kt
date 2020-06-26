@@ -10,6 +10,9 @@ import net.milosvasic.factory.common.obtain.ObtainParametrized
 import net.milosvasic.factory.component.database.*
 import net.milosvasic.factory.component.database.postgres.PostgresDatabasesListCommand
 import net.milosvasic.factory.configuration.*
+import net.milosvasic.factory.configuration.variable.Context
+import net.milosvasic.factory.configuration.variable.Key
+import net.milosvasic.factory.configuration.variable.Node
 import net.milosvasic.factory.execution.flow.callback.FlowCallback
 import net.milosvasic.factory.execution.flow.implementation.CommandFlow
 import net.milosvasic.factory.execution.flow.implementation.initialization.InitializationFlow
@@ -105,16 +108,20 @@ class DatabaseManager(entryPoint: Connection) :
                 Type.Postgres -> {
 
                     val configuration = ConfigurationManager.getConfiguration()
-                    val dbCtx = VariableContext.Database.context
-                    val keyUser = VariableKey.DbUser.key
-                    val keyPort = VariableKey.DbPort.key
-                    val keyPassword = VariableKey.DbPassword.key
+                    val dbCtx = Context.Database.context
+                    val keyUser = Key.DbUser.key
+                    val keyPort = Key.DbPort.key
+                    val keyPassword = Key.DbPassword.key
 
                     val host = localhost
-                    val sep = VariableNode.contextSeparator
+                    val sep = Node.contextSeparator
+
+                    // FIXME: Variable refinement:
+                    // Variable.parse("{{ZZZ}}")
                     val port = configuration.getVariableParsed("$dbCtx$sep$keyPort")
                     val user = configuration.getVariableParsed("$dbCtx$sep$keyUser")
                     val password = configuration.getVariableParsed("$dbCtx$sep$keyPassword")
+
 
                     port?.let { prt ->
                         user?.let { usr ->

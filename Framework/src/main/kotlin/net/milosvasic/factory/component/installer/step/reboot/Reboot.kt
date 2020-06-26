@@ -2,9 +2,9 @@ package net.milosvasic.factory.component.installer.step.reboot
 
 import net.milosvasic.factory.component.installer.step.RemoteOperationInstallationStep
 import net.milosvasic.factory.configuration.ConfigurationManager
-import net.milosvasic.factory.configuration.VariableContext
-import net.milosvasic.factory.configuration.VariableKey
-import net.milosvasic.factory.configuration.VariableNode
+import net.milosvasic.factory.configuration.variable.Context
+import net.milosvasic.factory.configuration.variable.Key
+import net.milosvasic.factory.configuration.variable.Node
 import net.milosvasic.factory.execution.flow.implementation.CommandFlow
 import net.milosvasic.factory.log
 import net.milosvasic.factory.operation.OperationResult
@@ -50,9 +50,9 @@ class Reboot(private val timeoutInSeconds: Int = 120) : RemoteOperationInstallat
         var rebootAllowed = false
         try {
             val configuration = ConfigurationManager.getConfiguration()
-            val sep = VariableNode.contextSeparator
-            val ctxServer = VariableContext.Server.context
-            val keyRebootAllowed = VariableKey.RebootAllowed.key
+            val sep = Node.contextSeparator
+            val ctxServer = Context.Server.context
+            val keyRebootAllowed = Key.RebootAllowed.key
             val rebootKey = "$ctxServer$sep$keyRebootAllowed"
             val rebootValue = configuration.getVariableParsed(rebootKey)
             rebootValue?.let {

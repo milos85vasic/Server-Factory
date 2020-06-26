@@ -1,6 +1,7 @@
 package net.milosvasic.factory.configuration
 
 import net.milosvasic.factory.EMPTY
+import net.milosvasic.factory.configuration.variable.Variable
 
 class InstallationStepDefinition(
     val type: String,

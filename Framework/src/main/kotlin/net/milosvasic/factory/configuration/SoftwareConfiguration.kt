@@ -6,13 +6,14 @@ import net.milosvasic.factory.EMPTY
 import net.milosvasic.factory.common.obtain.ObtainParametrized
 import net.milosvasic.factory.component.installer.step.InstallationStep
 import net.milosvasic.factory.component.installer.step.factory.InstallationStepFactories
+import net.milosvasic.factory.configuration.variable.Node
 import net.milosvasic.factory.log
 import net.milosvasic.factory.validation.Validator
 import java.io.File
 
 data class SoftwareConfiguration(
         var configuration: String = String.EMPTY,
-        var variables: VariableNode? = null,
+        var variables: Node? = null,
         val software: MutableList<SoftwareConfigurationItem> = mutableListOf(),
         val includes: MutableList<String> = mutableListOf()
 ) : ObtainParametrized<String, Map<String, List<InstallationStep<*>>>> {
@@ -30,8 +31,8 @@ data class SoftwareConfiguration(
 
                 val json = configurationFile.readText()
                 val gsonBuilder = GsonBuilder()
-                val variablesDeserializer = VariableNode.getDeserializer()
-                gsonBuilder.registerTypeAdapter(VariableNode::class.java, variablesDeserializer)
+                val variablesDeserializer = Node.getDeserializer()
+                gsonBuilder.registerTypeAdapter(Node::class.java, variablesDeserializer)
                 val gson = gsonBuilder.create()
 
                 val instance = gson.fromJson(json, SoftwareConfiguration::class.java)

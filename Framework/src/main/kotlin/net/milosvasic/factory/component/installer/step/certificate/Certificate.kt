@@ -7,6 +7,10 @@ import net.milosvasic.factory.component.installer.step.CommandInstallationStep
 import net.milosvasic.factory.component.installer.step.RemoteOperationInstallationStep
 import net.milosvasic.factory.component.installer.step.condition.SkipCondition
 import net.milosvasic.factory.configuration.*
+import net.milosvasic.factory.configuration.variable.Context
+import net.milosvasic.factory.configuration.variable.Key
+import net.milosvasic.factory.configuration.variable.Node
+import net.milosvasic.factory.configuration.variable.Variable
 import net.milosvasic.factory.execution.flow.implementation.CommandFlow
 import net.milosvasic.factory.execution.flow.implementation.InstallationStepFlow
 import net.milosvasic.factory.remote.ssh.SSH
@@ -23,10 +27,10 @@ open class Certificate(val name: String) : RemoteOperationInstallationStep<SSH>(
         connection?.let { conn ->
 
             val hostname = conn.getRemoteOS().getHostname()
-            val keyHome = VariableKey.Certificates.key
-            val ctxServer = VariableContext.Server.context
-            val ctxSeparator = VariableNode.contextSeparator
-            val ctxCertification = VariableContext.Certification.context
+            val keyHome = Key.Certificates.key
+            val ctxServer = Context.Server.context
+            val ctxSeparator = Node.contextSeparator
+            val ctxCertification = Context.Certification.context
             val key = "$ctxServer$ctxSeparator$ctxCertification$ctxSeparator$keyHome"
             val configuration = ConfigurationManager.getConfiguration()
             val path = configuration.getVariableParsed(key) as String

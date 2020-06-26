@@ -1,7 +1,7 @@
 package net.milosvasic.factory.terminal.command
 
 import net.milosvasic.factory.EMPTY
-import net.milosvasic.factory.configuration.Variable
+import net.milosvasic.factory.configuration.variable.Variable
 import net.milosvasic.factory.localhost
 import net.milosvasic.factory.remote.Remote
 import java.io.File

@@ -2,7 +2,7 @@ package net.milosvasic.factory.component.installer.step.deploy
 
 import net.milosvasic.factory.common.DataHandler
 import net.milosvasic.factory.component.installer.step.RemoteOperationInstallationStep
-import net.milosvasic.factory.configuration.Variable
+import net.milosvasic.factory.configuration.variable.Variable
 import net.milosvasic.factory.execution.flow.implementation.CommandFlow
 import net.milosvasic.factory.log
 import net.milosvasic.factory.operation.OperationResult

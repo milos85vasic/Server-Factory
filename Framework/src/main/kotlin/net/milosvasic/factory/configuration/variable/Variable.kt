@@ -1,6 +1,7 @@
-package net.milosvasic.factory.configuration
+package net.milosvasic.factory.configuration.variable
 
 import net.milosvasic.factory.EMPTY
+import net.milosvasic.factory.configuration.ConfigurationManager
 import java.util.regex.Pattern
 
 object Variable {
