@@ -1,6 +1,9 @@
 package net.milosvasic.factory.terminal.command
 
 import net.milosvasic.factory.EMPTY
+import net.milosvasic.factory.configuration.variable.Context
+import net.milosvasic.factory.configuration.variable.Key
+import net.milosvasic.factory.configuration.variable.PathBuilder
 import net.milosvasic.factory.configuration.variable.Variable
 import net.milosvasic.factory.localhost
 import net.milosvasic.factory.remote.Remote
@@ -132,6 +135,7 @@ object Commands {
         return Variable.parse(cmd)
     }
 
+    @Throws(IllegalArgumentException::class, IllegalStateException::class)
     fun generatePEM(keyName: String = "cakey.pem", certName: String = "cacert.pem"): String {
 
         val subject = getOpensslSubject()
@@ -139,7 +143,14 @@ object Commands {
         val passIn = "-passin pass:{{SERVER.CERTIFICATION.PASSPHRASE}}"
         val passOut = "-passout pass:{{SERVER.CERTIFICATION.PASSPHRASE}}"
         val password = "$passIn $passOut"
-        return Variable.parse("cd {{SERVER.CERTIFICATION.CERTIFICATES}} && $openssl $req $password")
+
+        val path = PathBuilder()
+                .addContext(Context.Server)
+                .addContext(Context.Certification)
+                .setKey(Key.Certificates)
+                .build()
+
+        return Variable.parse("cd ${Variable.get(path)} && $openssl $req $password")
     }
 
     fun getPrivateKyName(name: String): String {
