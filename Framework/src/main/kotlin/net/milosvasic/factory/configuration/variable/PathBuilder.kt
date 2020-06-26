@@ -2,7 +2,7 @@ package net.milosvasic.factory.configuration.variable
 
 import net.milosvasic.factory.common.Build
 
-class PathBuilder : Build<String> {
+class PathBuilder : Build<Path> {
 
     private var key: Key? = null
     private val builder = StringBuilder()
@@ -22,8 +22,10 @@ class PathBuilder : Build<String> {
 
     fun hasKey() = key != null
 
+    fun getPath(): String = builder.toString()
+
     @Throws(IllegalArgumentException::class)
-    override fun build(): String {
+    override fun build(): Path {
 
         val validator = PathBuilderValidator()
         if (validator.validate(this)) {
@@ -35,7 +37,7 @@ class PathBuilder : Build<String> {
             key?.let {
                 builder.append(it.key)
             }
-            return builder.toString()
+            return Path(this)
         } else {
 
             throw IllegalArgumentException("Cannot build path")

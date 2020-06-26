@@ -9,11 +9,7 @@ import net.milosvasic.factory.common.obtain.Instantiate
 import net.milosvasic.factory.common.obtain.ObtainParametrized
 import net.milosvasic.factory.component.database.*
 import net.milosvasic.factory.component.database.postgres.PostgresDatabasesListCommand
-import net.milosvasic.factory.configuration.*
-import net.milosvasic.factory.configuration.variable.Context
-import net.milosvasic.factory.configuration.variable.Key
-import net.milosvasic.factory.configuration.variable.Node
-import net.milosvasic.factory.configuration.variable.PathBuilder
+import net.milosvasic.factory.configuration.variable.*
 import net.milosvasic.factory.execution.flow.callback.FlowCallback
 import net.milosvasic.factory.execution.flow.implementation.CommandFlow
 import net.milosvasic.factory.execution.flow.implementation.initialization.InitializationFlow
@@ -108,7 +104,6 @@ class DatabaseManager(entryPoint: Connection) :
             when (databaseType) {
                 Type.Postgres -> {
 
-                    val configuration = ConfigurationManager.getConfiguration()
                     val host = localhost
 
                     val portPath = PathBuilder()
@@ -126,65 +121,58 @@ class DatabaseManager(entryPoint: Connection) :
                             .setKey(Key.DbPassword)
                             .build()
 
-                    val port = configuration.getVariableParsed(portPath)
-                    val user = configuration.getVariableParsed(userPath)
-                    val password = configuration.getVariableParsed(passPath)
+                    val port = Variable.get(portPath)
+                    val user = Variable.get(userPath)
+                    val password = Variable.get(passPath)
 
-                    port?.let { prt ->
-                        user?.let { usr ->
-                            password?.let { pwd ->
+                    val command = PostgresDatabasesListCommand(
+                            host,
+                            port.toInt(),
+                            user,
+                            user
+                    )
 
-                                val command = PostgresDatabasesListCommand(
-                                        host,
-                                        (prt as String).toInt(),
-                                        usr as String,
-                                        pwd as String
-                                )
+                    val handler = object : DataHandler<OperationResult> {
 
-                                val handler = object : DataHandler<OperationResult> {
+                        override fun onData(data: OperationResult?) {
+                            data?.let {
+                                it.data.split("\n").forEach { db ->
 
-                                    override fun onData(data: OperationResult?) {
-                                        data?.let {
-                                            it.data.split("\n").forEach { db ->
+                                    try {
+                                        val callback = object : OperationResultListener {
+                                            override fun onOperationPerformed(result: OperationResult) {
+                                                when (result.operation) {
+                                                    is DatabaseRegistrationOperation -> {
 
-                                                try {
-                                                    val callback = object : OperationResultListener {
-                                                        override fun onOperationPerformed(result: OperationResult) {
-                                                            when (result.operation) {
-                                                                is DatabaseRegistrationOperation -> {
-
-                                                                    if (!result.success) {
-                                                                        log.e("Database registration failed: $db")
-                                                                    }
-                                                                }
-                                                            }
+                                                        if (!result.success) {
+                                                            log.e("Database registration failed: $db")
                                                         }
                                                     }
-
-                                                    val dbConnection = DatabaseConnection(
-                                                            host,
-                                                            prt.toInt(),
-                                                            usr,
-                                                            pwd,
-                                                            entryPoint
-                                                    )
-                                                    val factory = DatabaseFactory(databaseType, db, dbConnection)
-                                                    val database = factory.build()
-                                                    val registration = DatabaseRegistration(database, callback)
-                                                    doRegister(registration)
-
-                                                } catch (e: IllegalStateException) {
-
-                                                    log.e(e)
                                                 }
                                             }
                                         }
+
+                                        val dbConnection = DatabaseConnection(
+                                                host,
+                                                port.toInt(),
+                                                user,
+                                                password,
+                                                entryPoint
+                                        )
+                                        val factory = DatabaseFactory(databaseType, db, dbConnection)
+                                        val database = factory.build()
+                                        val registration = DatabaseRegistration(database, callback)
+                                        doRegister(registration)
+
+                                    } catch (e: IllegalStateException) {
+
+                                        log.e(e)
                                     }
                                 }
-                                flow.perform(command, handler)
                             }
                         }
                     }
+                    flow.perform(command, handler)
                 }
                 else -> {
 
