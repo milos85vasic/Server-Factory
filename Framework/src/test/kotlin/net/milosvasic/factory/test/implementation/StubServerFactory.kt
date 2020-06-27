@@ -1,7 +1,6 @@
 package net.milosvasic.factory.test.implementation
 
 import net.milosvasic.factory.application.server_factory.ServerFactory
-import net.milosvasic.factory.component.database.manager.DatabaseManager
 import net.milosvasic.factory.component.docker.Docker
 import net.milosvasic.factory.component.installer.Installer
 import net.milosvasic.factory.configuration.ConfigurationFactory

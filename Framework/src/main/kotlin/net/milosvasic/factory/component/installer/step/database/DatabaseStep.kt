@@ -19,7 +19,6 @@ import net.milosvasic.factory.remote.Connection
 import net.milosvasic.factory.remote.ssh.SSH
 import net.milosvasic.factory.terminal.command.CatCommand
 import net.milosvasic.factory.terminal.command.TestCommand
-import java.io.File
 import java.nio.file.InvalidPathException
 
 class DatabaseStep(val path: String) : RemoteOperationInstallationStep<SSH>() {

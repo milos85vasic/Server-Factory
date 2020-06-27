@@ -2,7 +2,6 @@ package net.milosvasic.factory.configuration
 
 import net.milosvasic.factory.EMPTY
 import net.milosvasic.factory.common.busy.Busy
-import net.milosvasic.factory.common.busy.BusyException
 import net.milosvasic.factory.common.busy.BusyWorker
 import net.milosvasic.factory.common.initialization.Initialization
 import net.milosvasic.factory.configuration.variable.Node
