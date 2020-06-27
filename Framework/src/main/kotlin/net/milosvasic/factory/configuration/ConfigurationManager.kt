@@ -19,7 +19,7 @@ object ConfigurationManager : Initialization {
     private val softwareConfigurations = mutableListOf<SoftwareConfiguration>()
     private val containersConfigurations = mutableListOf<SoftwareConfiguration>()
 
-    @Throws(IllegalArgumentException::class, BusyException::class, IllegalStateException::class)
+    @Throws(IllegalArgumentException::class, IllegalStateException::class)
     override fun initialize() {
         checkInitialized()
         BusyWorker.busy(busy)

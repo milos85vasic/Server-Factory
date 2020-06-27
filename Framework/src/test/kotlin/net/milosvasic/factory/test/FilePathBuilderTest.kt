@@ -5,6 +5,7 @@ import net.milosvasic.factory.common.filesystem.FilePathBuilder
 import net.milosvasic.factory.log
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
+import java.io.File
 import java.nio.file.InvalidPathException
 
 class FilePathBuilderTest : BaseTest() {
@@ -20,7 +21,9 @@ class FilePathBuilderTest : BaseTest() {
                 listOf(".", "test"),
                 listOf("test", "."),
                 listOf("..", "test"),
-                listOf("test", "..")
+                listOf("test", ".."),
+                listOf(File.separator),
+                listOf(File.separator, File.separator, File.separator, "test", File.separator)
         )
 
         val invalidPaths = listOf(

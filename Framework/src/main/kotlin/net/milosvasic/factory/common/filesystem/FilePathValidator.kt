@@ -27,11 +27,6 @@ class FilePathValidator : Validation<FilePathBuilder> {
 
                 return false
             }
-            if (it.contains(builder.separator)) {
-
-                return false
-            }
-
             forbidden.forEach { forbid ->
                 if (it.contains(forbid)) {
                     return false
