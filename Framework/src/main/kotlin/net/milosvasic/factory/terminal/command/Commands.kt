@@ -1,6 +1,7 @@
 package net.milosvasic.factory.terminal.command
 
 import net.milosvasic.factory.EMPTY
+import net.milosvasic.factory.common.filesystem.FilePathBuilder
 import net.milosvasic.factory.configuration.variable.Context
 import net.milosvasic.factory.configuration.variable.Key
 import net.milosvasic.factory.configuration.variable.PathBuilder
@@ -8,6 +9,7 @@ import net.milosvasic.factory.configuration.variable.Variable
 import net.milosvasic.factory.localhost
 import net.milosvasic.factory.remote.Remote
 import java.io.File
+import java.nio.file.InvalidPathException
 
 object Commands {
 
@@ -103,10 +105,16 @@ object Commands {
 
     fun openssl(command: String) = Variable.parse("$openssl $command")
 
+    @Throws(InvalidPathException::class)
     fun generatePrivateKey(path: String, name: String): String {
 
         val keyName = getPrivateKyName(name)
-        return "$openssl genrsa -out $path${File.separator}$keyName"
+        val param = FilePathBuilder()
+                .addContext(path)
+                .addContext(keyName)
+                .build()
+
+        return "$openssl genrsa -out $param"
     }
 
     @Throws(IllegalArgumentException::class, IllegalStateException::class)
