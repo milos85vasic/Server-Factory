@@ -138,7 +138,11 @@ object Commands {
                 .build()
 
         val home = Variable.get(homePath)
-        val key = "$path${File.separator}$requestKey"
+        val key = FilePathBuilder()
+                .addContext(path)
+                .addContext(requestKey)
+                .build()
+
         return "cd $home && ./easyrsa import-req $key $name"
     }
 
