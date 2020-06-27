@@ -17,6 +17,10 @@ class FilePathValidator : Validation<FilePathBuilder> {
 
         Validator.Arguments.validateSingle(what)
         val builder = what[0]
+        if (!builder.hasContexts()) {
+
+            throw InvalidPathException(String.EMPTY, "No path contexts provided")
+        }
         builder.getElements().forEach {
 
             if (it == String.EMPTY) {

@@ -30,7 +30,8 @@ class FilePathBuilderTest : BaseTest() {
                 listOf("test", "\ttest"),
                 listOf("\ttest", "test"),
                 listOf("."),
-                listOf("..")
+                listOf(".."),
+                listOf()
         )
 
         var valid = 0
