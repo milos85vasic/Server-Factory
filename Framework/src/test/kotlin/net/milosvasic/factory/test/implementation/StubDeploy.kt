@@ -9,6 +9,7 @@ import net.milosvasic.factory.terminal.command.ChmodCommand
 import net.milosvasic.factory.terminal.command.Commands
 import net.milosvasic.factory.terminal.command.CpCommand
 import net.milosvasic.factory.terminal.command.RawTerminalCommand
+import java.nio.file.InvalidPathException
 
 class StubDeploy(
         what: String,
@@ -16,7 +17,8 @@ class StubDeploy(
         private val protoStubs: List<String>
 ) : Deploy(what, where) {
 
-    override fun getScp(remote: Remote) = CpCommand(localTar, where)
+    @Throws(InvalidPathException::class)
+    override fun getScp(remote: Remote) = CpCommand(getLocalTar(), where)
 
     override fun getScpCommand() = Commands.cp
 
