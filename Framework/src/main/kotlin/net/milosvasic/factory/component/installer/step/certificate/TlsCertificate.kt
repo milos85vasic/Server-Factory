@@ -1,5 +1,6 @@
 package net.milosvasic.factory.component.installer.step.certificate
 
+import net.milosvasic.factory.common.filesystem.FilePathBuilder
 import net.milosvasic.factory.component.Toolkit
 import net.milosvasic.factory.component.installer.recipe.CommandInstallationStepRecipe
 import net.milosvasic.factory.component.installer.recipe.ConditionRecipe
@@ -16,7 +17,6 @@ import net.milosvasic.factory.security.Permissions
 import net.milosvasic.factory.terminal.command.Commands
 import net.milosvasic.factory.terminal.command.ConcatenateCommand
 import net.milosvasic.factory.terminal.command.TestCommand
-import java.io.File
 
 class TlsCertificate(name: String) : Certificate(name) {
 
@@ -25,7 +25,6 @@ class TlsCertificate(name: String) : Certificate(name) {
 
         connection?.let { conn ->
 
-            val sep = File.separator
             val subject = Commands.getOpensslSubject()
             val hostname = conn.getRemoteOS().getHostname()
 
@@ -48,9 +47,28 @@ class TlsCertificate(name: String) : Certificate(name) {
             val passOut = "-passout pass:$passPhrase"
             val permission600 = Permissions(Permission(6), Permission.NONE, Permission.NONE).obtain()
 
-            val crtVerificationCommand = TestCommand("$certificatesPath$sep$hostname.crt")
-            val keyVerificationCommand = TestCommand("$certificatesPath$sep$hostname.key")
-            val caVerificationCommand = TestCommand("$certificatesPath${sep}ca-bundle.crt")
+            val crtVerificationCommand = TestCommand(
+
+                    FilePathBuilder()
+                            .addContext(certificatesPath)
+                            .addContext("$hostname.crt")
+                            .build()
+            )
+
+            val keyVerificationCommand = TestCommand(
+
+                    FilePathBuilder()
+                            .addContext(certificatesPath)
+                            .addContext("$hostname.key")
+                            .build()
+            )
+            val caVerificationCommand = TestCommand(
+
+                    FilePathBuilder()
+                            .addContext(certificatesPath)
+                            .addContext("ca-bundle.crt")
+                            .build()
+            )
 
             val installation = ConcatenateCommand(
                     Commands.cd(certificatesPath),

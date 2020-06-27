@@ -1,9 +1,12 @@
 package net.milosvasic.factory.component.docker
 
 import net.milosvasic.factory.EMPTY
+import net.milosvasic.factory.common.filesystem.FilePathBuilder
 import net.milosvasic.factory.common.obtain.Obtain
-import net.milosvasic.factory.configuration.variable.*
-import java.io.File
+import net.milosvasic.factory.configuration.variable.Context
+import net.milosvasic.factory.configuration.variable.Key
+import net.milosvasic.factory.configuration.variable.PathBuilder
+import net.milosvasic.factory.configuration.variable.Variable
 
 enum class DockerCommand : Obtain<String> {
 
@@ -50,7 +53,11 @@ enum class DockerCommand : Obtain<String> {
 
             val variable = Variable.get(path)
             return if (variable != String.EMPTY) {
-                "$variable${File.separator}docker-compose"
+
+                FilePathBuilder()
+                        .addContext(variable)
+                        .addContext("docker-compose")
+                        .build()
             } else {
                 "docker-compose"
             }

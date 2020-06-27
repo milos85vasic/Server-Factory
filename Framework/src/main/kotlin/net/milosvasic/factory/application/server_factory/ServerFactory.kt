@@ -15,8 +15,14 @@ import net.milosvasic.factory.component.docker.Docker
 import net.milosvasic.factory.component.docker.DockerInitializationFlowCallback
 import net.milosvasic.factory.component.installer.Installer
 import net.milosvasic.factory.component.installer.InstallerInitializationFlowCallback
-import net.milosvasic.factory.configuration.*
-import net.milosvasic.factory.configuration.variable.*
+import net.milosvasic.factory.configuration.Configuration
+import net.milosvasic.factory.configuration.ConfigurationFactory
+import net.milosvasic.factory.configuration.ConfigurationManager
+import net.milosvasic.factory.configuration.SoftwareConfiguration
+import net.milosvasic.factory.configuration.variable.Context
+import net.milosvasic.factory.configuration.variable.Key
+import net.milosvasic.factory.configuration.variable.PathBuilder
+import net.milosvasic.factory.configuration.variable.Variable
 import net.milosvasic.factory.execution.flow.FlowBuilder
 import net.milosvasic.factory.execution.flow.callback.DieOnFailureCallback
 import net.milosvasic.factory.execution.flow.callback.TerminationCallback

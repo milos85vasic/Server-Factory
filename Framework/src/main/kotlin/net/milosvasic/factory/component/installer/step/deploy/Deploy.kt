@@ -1,6 +1,7 @@
 package net.milosvasic.factory.component.installer.step.deploy
 
 import net.milosvasic.factory.common.DataHandler
+import net.milosvasic.factory.common.filesystem.FilePathBuilder
 import net.milosvasic.factory.component.installer.step.RemoteOperationInstallationStep
 import net.milosvasic.factory.configuration.variable.Variable
 import net.milosvasic.factory.execution.flow.implementation.CommandFlow
@@ -14,6 +15,7 @@ import net.milosvasic.factory.terminal.Terminal
 import net.milosvasic.factory.terminal.TerminalCommand
 import net.milosvasic.factory.terminal.command.*
 import java.io.File
+import java.nio.file.InvalidPathException
 
 open class Deploy(what: String, private val where: String) : RemoteOperationInstallationStep<SSH>() {
 
@@ -27,8 +29,6 @@ open class Deploy(what: String, private val where: String) : RemoteOperationInst
     private var terminal: Terminal? = null
     private val excludes = listOf("$prototypePrefix*")
     private val localPath = localPath().absolutePath
-    private val remoteTar = "$where${File.separator}${whatFile.name}${Commands.tarExtension}"
-    protected val localTar = "$localPath${File.separator}${whatFile.name}${Commands.tarExtension}"
 
     private val onDirectoryCreated = object : DataHandler<OperationResult> {
         override fun onData(data: OperationResult?) {
@@ -78,11 +78,11 @@ open class Deploy(what: String, private val where: String) : RemoteOperationInst
                             .width(conn)
                             .perform(MkdirCommand(where), onDirectoryCreated)
                             .width(term)
-                            .perform(TarCommand(whatFile.absolutePath, localTar))
+                            .perform(TarCommand(whatFile.absolutePath, getLocalTar()))
                             .perform(getScp(rmt))
                             .width(conn)
-                            .perform(UnTarCommand(remoteTar, where))
-                            .perform(RmCommand(remoteTar))
+                            .perform(UnTarCommand(getRemoteTar(), where))
+                            .perform(RmCommand(getRemoteTar()))
 
                     try {
                         val protoCleanup = getProtoCleanup()
@@ -94,7 +94,7 @@ open class Deploy(what: String, private val where: String) : RemoteOperationInst
 
                     return flow
                             .width(term)
-                            .perform(RmCommand(localTar))
+                            .perform(RmCommand(getLocalTar()))
                             .width(conn)
                             .perform(getSecurityChanges(rmt))
                 }
@@ -119,7 +119,8 @@ open class Deploy(what: String, private val where: String) : RemoteOperationInst
 
     protected open fun getScpCommand() = Commands.scp
 
-    protected open fun getScp(remote: Remote): TerminalCommand = ScpCommand(localTar, where, remote)
+    @Throws(InvalidPathException::class)
+    protected open fun getScp(remote: Remote): TerminalCommand = ScpCommand(getLocalTar(), where, remote)
 
     @Throws(IllegalStateException::class)
     private fun processFiles(directory: File) {
@@ -214,5 +215,23 @@ open class Deploy(what: String, private val where: String) : RemoteOperationInst
         val permissions = Permissions(Permission.ALL, Permission.NONE, Permission.NONE)
         val chmod = Commands.chmod(where, permissions.obtain())
         return ConcatenateCommand(chown, chgrp, chmod)
+    }
+
+    @Throws(InvalidPathException::class)
+    private fun getRemoteTar(): String {
+
+        return FilePathBuilder()
+                .addContext(where)
+                .addContext("${whatFile.name}${Commands.tarExtension}")
+                .build()
+    }
+
+    @Throws(InvalidPathException::class)
+    protected fun getLocalTar(): String {
+
+        return FilePathBuilder()
+                .addContext(localPath)
+                .addContext("${whatFile.name}${Commands.tarExtension}")
+                .build()
     }
 }

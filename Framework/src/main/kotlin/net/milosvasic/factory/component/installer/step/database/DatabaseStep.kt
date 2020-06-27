@@ -3,6 +3,7 @@ package net.milosvasic.factory.component.installer.step.database
 import com.google.gson.Gson
 import com.google.gson.JsonParseException
 import net.milosvasic.factory.common.DataHandler
+import net.milosvasic.factory.common.filesystem.FilePathBuilder
 import net.milosvasic.factory.common.obtain.Obtain
 import net.milosvasic.factory.component.database.*
 import net.milosvasic.factory.component.database.manager.DatabaseManager
@@ -18,7 +19,7 @@ import net.milosvasic.factory.remote.Connection
 import net.milosvasic.factory.remote.ssh.SSH
 import net.milosvasic.factory.terminal.command.CatCommand
 import net.milosvasic.factory.terminal.command.TestCommand
-import java.io.File
+import java.nio.file.InvalidPathException
 
 class DatabaseStep(val path: String) : RemoteOperationInstallationStep<SSH>() {
 
@@ -34,7 +35,11 @@ class DatabaseStep(val path: String) : RemoteOperationInstallationStep<SSH>() {
 
             val manager = DatabaseManager.instantiate() ?: throw IllegalStateException("Invalid database manager")
             var config: DatabaseConfiguration? = null
-            val configurationFile = "$path${File.separator}$defaultConfigurationFile"
+
+            val configurationFile = FilePathBuilder()
+                    .addContext(path)
+                    .addContext(defaultConfigurationFile)
+                    .build()
 
             val configurationDataHandler = object : DataHandler<OperationResult> {
                 override fun onData(data: OperationResult?) {
@@ -69,6 +74,8 @@ class DatabaseStep(val path: String) : RemoteOperationInstallationStep<SSH>() {
 
             val databaseFlow = ObtainableFlow().width(
                     object : Obtain<InstallationStepFlow> {
+
+                        @Throws(InvalidPathException::class)
                         override fun obtain(): InstallationStepFlow {
 
                             val db = databaseRegistrationProvider.obtain().database
@@ -77,7 +84,12 @@ class DatabaseStep(val path: String) : RemoteOperationInstallationStep<SSH>() {
                                 if (conf.sqls.isNotEmpty()) {
                                     val sqlFlow = CommandFlow().width(conn)
                                     conf.sqls.forEach { sql ->
-                                        val sqlPath = "$path${File.separator}$sql"
+
+                                        val sqlPath = FilePathBuilder()
+                                                .addContext(path)
+                                                .addContext(sql)
+                                                .build()
+
                                         log.v("SQL: $sqlPath")
                                         val sqlCommand = db.getSqlCommand(sqlPath)
                                         sqlFlow.perform(sqlCommand)

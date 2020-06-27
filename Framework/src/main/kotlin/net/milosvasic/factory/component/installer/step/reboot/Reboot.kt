@@ -1,7 +1,10 @@
 package net.milosvasic.factory.component.installer.step.reboot
 
 import net.milosvasic.factory.component.installer.step.RemoteOperationInstallationStep
-import net.milosvasic.factory.configuration.variable.*
+import net.milosvasic.factory.configuration.variable.Context
+import net.milosvasic.factory.configuration.variable.Key
+import net.milosvasic.factory.configuration.variable.PathBuilder
+import net.milosvasic.factory.configuration.variable.Variable
 import net.milosvasic.factory.execution.flow.implementation.CommandFlow
 import net.milosvasic.factory.log
 import net.milosvasic.factory.operation.OperationResult

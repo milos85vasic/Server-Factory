@@ -1,26 +1,13 @@
 package net.milosvasic.factory.configuration.variable
 
-import net.milosvasic.factory.common.Build
+import net.milosvasic.factory.common.path.HierarchyPathBuilder
 
-class PathBuilder : Build<Path> {
+class PathBuilder : HierarchyPathBuilder<Path, Context, Key, String>() {
 
-    private var key: Key? = null
     private val builder = StringBuilder()
-    private val contexts = mutableListOf<Context>()
 
-    fun addContext(context: Context): PathBuilder {
-        contexts.add(context)
-        return this
-    }
-
-    fun setKey(key: Key): PathBuilder {
-        this.key = key
-        return this
-    }
-
-    fun hasContexts() = contexts.isNotEmpty()
-
-    fun hasKey() = key != null
+    override val separator: String
+        get() = Node.contextSeparator
 
     fun getPath(): String = builder.toString()
 
@@ -32,7 +19,7 @@ class PathBuilder : Build<Path> {
             contexts.forEach { context ->
                 builder
                         .append(context.context)
-                        .append(Node.contextSeparator)
+                        .append(separator)
             }
             key?.let {
                 builder.append(it.key)

@@ -2,7 +2,6 @@ package net.milosvasic.factory.configuration
 
 import net.milosvasic.factory.EMPTY
 import net.milosvasic.factory.common.busy.Busy
-import net.milosvasic.factory.common.busy.BusyException
 import net.milosvasic.factory.common.busy.BusyWorker
 import net.milosvasic.factory.common.initialization.Initialization
 import net.milosvasic.factory.configuration.variable.Node
@@ -19,7 +18,7 @@ object ConfigurationManager : Initialization {
     private val softwareConfigurations = mutableListOf<SoftwareConfiguration>()
     private val containersConfigurations = mutableListOf<SoftwareConfiguration>()
 
-    @Throws(IllegalArgumentException::class, BusyException::class, IllegalStateException::class)
+    @Throws(IllegalArgumentException::class, IllegalStateException::class)
     override fun initialize() {
         checkInitialized()
         BusyWorker.busy(busy)
