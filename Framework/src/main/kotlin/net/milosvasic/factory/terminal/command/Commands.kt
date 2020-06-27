@@ -8,7 +8,6 @@ import net.milosvasic.factory.configuration.variable.PathBuilder
 import net.milosvasic.factory.configuration.variable.Variable
 import net.milosvasic.factory.localhost
 import net.milosvasic.factory.remote.Remote
-import java.io.File
 import java.nio.file.InvalidPathException
 
 object Commands {
@@ -123,9 +122,19 @@ object Commands {
         val params = getOpensslSubject()
         val requestKey = getRequestKeyName(reqName)
         val cmd = "$openssl req -new -key"
-        val reqKey = "$path${File.separator}$requestKey"
+
+        val reqKey = FilePathBuilder()
+                .addContext(path)
+                .addContext(requestKey)
+                .build()
+
         val verify = "openssl req -in $reqKey -noout -subject"
-        return "$cmd $path${File.separator}$keyName -out $reqKey -subj $params && $verify"
+        val param = FilePathBuilder()
+                .addContext(path)
+                .addContext(keyName)
+                .build()
+
+        return "$cmd $param -out $reqKey -subj $params && $verify"
     }
 
     @Throws(IllegalArgumentException::class, IllegalStateException::class)
