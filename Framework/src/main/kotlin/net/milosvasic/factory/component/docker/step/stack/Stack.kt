@@ -113,12 +113,14 @@ open class Stack(
         )
     }
 
+    @Throws(InvalidPathException::class)
     private fun getYmlPath(): String {
-        var path = composeYmlPath
-        if (!path.endsWith(composeFileExtension)) {
-            path += File.separator + composeFile
+
+        val path = FilePathBuilder().addContext(composeYmlPath)
+        if (!path.getPath().endsWith(composeFileExtension)) {
+            path.addContext(composeFile)
         }
-        return path
+        return path.build()
     }
 
     private fun generate(command: String, script: String): String {
