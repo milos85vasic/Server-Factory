@@ -1,7 +1,11 @@
 package net.milosvasic.factory.test
 
+import net.milosvasic.factory.EMPTY
+import net.milosvasic.factory.common.filesystem.FilePathBuilder
 import net.milosvasic.factory.log
+import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
+import java.nio.file.InvalidPathException
 
 class FilePathBuilderTest : BaseTest() {
 
@@ -10,6 +14,56 @@ class FilePathBuilderTest : BaseTest() {
         initLogging()
         log.i("File path builder test started")
 
+        val validPaths = listOf(
+                listOf("Test", "test", "test123")
+        )
+
+        val invalidPaths = listOf(
+                listOf("Test?", "123")
+        )
+
+        var valid = 0
+        var invalid = 0
+
+        fun buildPath(builder: FilePathBuilder) {
+
+            try {
+                val path = builder.build()
+                if (path != String.EMPTY) {
+                    valid++
+                } else {
+                    invalid++
+                }
+            } catch (e: InvalidPathException) {
+
+                invalid++
+            }
+        }
+
+        fun getBuilder(elements: List<String>): FilePathBuilder {
+
+            val builder = FilePathBuilder()
+            elements.forEach { element ->
+
+                builder.addContext(element)
+            }
+            return builder
+        }
+
+        validPaths.forEach {
+
+            val builder = getBuilder(it)
+            buildPath(builder)
+        }
+
+        invalidPaths.forEach {
+
+            val builder = getBuilder(it)
+            buildPath(builder)
+        }
+
+        Assertions.assertEquals(validPaths.size, valid)
+        Assertions.assertEquals(invalidPaths.size, invalid)
         log.i("File path builder test completed")
     }
 }
