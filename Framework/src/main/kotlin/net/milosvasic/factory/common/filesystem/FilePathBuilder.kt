@@ -9,6 +9,11 @@ class FilePathBuilder : PathBuilder<String, String, String>() {
     override val separator: String
         get() = File.separator
 
+    fun addContext(file: File): FilePathBuilder {
+        addContext(file.absolutePath)
+        return this
+    }
+
     @Throws(InvalidPathException::class)
     override fun build(): String {
 

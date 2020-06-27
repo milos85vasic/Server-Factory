@@ -1,5 +1,6 @@
 package net.milosvasic.factory.component.docker.step.stack
 
+import net.milosvasic.factory.common.filesystem.FilePathBuilder
 import net.milosvasic.factory.component.docker.DockerCommand
 import net.milosvasic.factory.component.docker.DockerInstallationOperation
 import net.milosvasic.factory.component.docker.command.DockerComposeUp
@@ -11,6 +12,7 @@ import net.milosvasic.factory.terminal.TerminalCommand
 import net.milosvasic.factory.terminal.command.Commands
 import net.milosvasic.factory.terminal.command.ConcatenateCommand
 import java.io.File
+import java.nio.file.InvalidPathException
 
 open class Stack(
         private val composeYmlPath: String,
@@ -51,6 +53,7 @@ open class Stack(
         return Commands.printf("$bashHead\\n$command")
     }
 
+    @Throws(InvalidPathException::class)
     private fun getCompletionCommand(command: TerminalCommand): ConcatenateCommand {
 
         val stop = "stop.sh"
@@ -59,9 +62,22 @@ open class Stack(
         val path = getYmlPath()
         val file = File(path)
         val directory = file.parentFile
-        val stopShellScript = "$directory${File.separator}$stop"
-        val startShellScript = "$directory${File.separator}$start"
-        val restartShellScript = "$directory${File.separator}$restart"
+
+        val stopShellScript = FilePathBuilder()
+                .addContext(directory)
+                .addContext(stop)
+                .build()
+
+        val startShellScript = FilePathBuilder()
+                .addContext(directory)
+                .addContext(start)
+                .build()
+
+        val restartShellScript = FilePathBuilder()
+                .addContext(directory)
+                .addContext(restart)
+                .build()
+
         val restartCmd = "sh stop.sh;\\nsh start.sh;"
         val stopCmd = command.command
                 .replace(DockerCommand.UP.obtain(), DockerCommand.DOWN.obtain())
