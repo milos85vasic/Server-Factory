@@ -30,6 +30,7 @@ class FilePathBuilderTest : BaseTest() {
             try {
                 val path = builder.build()
                 if (path != String.EMPTY) {
+                    log.v("Valid path: $path")
                     valid++
                 } else {
                     invalid++

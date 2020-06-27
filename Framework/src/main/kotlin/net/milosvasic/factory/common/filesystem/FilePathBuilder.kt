@@ -17,10 +17,12 @@ class FilePathBuilder : PathBuilder<String, String, String>() {
         val validator = FilePathValidator()
         if (validator.validate(this)) {
 
-            contexts.forEach { context ->
-                builder
-                        .append(context)
-                        .append(separator)
+            contexts.forEachIndexed { index, context ->
+
+                builder.append(context)
+                if (index != contexts.lastIndex) {
+                    builder.append(separator)
+                }
             }
         }
         return builder.toString()

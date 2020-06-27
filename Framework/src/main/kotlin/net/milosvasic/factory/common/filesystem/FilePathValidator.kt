@@ -1,5 +1,6 @@
 package net.milosvasic.factory.common.filesystem
 
+import net.milosvasic.factory.EMPTY
 import net.milosvasic.factory.common.Validation
 import net.milosvasic.factory.validation.Validator
 import net.milosvasic.factory.validation.parameters.SingleParameterExpectedException
@@ -18,6 +19,9 @@ class FilePathValidator : Validation<FilePathBuilder> {
         val builder = what[0]
         builder.getElements().forEach {
 
+            if (it == String.EMPTY) {
+                return false
+            }
             forbidden.forEach { forbid ->
                 if (it.contains(forbid)) {
                     return false
