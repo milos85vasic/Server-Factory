@@ -3,6 +3,7 @@ package net.milosvasic.factory.component.installer.step.database
 import com.google.gson.Gson
 import com.google.gson.JsonParseException
 import net.milosvasic.factory.common.DataHandler
+import net.milosvasic.factory.common.filesystem.FilePathBuilder
 import net.milosvasic.factory.common.obtain.Obtain
 import net.milosvasic.factory.component.database.*
 import net.milosvasic.factory.component.database.manager.DatabaseManager
@@ -34,7 +35,11 @@ class DatabaseStep(val path: String) : RemoteOperationInstallationStep<SSH>() {
 
             val manager = DatabaseManager.instantiate() ?: throw IllegalStateException("Invalid database manager")
             var config: DatabaseConfiguration? = null
-            val configurationFile = "$path${File.separator}$defaultConfigurationFile"
+
+            val configurationFile = FilePathBuilder()
+                    .addContext(path)
+                    .addContext(defaultConfigurationFile)
+                    .build()
 
             val configurationDataHandler = object : DataHandler<OperationResult> {
                 override fun onData(data: OperationResult?) {
