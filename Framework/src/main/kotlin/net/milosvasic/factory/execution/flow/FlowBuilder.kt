@@ -115,7 +115,7 @@ abstract class FlowBuilder<T, D, C> : Flow<T, D>, BusyDelegation {
                     nextFlow?.let {
                         val callback = object : FlowCallback {
                             override fun onFinish(success: Boolean) {
-                                finish(true)
+                                finish(success)
                             }
                         }
                         it.onFinish(callback).run()
