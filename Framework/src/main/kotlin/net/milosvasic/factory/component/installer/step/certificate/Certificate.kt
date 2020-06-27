@@ -1,5 +1,6 @@
 package net.milosvasic.factory.component.installer.step.certificate
 
+import net.milosvasic.factory.common.filesystem.FilePathBuilder
 import net.milosvasic.factory.component.Toolkit
 import net.milosvasic.factory.component.installer.recipe.CommandInstallationStepRecipe
 import net.milosvasic.factory.component.installer.recipe.ConditionRecipe
@@ -42,10 +43,21 @@ open class Certificate(val name: String) : RemoteOperationInstallationStep<SSH>(
 
             val permission = Permissions(Permission(6), Permission.NONE, Permission.NONE)
             val perm = permission.obtain()
-            val sep = File.separator
+
             val certificateExtension = ".crt"
-            val issued = "${sep}pki${sep}issued$sep"
-            val linkingPath = "$certificates$sep$hostname$certificateExtension"
+            val issued = FilePathBuilder()
+                    .addContext(File.separator)
+                    .addContext("pki")
+                    .addContext("issued")
+                    .addContext(File.separator)
+                    .build()
+
+            val linkingPath = FilePathBuilder()
+                    .addContext(certificates)
+                    .addContext(hostname)
+                    .addContext(certificateExtension)
+                    .build()
+
             val verificationPath = "$certHome$issued$hostname$certificateExtension"
             val verificationCommand = TestCommand(verificationPath)
 
