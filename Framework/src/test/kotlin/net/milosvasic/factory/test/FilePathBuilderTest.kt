@@ -15,11 +15,22 @@ class FilePathBuilderTest : BaseTest() {
         log.i("File path builder test started")
 
         val validPaths = listOf(
-                listOf("Test", "test", "test123")
+                listOf("Test", "test", "test123"),
+                listOf("123", "aaa,", "!@#$%^&*"),
+                listOf(".", "test"),
+                listOf("test", "."),
+                listOf("..", "test"),
+                listOf("test", "..")
         )
 
         val invalidPaths = listOf(
-                listOf(" test", "test\n")
+                listOf(" test", "test\n"),
+                listOf("test", " test"),
+                listOf(" test", "test"),
+                listOf("test", "\ttest"),
+                listOf("\ttest", "test"),
+                listOf("."),
+                listOf("..")
         )
 
         var valid = 0

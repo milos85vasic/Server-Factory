@@ -10,6 +10,7 @@ import java.nio.file.Paths
 class FilePathValidator : Validation<FilePathBuilder> {
 
     private val forbidden = listOf(" ", "\n", "\t")
+    private val forbiddenAsWholePath = listOf(".", "..")
 
     @Throws(InvalidPathException::class, SingleParameterExpectedException::class)
     override fun validate(vararg what: FilePathBuilder): Boolean {
@@ -33,6 +34,13 @@ class FilePathValidator : Validation<FilePathBuilder> {
                 }
             }
             Paths.get(it)
+        }
+
+        forbiddenAsWholePath.forEach { forbid ->
+            if (builder.getPath() == forbid) {
+
+                return false
+            }
         }
         return true
     }

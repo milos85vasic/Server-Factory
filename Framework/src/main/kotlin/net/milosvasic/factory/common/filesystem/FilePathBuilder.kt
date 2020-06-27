@@ -6,8 +6,6 @@ import java.nio.file.InvalidPathException
 
 class FilePathBuilder : PathBuilder<String, String, String>() {
 
-    private val builder = StringBuilder()
-
     override val separator: String
         get() = File.separator
 
@@ -17,16 +15,23 @@ class FilePathBuilder : PathBuilder<String, String, String>() {
         val validator = FilePathValidator()
         if (validator.validate(this)) {
 
-            contexts.forEachIndexed { index, context ->
+            return getPath()
+        }
+        throw InvalidPathException(getPath(), "Path is invalid")
+    }
 
-                builder.append(context)
-                if (index != contexts.lastIndex) {
-                    builder.append(separator)
-                }
+    fun getElements() = contexts.toList()
+
+    fun getPath(): String {
+
+        val builder = StringBuilder()
+        contexts.forEachIndexed { index, context ->
+
+            builder.append(context)
+            if (index != contexts.lastIndex) {
+                builder.append(separator)
             }
         }
         return builder.toString()
     }
-
-    fun getElements() = contexts.toList()
 }
