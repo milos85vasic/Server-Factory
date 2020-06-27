@@ -19,7 +19,7 @@ class FilePathBuilderTest : BaseTest() {
         )
 
         val invalidPaths = listOf(
-                listOf("Test?", "123")
+                listOf(" test", "test\n")
         )
 
         var valid = 0

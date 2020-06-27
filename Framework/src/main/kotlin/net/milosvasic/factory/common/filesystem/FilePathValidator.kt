@@ -9,6 +9,7 @@ import java.nio.file.Paths
 class FilePathValidator : Validation<FilePathBuilder> {
 
     private val builder = StringBuilder()
+    private val forbidden = listOf(" ", "\n", "\t")
 
     @Throws(InvalidPathException::class, SingleParameterExpectedException::class)
     override fun validate(vararg what: FilePathBuilder): Boolean {
@@ -17,6 +18,11 @@ class FilePathValidator : Validation<FilePathBuilder> {
         val builder = what[0]
         builder.getElements().forEach {
 
+            forbidden.forEach { forbid ->
+                if (it.contains(forbid)) {
+                    return false
+                }
+            }
             Paths.get(it)
         }
         return true
