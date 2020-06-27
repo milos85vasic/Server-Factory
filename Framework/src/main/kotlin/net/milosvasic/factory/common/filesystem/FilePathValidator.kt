@@ -9,7 +9,6 @@ import java.nio.file.Paths
 
 class FilePathValidator : Validation<FilePathBuilder> {
 
-    private val builder = StringBuilder()
     private val forbidden = listOf(" ", "\n", "\t")
 
     @Throws(InvalidPathException::class, SingleParameterExpectedException::class)
@@ -20,8 +19,14 @@ class FilePathValidator : Validation<FilePathBuilder> {
         builder.getElements().forEach {
 
             if (it == String.EMPTY) {
+
                 return false
             }
+            if (it.contains(builder.separator)) {
+
+                return false
+            }
+
             forbidden.forEach { forbid ->
                 if (it.contains(forbid)) {
                     return false
