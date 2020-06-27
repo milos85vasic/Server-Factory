@@ -24,12 +24,15 @@ class FlowConnectTestWithFailure : BaseTest() {
         val iterations = 3
         var commandFlowFailed = 0
         var commandFlowExecuted = 0
+        var initializationFlowFailed = 0
         var initializationFlowExecuted = 0
 
         fun getEcho(parent: Int) = EchoCommand("$echo $parent :: ${++count}")
 
         val commandFlowCallback = object : FlowCallback {
             override fun onFinish(success: Boolean) {
+
+                log.v("commandFlowCallback -> onFinish() -> $success")
                 if (success) {
                     log.i("Command flow finished")
                     commandFlowExecuted++
@@ -42,13 +45,15 @@ class FlowConnectTestWithFailure : BaseTest() {
 
         val initializationFlowCallback = object : FlowCallback {
             override fun onFinish(success: Boolean) {
+
+                log.v("initializationFlowCallback -> onFinish() -> $success")
                 if (success) {
                     log.i("Initialization flow finished")
+                    initializationFlowExecuted++
                 } else {
                     log.e("Initialization flow failed")
+                    initializationFlowFailed++
                 }
-                assert(success)
-                initializationFlowExecuted++
             }
         }
 
@@ -86,11 +91,23 @@ class FlowConnectTestWithFailure : BaseTest() {
             return initFlow
         }
 
+        // 1 Successful
         val flow = getCommandFlow(++commandFlows, false)
+        // + 3 more
         for (x in 0 until iterations) {
             flow
                     .connect(getInitFlow(++initFlows))
-                    .connect(getCommandFlow(++commandFlows, true))
+                    .connect(getCommandFlow(++commandFlows, false))
+        }
+        // Then 1 failure
+        flow
+                .connect(getInitFlow(++initFlows))
+                .connect(getCommandFlow(++commandFlows, true))
+        // And 3 more successful
+        for (x in 0 until iterations) {
+            flow
+                    .connect(getInitFlow(++initFlows))
+                    .connect(getCommandFlow(++commandFlows, false))
         }
         flow.run()
 
@@ -98,10 +115,10 @@ class FlowConnectTestWithFailure : BaseTest() {
             Thread.yield()
         }
 
-        Assertions.assertEquals(1, commandFlowExecuted)
-        Assertions.assertEquals(1, commandFlowFailed)
-        Assertions.assertEquals(1, initializationFlowExecuted)
-
+        Assertions.assertEquals(0, commandFlowExecuted)
+        Assertions.assertEquals(iterations + 2, commandFlowFailed)
+        Assertions.assertEquals(0, initializationFlowExecuted)
+        Assertions.assertEquals(iterations + 1, initializationFlowFailed)
         log.i("Flow connect test with failure completed")
     }
 }

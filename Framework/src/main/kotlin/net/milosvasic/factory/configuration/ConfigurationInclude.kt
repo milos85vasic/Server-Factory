@@ -1,5 +1,6 @@
 package net.milosvasic.factory.configuration
 
+import net.milosvasic.factory.configuration.variable.Node
 import java.util.concurrent.LinkedBlockingQueue
 
 open class ConfigurationInclude(
@@ -7,7 +8,7 @@ open class ConfigurationInclude(
         var includes: LinkedBlockingQueue<String>?,
         var software: LinkedBlockingQueue<String>?,
         var containers: LinkedBlockingQueue<String>?,
-        var variables: VariableNode? = null
+        var variables: Node? = null
 ) {
 
     override fun toString(): String {

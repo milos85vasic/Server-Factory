@@ -4,6 +4,7 @@ import com.google.gson.GsonBuilder
 import com.google.gson.JsonParseException
 import com.google.gson.JsonSyntaxException
 import net.milosvasic.factory.common.obtain.ObtainParametrized
+import net.milosvasic.factory.configuration.variable.Node
 import net.milosvasic.factory.log
 import net.milosvasic.factory.validation.Validator
 import java.io.File
@@ -27,9 +28,9 @@ abstract class ConfigurationFactory<T : Configuration> : ObtainParametrized<File
 
             log.v("Configuration file: ${configurationFile.absolutePath}")
             val configurationJson = configurationFile.readText()
-            val variablesDeserializer = VariableNode.getDeserializer()
+            val variablesDeserializer = Node.getDeserializer()
             val gsonBuilder = GsonBuilder()
-            gsonBuilder.registerTypeAdapter(VariableNode::class.java, variablesDeserializer)
+            gsonBuilder.registerTypeAdapter(Node::class.java, variablesDeserializer)
             val gson = gsonBuilder.create()
             try {
 
@@ -76,7 +77,7 @@ abstract class ConfigurationFactory<T : Configuration> : ObtainParametrized<File
             configuration.containers = LinkedBlockingQueue()
         }
         if (configuration.variables == null) {
-            configuration.variables = VariableNode()
+            configuration.variables = Node()
         }
         onInstantiated(configuration)
     }

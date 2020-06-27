@@ -8,6 +8,9 @@
   "variables": {
     "SERVER": {
       "HOSTNAME": "test.local"
+    },
+    "DOCKER": {
+      "DOCKER_COMPOSE_PATH": "/usr/local/bin"
     }
   },
   "containers": [

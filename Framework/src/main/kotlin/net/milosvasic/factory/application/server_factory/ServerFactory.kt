@@ -16,6 +16,7 @@ import net.milosvasic.factory.component.docker.DockerInitializationFlowCallback
 import net.milosvasic.factory.component.installer.Installer
 import net.milosvasic.factory.component.installer.InstallerInitializationFlowCallback
 import net.milosvasic.factory.configuration.*
+import net.milosvasic.factory.configuration.variable.*
 import net.milosvasic.factory.execution.flow.FlowBuilder
 import net.milosvasic.factory.execution.flow.callback.DieOnFailureCallback
 import net.milosvasic.factory.execution.flow.callback.TerminationCallback
@@ -151,7 +152,7 @@ abstract class ServerFactory(val arguments: List<String> = listOf()) : Applicati
             val ssh = getConnection()
             val docker = instantiateDocker(ssh)
             val installer = instantiateInstaller(ssh)
-            val databaseManager = DatabaseManager(ssh)
+            val databaseManager = getDatabaseManager(ssh)
 
             terminators.add(docker)
             terminators.add(installer)
@@ -249,6 +250,8 @@ abstract class ServerFactory(val arguments: List<String> = listOf()) : Applicati
     protected open fun instantiateInstaller(ssh: Connection) = Installer(ssh)
 
     protected open fun getHostInfoCommand(): TerminalCommand = HostInfoCommand()
+
+    protected open fun getDatabaseManager(ssh: Connection) = DatabaseManager(ssh)
 
     protected open fun getHostNameSetCommand(hostname: String): TerminalCommand = HostNameSetCommand(hostname)
 
@@ -392,15 +395,12 @@ abstract class ServerFactory(val arguments: List<String> = listOf()) : Applicati
 
     @Throws(IllegalArgumentException::class, IllegalStateException::class)
     private fun getHostname(): String {
-        var hostname = String.EMPTY
-        configuration?.let {
+        val path = PathBuilder()
+                .addContext(Context.Server)
+                .setKey(Key.Hostname)
+                .build()
 
-            val sep = VariableNode.contextSeparator
-            val key = "${VariableContext.Server.context}$sep${VariableKey.Hostname.key}"
-            it.getVariableParsed(key)?.let { hName ->
-                hostname = hName as String
-            }
-        }
+        val hostname = Variable.get(path)
         if (hostname == String.EMPTY) {
 
             throw IllegalArgumentException("Empty hostname obtained for the server")

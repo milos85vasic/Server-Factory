@@ -1,7 +1,10 @@
 package net.milosvasic.factory.terminal.command
 
 import net.milosvasic.factory.EMPTY
-import net.milosvasic.factory.configuration.Variable
+import net.milosvasic.factory.configuration.variable.Context
+import net.milosvasic.factory.configuration.variable.Key
+import net.milosvasic.factory.configuration.variable.PathBuilder
+import net.milosvasic.factory.configuration.variable.Variable
 import net.milosvasic.factory.localhost
 import net.milosvasic.factory.remote.Remote
 import java.io.File
@@ -106,6 +109,7 @@ object Commands {
         return "$openssl genrsa -out $path${File.separator}$keyName"
     }
 
+    @Throws(IllegalArgumentException::class, IllegalStateException::class)
     fun generateRequestKey(path: String, keyName: String, reqName: String): String {
 
         val params = getOpensslSubject()
@@ -116,30 +120,70 @@ object Commands {
         return "$cmd $path${File.separator}$keyName -out $reqKey -subj $params && $verify"
     }
 
+    @Throws(IllegalArgumentException::class, IllegalStateException::class)
     fun importRequestKey(path: String, requestKey: String, name: String): String {
 
+        val homePath = PathBuilder()
+                .addContext(Context.Server)
+                .addContext(Context.Certification)
+                .setKey(Key.Home)
+                .build()
+
+        val home = Variable.get(homePath)
         val key = "$path${File.separator}$requestKey"
-        val cmd = "cd {{SERVER.CERTIFICATION.HOME}} && ./easyrsa import-req $key $name"
-        return Variable.parse(cmd)
+        return "cd $home && ./easyrsa import-req $key $name"
     }
 
+    @Throws(IllegalArgumentException::class, IllegalStateException::class)
     fun signRequestKey(name: String): String {
 
-        val passIn = "export EASYRSA_PASSIN='pass:{{SERVER.CERTIFICATION.PASSPHRASE}}'"
-        val passOut = "export EASYRSA_PASSOUT='pass:{{SERVER.CERTIFICATION.PASSPHRASE}}'"
+        val path = PathBuilder()
+                .addContext(Context.Server)
+                .addContext(Context.Certification)
+                .setKey(Key.Home)
+                .build()
+
+        val passPhrasePath = PathBuilder()
+                .addContext(Context.Server)
+                .addContext(Context.Certification)
+                .setKey(Key.Passphrase)
+                .build()
+
+        val home = Variable.get(path)
+        val passPhrase = Variable.get(passPhrasePath)
+
+        val passIn = "export EASYRSA_PASSIN='pass:$passPhrase'"
+        val passOut = "export EASYRSA_PASSOUT='pass:$passPhrase'"
         val passwords = "$passIn && $passOut"
-        val cmd = "cd {{SERVER.CERTIFICATION.HOME}} && $passwords && echo 'yes' | ./easyrsa sign-req server $name"
-        return Variable.parse(cmd)
+        return "cd $home && $passwords && echo 'yes' | ./easyrsa sign-req server $name"
     }
 
+    @Throws(IllegalArgumentException::class, IllegalStateException::class)
     fun generatePEM(keyName: String = "cakey.pem", certName: String = "cacert.pem"): String {
 
         val subject = getOpensslSubject()
         val req = "req -subj $subject -new -x509 -extensions v3_ca -keyout $keyName -out $certName -days 3650"
-        val passIn = "-passin pass:{{SERVER.CERTIFICATION.PASSPHRASE}}"
-        val passOut = "-passout pass:{{SERVER.CERTIFICATION.PASSPHRASE}}"
+
+        val path = PathBuilder()
+                .addContext(Context.Server)
+                .addContext(Context.Certification)
+                .setKey(Key.Certificates)
+                .build()
+
+        val passPhrasePath = PathBuilder()
+                .addContext(Context.Server)
+                .addContext(Context.Certification)
+                .setKey(Key.Passphrase)
+                .build()
+
+        val home = Variable.get(path)
+        val passPhrase = Variable.get(passPhrasePath)
+
+        val passIn = "-passin pass:$passPhrase"
+        val passOut = "-passout pass:$passPhrase"
         val password = "$passIn $passOut"
-        return Variable.parse("cd {{SERVER.CERTIFICATION.CERTIFICATES}} && $openssl $req $password")
+
+        return "cd $home && $openssl $req $password"
     }
 
     fun getPrivateKyName(name: String): String {
@@ -176,16 +220,52 @@ object Commands {
 
     fun portTaken(port: Int) = "${echo("^C")} | $telnet $localhost $port | grep \"Connected\""
 
+    @Throws(IllegalArgumentException::class, IllegalStateException::class)
     fun getOpensslSubject(): String {
 
-        val hostname = "{{SERVER.HOSTNAME}}"
-        val city = "{{SERVER.CERTIFICATION.CITY}}"
-        val country = "{{SERVER.CERTIFICATION.COUNTRY}}"
-        val province = "{{SERVER.CERTIFICATION.PROVINCE}}"
-        val department = "{{SERVER.CERTIFICATION.DEPARTMENT}}"
-        val organisation = "{{SERVER.CERTIFICATION.ORGANISATION}}"
+        val pathHostname = PathBuilder()
+                .addContext(Context.Server)
+                .setKey(Key.Hostname)
+                .build()
+
+        val pathCity = PathBuilder()
+                .addContext(Context.Server)
+                .addContext(Context.Certification)
+                .setKey(Key.City)
+                .build()
+
+        val pathCountry = PathBuilder()
+                .addContext(Context.Server)
+                .addContext(Context.Certification)
+                .setKey(Key.Country)
+                .build()
+
+        val pathProvince = PathBuilder()
+                .addContext(Context.Server)
+                .addContext(Context.Certification)
+                .setKey(Key.Province)
+                .build()
+
+        val pathDepartment = PathBuilder()
+                .addContext(Context.Server)
+                .addContext(Context.Certification)
+                .setKey(Key.Department)
+                .build()
+
+        val pathOrganisation = PathBuilder()
+                .addContext(Context.Server)
+                .addContext(Context.Certification)
+                .setKey(Key.Organisation)
+                .build()
+
+        val hostname = Variable.get(pathHostname)
+        val city = Variable.get(pathCity)
+        val country = Variable.get(pathCountry)
+        val province = Variable.get(pathProvince)
+        val department = Variable.get(pathDepartment)
+        val organisation = Variable.get(pathOrganisation)
         var subject = "/C=$country/ST=$province/L=$city/O=$organisation/OU=$department/CN=$hostname"
-        subject = Variable.parse(subject).replace(" ", "\\ ")
+        subject = subject.replace(" ", "\\ ")
         return subject
     }
 }

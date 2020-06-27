@@ -1,6 +1,7 @@
-package net.milosvasic.factory.configuration
+package net.milosvasic.factory.configuration.variable
 
 import net.milosvasic.factory.EMPTY
+import net.milosvasic.factory.configuration.ConfigurationManager
 import java.util.regex.Pattern
 
 object Variable {
@@ -11,6 +12,12 @@ object Variable {
     private fun getRegex() = "${Pattern.quote(open)}(.*?)${Pattern.quote(close)}"
 
     private fun getPattern() = Pattern.compile(getRegex())
+
+    @Throws(IllegalStateException::class)
+    fun get(path: Path): String {
+
+        return parse("$open${path.getPath()}$close")
+    }
 
     @Throws(IllegalStateException::class)
     fun parse(value: String): String {

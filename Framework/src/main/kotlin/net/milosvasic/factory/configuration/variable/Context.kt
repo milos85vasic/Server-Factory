@@ -1,8 +1,8 @@
-package net.milosvasic.factory.configuration
+package net.milosvasic.factory.configuration.variable
 
 import net.milosvasic.factory.component.docker.DockerCommand
 
-enum class VariableContext(val context: String) {
+enum class Context(val context: String) {
 
     Database("DB"),
     Server("SERVER"),

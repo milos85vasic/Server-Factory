@@ -5,6 +5,8 @@ import net.milosvasic.factory.common.busy.Busy
 import net.milosvasic.factory.common.busy.BusyException
 import net.milosvasic.factory.common.busy.BusyWorker
 import net.milosvasic.factory.common.initialization.Initialization
+import net.milosvasic.factory.configuration.variable.Node
+import net.milosvasic.factory.configuration.variable.Variable
 import net.milosvasic.factory.log
 import java.io.File
 
@@ -102,7 +104,7 @@ object ConfigurationManager : Initialization {
         }
     }
 
-    private fun printVariableNode(variableNode: VariableNode?, prefix: String = String.EMPTY) {
+    private fun printVariableNode(variableNode: Node?, prefix: String = String.EMPTY) {
         val prefixEnd = "-> "
         variableNode?.let { node ->
             if (node.value != String.EMPTY) {

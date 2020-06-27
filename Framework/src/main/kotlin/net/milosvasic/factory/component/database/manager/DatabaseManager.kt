@@ -9,7 +9,7 @@ import net.milosvasic.factory.common.obtain.Instantiate
 import net.milosvasic.factory.common.obtain.ObtainParametrized
 import net.milosvasic.factory.component.database.*
 import net.milosvasic.factory.component.database.postgres.PostgresDatabasesListCommand
-import net.milosvasic.factory.configuration.*
+import net.milosvasic.factory.configuration.variable.*
 import net.milosvasic.factory.execution.flow.callback.FlowCallback
 import net.milosvasic.factory.execution.flow.implementation.CommandFlow
 import net.milosvasic.factory.execution.flow.implementation.initialization.InitializationFlow
@@ -22,7 +22,7 @@ import net.milosvasic.factory.validation.Validator
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicBoolean
 
-class DatabaseManager(entryPoint: Connection) :
+open class DatabaseManager(entryPoint: Connection) :
         BusyWorker<DatabaseManager>(entryPoint),
         ObtainParametrized<DatabaseRequest, Database>,
         Registration<DatabaseRegistration>,
@@ -97,80 +97,82 @@ class DatabaseManager(entryPoint: Connection) :
     }
 
     @Throws(IllegalStateException::class)
-    fun loadDatabasesFlow(): CommandFlow {
+    open fun loadDatabasesFlow(): CommandFlow {
 
         val flow = CommandFlow().width(entryPoint)
         Type.values().forEach { databaseType ->
             when (databaseType) {
                 Type.Postgres -> {
 
-                    val configuration = ConfigurationManager.getConfiguration()
-                    val dbCtx = VariableContext.Database.context
-                    val keyUser = VariableKey.DbUser.key
-                    val keyPort = VariableKey.DbPort.key
-                    val keyPassword = VariableKey.DbPassword.key
-
                     val host = localhost
-                    val sep = VariableNode.contextSeparator
-                    val port = configuration.getVariableParsed("$dbCtx$sep$keyPort")
-                    val user = configuration.getVariableParsed("$dbCtx$sep$keyUser")
-                    val password = configuration.getVariableParsed("$dbCtx$sep$keyPassword")
 
-                    port?.let { prt ->
-                        user?.let { usr ->
-                            password?.let { pwd ->
+                    val portPath = PathBuilder()
+                            .addContext(Context.Database)
+                            .setKey(Key.DbPort)
+                            .build()
 
-                                val command = PostgresDatabasesListCommand(
-                                        host,
-                                        (prt as String).toInt(),
-                                        usr as String,
-                                        pwd as String
-                                )
+                    val userPath = PathBuilder()
+                            .addContext(Context.Database)
+                            .setKey(Key.DbUser)
+                            .build()
 
-                                val handler = object : DataHandler<OperationResult> {
+                    val passPath = PathBuilder()
+                            .addContext(Context.Database)
+                            .setKey(Key.DbPassword)
+                            .build()
 
-                                    override fun onData(data: OperationResult?) {
-                                        data?.let {
-                                            it.data.split("\n").forEach { db ->
+                    val port = Variable.get(portPath)
+                    val user = Variable.get(userPath)
+                    val password = Variable.get(passPath)
 
-                                                try {
-                                                    val callback = object : OperationResultListener {
-                                                        override fun onOperationPerformed(result: OperationResult) {
-                                                            when (result.operation) {
-                                                                is DatabaseRegistrationOperation -> {
+                    val command = PostgresDatabasesListCommand(
+                            host,
+                            port.toInt(),
+                            user,
+                            password
+                    )
 
-                                                                    if (!result.success) {
-                                                                        log.e("Database registration failed: $db")
-                                                                    }
-                                                                }
-                                                            }
+                    val handler = object : DataHandler<OperationResult> {
+
+                        override fun onData(data: OperationResult?) {
+                            data?.let {
+                                it.data.split("\n").forEach { db ->
+
+                                    try {
+                                        val callback = object : OperationResultListener {
+                                            override fun onOperationPerformed(result: OperationResult) {
+                                                when (result.operation) {
+                                                    is DatabaseRegistrationOperation -> {
+
+                                                        if (!result.success) {
+                                                            log.e("Database registration failed: $db")
                                                         }
                                                     }
-
-                                                    val dbConnection = DatabaseConnection(
-                                                            host,
-                                                            prt.toInt(),
-                                                            usr,
-                                                            pwd,
-                                                            entryPoint
-                                                    )
-                                                    val factory = DatabaseFactory(databaseType, db, dbConnection)
-                                                    val database = factory.build()
-                                                    val registration = DatabaseRegistration(database, callback)
-                                                    doRegister(registration)
-
-                                                } catch (e: IllegalStateException) {
-
-                                                    log.e(e)
                                                 }
                                             }
                                         }
+
+                                        val dbConnection = DatabaseConnection(
+                                                host,
+                                                port.toInt(),
+                                                user,
+                                                password,
+                                                entryPoint
+                                        )
+                                        val factory = DatabaseFactory(databaseType, db, dbConnection)
+                                        val database = factory.build()
+                                        val registration = DatabaseRegistration(database, callback)
+                                        doRegister(registration)
+
+                                    } catch (e: IllegalStateException) {
+
+                                        log.e(e)
                                     }
                                 }
-                                flow.perform(command, handler)
                             }
                         }
                     }
+                    flow.perform(command, handler)
                 }
                 else -> {
 

@@ -1,6 +1,7 @@
 package net.milosvasic.factory.test.implementation
 
 import net.milosvasic.factory.application.server_factory.ServerFactory
+import net.milosvasic.factory.component.database.manager.DatabaseManager
 import net.milosvasic.factory.component.docker.Docker
 import net.milosvasic.factory.component.installer.Installer
 import net.milosvasic.factory.configuration.ConfigurationFactory
@@ -36,6 +37,8 @@ class StubServerFactory(arguments: List<String> = listOf()) : ServerFactory(argu
         docker.addProcessingRecipesRegistrar(recipeRegistrar)
         return docker
     }
+
+    override fun getDatabaseManager(ssh: Connection) = StubDatabaseManager(ssh)
 
     override fun getHostNameSetCommand(hostname: String) = EchoCommand(hostname)
 }
