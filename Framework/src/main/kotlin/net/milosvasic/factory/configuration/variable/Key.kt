@@ -4,7 +4,7 @@ enum class Key(val key: String) {
 
     Home("HOME"),
     City("CITY"),
-    DbHost("DB_HOST"),
+    DbHost("HOST"),
     DbPort("DB_PORT"),
     DbUser("DB_USER"),
     DbName("DB_NAME"),
