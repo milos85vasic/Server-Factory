@@ -23,5 +23,8 @@ enum class Key(val key: String) {
     Type("TYPE"),
     TableDomains("TABLE_DOMAINS"),
     TableUsers("TABLE_USERS"),
-    TableAliases("TABLE_ALIASES")
+    TableAliases("TABLE_ALIASES"),
+    ViewDomains("VIEW_DOMAINS"),
+    ViewUsers("VIEW_USERS"),
+    ViewAliases("VIEW_ALIASES")
 }
