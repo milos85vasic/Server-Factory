@@ -19,5 +19,9 @@ enum class Key(val key: String) {
     Organisation("ORGANISATION"),
     Certificates("CERTIFICATES"),
     RebootAllowed("REBOOT_ALLOWED"),
-    DockerComposePath("DOCKER_COMPOSE_PATH")
+    DockerComposePath("DOCKER_COMPOSE_PATH"),
+    Type("TYPE"),
+    TableDomains("TABLE_DOMAINS"),
+    TableUsers("TABLE_USERS"),
+    TableAliases("TABLE_ALIASES")
 }
