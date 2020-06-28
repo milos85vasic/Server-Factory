@@ -111,7 +111,7 @@ open class DatabaseManager(entryPoint: Connection) :
 
                     val portPath = PathBuilder()
                             .addContext(Context.Database)
-                            .setKey(Key.DbPort)
+                            .setKey(Key.DbPortExposed)
                             .build()
 
                     val userPath = PathBuilder()
