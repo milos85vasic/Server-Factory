@@ -5,7 +5,6 @@ import net.milosvasic.factory.component.docker.DockerCommand
 enum class Context(val context: String) {
 
     Server("SERVER"),
-    Postfix("POSTFIX"),
     Service("SERVICE"),
     Database("DATABASE"),
     Certification("CERTIFICATION"),
