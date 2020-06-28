@@ -4,9 +4,10 @@ import net.milosvasic.factory.component.docker.DockerCommand
 
 enum class Context(val context: String) {
 
-    Database("DB"),
     Server("SERVER"),
     Postfix("POSTFIX"),
+    Service("SERVICE"),
+    Database("DATABASE"),
     Certification("CERTIFICATION"),
     Docker(DockerCommand.DOCKER.obtain().toUpperCase())
 }

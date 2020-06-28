@@ -110,16 +110,19 @@ open class DatabaseManager(entryPoint: Connection) :
                     val host = localhost
 
                     val portPath = PathBuilder()
+                            .addContext(Context.Service)
                             .addContext(Context.Database)
                             .setKey(Key.DbPortExposed)
                             .build()
 
                     val userPath = PathBuilder()
+                            .addContext(Context.Service)
                             .addContext(Context.Database)
                             .setKey(Key.DbUser)
                             .build()
 
                     val passPath = PathBuilder()
+                            .addContext(Context.Service)
                             .addContext(Context.Database)
                             .setKey(Key.DbPassword)
                             .build()

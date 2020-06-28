@@ -6,8 +6,9 @@ enum class Key(val key: String) {
     City("CITY"),
     DbHost("HOST"),
     DbPort("PORT"),
-    DbPortExposed("PORT_EXPOSED"),
     DbUser("DB_USER"),
+    DbPortExposed("PORT_EXPOSED"),
+
     DbName("DB_NAME"),
     Country("COUNTRY"),
     Hostname("HOSTNAME"),
