@@ -22,7 +22,7 @@ class PathBuilder : HierarchyPathBuilder<Path, Context, Key, String>() {
                         .append(separator)
             }
             key?.let {
-                builder.append(it.key)
+                builder.append(it.key())
             }
             return Path(this)
         } else {
