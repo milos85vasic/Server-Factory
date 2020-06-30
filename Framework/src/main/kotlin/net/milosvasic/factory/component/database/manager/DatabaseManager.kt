@@ -228,7 +228,7 @@ open class DatabaseManager(entryPoint: Connection) :
         databases[type]?.get(name)?.let {
             return it
         }
-        throw IllegalArgumentException("No database registered for the type: ${type.type}")
+        throw IllegalArgumentException("No database registered with the name '$name' for type: ${type.type}")
     }
 
     @Synchronized

@@ -9,6 +9,7 @@ enum class Key(val key: String) {
     DbUser("DB_USER"),
     DbPortExposed("PORT_EXPOSED"),
     Name("NAME"),
+    DbDirectory("DB_DIRECTORY"),
     Country("COUNTRY"),
     Hostname("HOSTNAME"),
     Province("PROVINCE"),
