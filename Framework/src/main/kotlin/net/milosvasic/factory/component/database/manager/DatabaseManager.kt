@@ -112,6 +112,7 @@ open class DatabaseManager(entryPoint: Connection) :
                     val portPath = PathBuilder()
                             .addContext(Context.Service)
                             .addContext(Context.Database)
+                            .addContext(Context.Ports)
                             .setKey(Key.DbPortExposed)
                             .build()
 
