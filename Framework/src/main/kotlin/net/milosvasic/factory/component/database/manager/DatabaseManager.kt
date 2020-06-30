@@ -110,18 +110,22 @@ open class DatabaseManager(entryPoint: Connection) :
                     val host = localhost
 
                     val portPath = PathBuilder()
+                            .addContext(Context.Service)
                             .addContext(Context.Database)
-                            .setKey(Key.DbPort)
+                            .addContext(Context.Ports)
+                            .setKey(Key.PortExposed)
                             .build()
 
                     val userPath = PathBuilder()
+                            .addContext(Context.Service)
                             .addContext(Context.Database)
-                            .setKey(Key.DbUser)
+                            .setKey(Key.User)
                             .build()
 
                     val passPath = PathBuilder()
+                            .addContext(Context.Service)
                             .addContext(Context.Database)
-                            .setKey(Key.DbPassword)
+                            .setKey(Key.Password)
                             .build()
 
                     val port = Variable.get(portPath)
@@ -225,7 +229,7 @@ open class DatabaseManager(entryPoint: Connection) :
         databases[type]?.get(name)?.let {
             return it
         }
-        throw IllegalArgumentException("No database registered for the type: ${type.type}")
+        throw IllegalArgumentException("No database registered with the name '$name' for type: ${type.type}")
     }
 
     @Synchronized

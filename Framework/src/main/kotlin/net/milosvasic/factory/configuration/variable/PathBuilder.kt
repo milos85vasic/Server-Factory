@@ -18,11 +18,11 @@ class PathBuilder : HierarchyPathBuilder<Path, Context, Key, String>() {
         if (validator.validate(this)) {
             contexts.forEach { context ->
                 builder
-                        .append(context.context)
+                        .append(context.context())
                         .append(separator)
             }
             key?.let {
-                builder.append(it.key)
+                builder.append(it.key())
             }
             return Path(this)
         } else {
