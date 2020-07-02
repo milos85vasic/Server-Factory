@@ -9,5 +9,5 @@ class DockerServiceCommand(
 
 ) : TerminalCommand(
 
-        "${DockerCommand.DOCKER.name} exec -ti $service sh -c \"$serviceCommand\""
+        "${DockerCommand.DOCKER.obtain()} exec -ti $service sh -c \"$serviceCommand\""
 )
