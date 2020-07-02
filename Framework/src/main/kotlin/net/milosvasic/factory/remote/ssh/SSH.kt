@@ -58,14 +58,14 @@ open class SSH(private val remote: Remote) :
     @Synchronized
     @Throws(BusyException::class, IllegalArgumentException::class)
     override fun execute(what: TerminalCommand) {
-        val command = SSHCommand(remote, what, what.configuration)
+        val command = SSHCommand(remote, filterCommand(what), what.configuration)
         terminal.execute(command)
     }
 
     @Synchronized
     @Throws(BusyException::class, IllegalArgumentException::class)
     open fun execute(data: TerminalCommand, obtainOutput: Boolean) {
-        val command = SSHCommand(remote, data)
+        val command = SSHCommand(remote, filterCommand(data))
         command.configuration[CommandConfiguration.OBTAIN_RESULT] = obtainOutput
         terminal.execute(command)
     }
@@ -94,4 +94,6 @@ open class SSH(private val remote: Remote) :
     override fun getRemoteOS(): OperatingSystem {
         return operatingSystem
     }
+
+    protected open fun filterCommand(command: TerminalCommand) = command
 }
