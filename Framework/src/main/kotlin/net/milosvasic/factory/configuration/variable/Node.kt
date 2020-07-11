@@ -52,7 +52,12 @@ data class Node(
                                                 itemValue.asBoolean
                                             }
                                             itemPrimitiveValue.isNumber -> {
-                                                itemValue.asFloat
+
+                                                if (itemValue.toString().contains(".")) {
+                                                    itemValue.asFloat
+                                                } else {
+                                                    itemValue.asInt
+                                                }
                                             }
                                             else -> {
                                                 itemValue.asString
@@ -103,7 +108,12 @@ data class Node(
                                     value = itemValue.asBoolean
                                 }
                                 itemValue.isNumber -> {
-                                    value = itemValue.asFloat
+
+                                    value = if (itemValue.toString().contains(".")) {
+                                        itemValue.asFloat
+                                    } else {
+                                        itemValue.asInt
+                                    }
                                 }
                             }
                             val child = Node(
@@ -153,7 +163,7 @@ data class Node(
         return this
     }
 
-    fun get(what: String): String? {
+    fun get(what: String): Any? {
 
         val path = what.split(contextSeparator)
         val iterator = path.iterator()
@@ -169,6 +179,6 @@ data class Node(
                 return null
             }
         }
-        return node.value.toString()
+        return node.value
     }
 }
