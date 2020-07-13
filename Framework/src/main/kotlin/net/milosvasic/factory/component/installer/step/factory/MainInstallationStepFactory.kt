@@ -3,6 +3,7 @@ package net.milosvasic.factory.component.installer.step.factory
 import net.milosvasic.factory.component.docker.step.DockerInstallationStepType
 import net.milosvasic.factory.component.docker.step.dockerfile.Build
 import net.milosvasic.factory.component.docker.step.network.Network
+import net.milosvasic.factory.component.docker.step.network.NetworkValidator
 import net.milosvasic.factory.component.docker.step.stack.Check
 import net.milosvasic.factory.component.docker.step.stack.SkipConditionCheck
 import net.milosvasic.factory.component.docker.step.stack.Stack
@@ -114,7 +115,19 @@ class MainInstallationStepFactory : InstallationStepFactory {
             }
             DockerInstallationStepType.NETWORK.type -> {
 
-                return Network(definition.getValue())
+                val separator = ":"
+                val value = definition.getValue()
+                val validator = NetworkValidator(separator)
+                if (validator.validate(value)) {
+
+                    val arguments = value.split(separator)
+                    val name = arguments[0].trim()
+                    val subnet = arguments[1].trim()
+                    return Network(name, subnet)
+                } else {
+
+                    throw IllegalArgumentException("Invalid network parameters: $value")
+                }
             }
             DockerInstallationStepType.BUILD.type -> {
 

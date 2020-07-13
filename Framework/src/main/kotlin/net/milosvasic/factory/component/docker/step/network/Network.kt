@@ -4,7 +4,7 @@ import net.milosvasic.factory.component.docker.command.NetworkCreate
 import net.milosvasic.factory.component.docker.step.DockerInstallationStep
 import net.milosvasic.factory.execution.flow.implementation.CommandFlow
 
-class Network(private val name: String) : DockerInstallationStep() {
+class Network(private val name: String, private val subnet: String) : DockerInstallationStep() {
 
     @Throws(IllegalArgumentException::class, IllegalStateException::class)
     override fun getFlow(): CommandFlow {
@@ -13,7 +13,7 @@ class Network(private val name: String) : DockerInstallationStep() {
 
             return CommandFlow()
                     .width(conn)
-                    .perform(NetworkCreate(name))
+                    .perform(NetworkCreate(name, subnet))
         }
         throw IllegalArgumentException("No connection provided")
     }
