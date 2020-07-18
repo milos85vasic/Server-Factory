@@ -113,7 +113,7 @@ object ConfigurationManager : Initialization {
                     " "
                 }
                 node.value.let { value ->
-                    val nodeValue = Variable.parse(value.toString())
+                    val nodeValue = Variable.parse(value)
                     node.name.let { name ->
                         if (name != String.EMPTY) {
                             log.v("Configuration variable:$printablePrefix$name -> $nodeValue")
