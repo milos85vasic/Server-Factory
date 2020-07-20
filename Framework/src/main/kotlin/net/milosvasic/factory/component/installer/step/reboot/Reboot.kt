@@ -19,6 +19,8 @@ import net.milosvasic.factory.terminal.command.RebootCommand
 class Reboot(private val timeoutInSeconds: Int = 120) : RemoteOperationInstallationStep<SSH>() {
 
     private var pingCount = 0
+    private var helloCount = 0
+    private val hello = "Hello"
     private val rebootScheduleTime = 3
     private var remote: Remote? = null
     private var terminal: Terminal? = null
@@ -27,15 +29,38 @@ class Reboot(private val timeoutInSeconds: Int = 120) : RemoteOperationInstallat
         override fun onOperationPerformed(result: OperationResult) {
 
             when (result.operation) {
+
                 is PingCommand -> {
+
                     if (result.success) {
-                        finish(true)
+                        hello()
                     } else {
 
                         if (pingCount <= timeoutInSeconds) {
                             ping()
                         } else {
+                            log.e("Reboot timeout exceeded")
+                            finish(false)
+                        }
+                    }
+                }
+            }
+        }
+    }
 
+    private val helloCallback = object : OperationResultListener {
+        override fun onOperationPerformed(result: OperationResult) {
+
+            when (result.operation) {
+                is EchoCommand -> {
+
+                    if (result.success) {
+                        finish(true)
+                    } else {
+
+                        if (helloCount <= timeoutInSeconds) {
+                            hello()
+                        } else {
                             log.e("Reboot timeout exceeded")
                             finish(false)
                         }
@@ -95,7 +120,12 @@ class Reboot(private val timeoutInSeconds: Int = 120) : RemoteOperationInstallat
         if (success && pingCount == 0) {
 
             try {
-                Thread.sleep(3000)
+
+                log.v("Waiting for remote host to restart")
+                for (x in 1..10) {
+                    log.v("Counting:  $x")
+                    Thread.sleep(1000)
+                }
                 ping()
             } catch (e: InterruptedException) {
 
@@ -105,6 +135,7 @@ class Reboot(private val timeoutInSeconds: Int = 120) : RemoteOperationInstallat
         } else {
 
             terminal?.unsubscribe(pingCallback)
+            connection?.unsubscribe(helloCallback)
             super.finish(success)
         }
     }
@@ -123,6 +154,36 @@ class Reboot(private val timeoutInSeconds: Int = 120) : RemoteOperationInstallat
             terminal?.let { term ->
                 try {
                     term.execute(PingCommand(host, 1))
+                } catch (e: IllegalStateException) {
+
+                    log.e(e)
+                    finish(false)
+                } catch (e: IllegalArgumentException) {
+
+                    log.e(e)
+                    finish(false)
+                }
+            }
+        }
+    }
+
+    private fun hello() {
+
+        helloCount++
+        log.v("Hello no. $helloCount")
+        val host = remote?.host
+        if (host == null) {
+
+            log.e("No host to hello provided")
+            finish(false)
+        } else {
+
+            connection?.let { conn ->
+                try {
+                    if (helloCount == 1) {
+                        conn.subscribe(helloCallback)
+                    }
+                    conn.execute(EchoCommand("Hello"))
                 } catch (e: IllegalStateException) {
 
                     log.e(e)
