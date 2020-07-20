@@ -18,9 +18,11 @@ import net.milosvasic.factory.terminal.command.RebootCommand
 
 class Reboot(private val timeoutInSeconds: Int = 120) : RemoteOperationInstallationStep<SSH>() {
 
+    private val maxHellos = 3
     private var pingCount = 0
     private var helloCount = 0
     private val hello = "Hello"
+    private val numberOfPings = 3
     private val rebootScheduleTime = 3
     private var remote: Remote? = null
     private var terminal: Terminal? = null
@@ -36,7 +38,7 @@ class Reboot(private val timeoutInSeconds: Int = 120) : RemoteOperationInstallat
                         hello()
                     } else {
 
-                        if (pingCount <= timeoutInSeconds) {
+                        if (pingCount <= (timeoutInSeconds / numberOfPings)) {
                             ping()
                         } else {
                             log.e("Reboot timeout exceeded")
@@ -58,7 +60,7 @@ class Reboot(private val timeoutInSeconds: Int = 120) : RemoteOperationInstallat
                         finish(true)
                     } else {
 
-                        if (helloCount <= timeoutInSeconds) {
+                        if (helloCount <= maxHellos) {
                             hello()
                         } else {
                             log.e("Reboot timeout exceeded")
@@ -153,7 +155,7 @@ class Reboot(private val timeoutInSeconds: Int = 120) : RemoteOperationInstallat
 
             terminal?.let { term ->
                 try {
-                    term.execute(PingCommand(host, 1))
+                    term.execute(PingCommand(host, numberOfPings))
                 } catch (e: IllegalStateException) {
 
                     log.e(e)
@@ -183,7 +185,7 @@ class Reboot(private val timeoutInSeconds: Int = 120) : RemoteOperationInstallat
                     if (helloCount == 1) {
                         conn.subscribe(helloCallback)
                     }
-                    conn.execute(EchoCommand("Hello"))
+                    conn.execute(EchoCommand(hello))
                 } catch (e: IllegalStateException) {
 
                     log.e(e)
