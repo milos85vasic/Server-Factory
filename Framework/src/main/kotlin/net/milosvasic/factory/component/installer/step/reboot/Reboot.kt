@@ -124,7 +124,7 @@ class Reboot(private val timeoutInSeconds: Int = 120) : RemoteOperationInstallat
             try {
 
                 log.v("Waiting for remote host to restart")
-                for (x in 1..10) {
+                for (x in 1..15) { // TODO: Negative ping.
                     log.v("Counting:  $x")
                     Thread.sleep(1000)
                 }
