@@ -23,6 +23,7 @@ class Reboot(private val timeoutInSeconds: Int = 120) : RemoteOperationInstallat
     private var helloCount = 0
     private val hello = "Hello"
     private val numberOfPings = 3
+    private var hasRestarted = false
     private val rebootScheduleTime = 3
     private var remote: Remote? = null
     private var terminal: Terminal? = null
@@ -33,11 +34,21 @@ class Reboot(private val timeoutInSeconds: Int = 120) : RemoteOperationInstallat
             when (result.operation) {
 
                 is PingCommand -> {
-
                     if (result.success) {
-                        hello()
+
+                        if (hasRestarted) {
+                            hello()
+                        } else {
+                            log.v("Remote host is not restarted yet")
+                            ping()
+                        }
                     } else {
 
+                        if (!hasRestarted) {
+                            pingCount = 0
+                            hasRestarted = true
+                            log.i("Remote host has been restarted")
+                        }
                         if (pingCount <= (timeoutInSeconds / numberOfPings)) {
                             ping()
                         } else {
@@ -120,14 +131,9 @@ class Reboot(private val timeoutInSeconds: Int = 120) : RemoteOperationInstallat
 
     override fun finish(success: Boolean) {
         if (success && pingCount == 0) {
-
             try {
 
                 log.v("Waiting for remote host to restart")
-                for (x in 1..15) { // TODO: Negative ping.
-                    log.v("Counting:  $x")
-                    Thread.sleep(1000)
-                }
                 ping()
             } catch (e: InterruptedException) {
 
