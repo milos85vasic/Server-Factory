@@ -153,7 +153,7 @@ data class Node(
                         children.add(node)
                     }
                 } else {
-                    children.addAll(node.children)
+                    append(*node.children.toTypedArray())
                 }
             }
             if (node.value != String.EMPTY) {
