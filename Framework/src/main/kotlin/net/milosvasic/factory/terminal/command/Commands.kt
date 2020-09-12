@@ -239,9 +239,22 @@ object Commands {
 
     fun portAvailable(port: Int) = "! $netstat -tulpn | ${grep(":$port")}"
 
-    fun portTaken(port: Int) : String {
+    fun portTaken(port: Int): String {
 
-        return "${echo("^C")} | $telnet $localhost $port | grep \"Connected\""
+        val serverHomePath = PathBuilder()
+                .addContext(Context.Server)
+                .setKey(Key.ServerHome)
+                .build()
+
+        val serverHome = Variable.get(serverHomePath)
+
+        val command = FilePathBuilder()
+                .addContext(serverHome)
+                .addContext("Utils")
+                .addContext("checkPortBound.sh")
+                .build()
+
+        return "$command $port"
     }
 
     @Throws(IllegalArgumentException::class, IllegalStateException::class)
