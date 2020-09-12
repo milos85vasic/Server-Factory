@@ -239,7 +239,10 @@ object Commands {
 
     fun portAvailable(port: Int) = "! $netstat -tulpn | ${grep(":$port")}"
 
-    fun portTaken(port: Int) = "${echo("^C")} | $telnet $localhost $port | grep \"Connected\""
+    fun portTaken(port: Int) : String {
+
+        return "${echo("^C")} | $telnet $localhost $port | grep \"Connected\""
+    }
 
     @Throws(IllegalArgumentException::class, IllegalStateException::class)
     fun getOpensslSubject(): String {
