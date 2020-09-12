@@ -239,7 +239,7 @@ object Commands {
 
     fun portAvailable(port: Int) = "! $netstat -tulpn | ${grep(":$port")}"
 
-    fun portTaken(port: Int): String {
+    fun portTaken(port: Int, timeout: Int): String {
 
         val serverHomePath = PathBuilder()
                 .addContext(Context.Server)
@@ -254,7 +254,7 @@ object Commands {
                 .addContext("checkPortBound.sh")
                 .build()
 
-        return "$command $port"
+        return "$command $port $timeout"
     }
 
     @Throws(IllegalArgumentException::class, IllegalStateException::class)

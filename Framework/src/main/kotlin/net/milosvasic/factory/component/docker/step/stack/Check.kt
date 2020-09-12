@@ -5,6 +5,6 @@ import net.milosvasic.factory.terminal.TerminalCommand
 
 open class Check(
         containerName: String,
-        checkCommand: TerminalCommand = CheckCommand(containerName)
+        checkCommand: TerminalCommand = CheckCommand(containerName, 120)
 
 ) : CommandInstallationStep(checkCommand)
