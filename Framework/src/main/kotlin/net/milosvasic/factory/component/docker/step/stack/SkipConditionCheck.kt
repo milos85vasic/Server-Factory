@@ -5,6 +5,6 @@ import net.milosvasic.factory.terminal.TerminalCommand
 
 open class SkipConditionCheck(
         containerName: String,
-        checkCommand: TerminalCommand = CheckCommand(containerName)
+        checkCommand: TerminalCommand = CheckCommand(containerName, 5)
 
 ) : SkipCondition(checkCommand)

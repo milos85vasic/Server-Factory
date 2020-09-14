@@ -1,10 +1,27 @@
 package net.milosvasic.factory.component.docker.step.stack
 
-import net.milosvasic.factory.component.docker.DockerCommand
+import net.milosvasic.factory.common.filesystem.FilePathBuilder
+import net.milosvasic.factory.configuration.variable.Context
+import net.milosvasic.factory.configuration.variable.Key
+import net.milosvasic.factory.configuration.variable.PathBuilder
+import net.milosvasic.factory.configuration.variable.Variable
 import net.milosvasic.factory.terminal.TerminalCommand
-import net.milosvasic.factory.terminal.command.Commands
 
-class CheckCommand(containerName: String, waitFor: Int = 3) : TerminalCommand(
+class CheckCommand(containerName: String, val timeout: Int) :
+        TerminalCommand("${getCommand()} $containerName $timeout")
 
-        "${Commands.sleep} $waitFor && ${DockerCommand.DOCKER.obtain()} ${DockerCommand.PS.obtain()} -a --filter \"status=running\" | ${Commands.grep(containerName)}"
-)
+private fun getCommand(): String {
+
+    val serverHomePath = PathBuilder()
+            .addContext(Context.Server)
+            .setKey(Key.ServerHome)
+            .build()
+
+    val serverHome = Variable.get(serverHomePath)
+
+    return FilePathBuilder()
+            .addContext(serverHome)
+            .addContext("Utils")
+            .addContext("check.sh")
+            .build()
+}
