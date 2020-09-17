@@ -9,9 +9,9 @@ import java.nio.file.InvalidPathException
 import java.util.concurrent.LinkedBlockingQueue
 
 abstract class Configuration(
+
         val name: String = String.EMPTY,
         val remote: Remote,
-
         includes: LinkedBlockingQueue<String>?,
         software: LinkedBlockingQueue<String>?,
         containers: LinkedBlockingQueue<String>?,
@@ -43,6 +43,18 @@ abstract class Configuration(
             }
             return fullPath
         }
+    }
+
+    open fun getDefaultSoftware() = listOf("Definitions/Software/Docker")
+
+    override fun getSoftwareDefinitions(): LinkedBlockingQueue<String> {
+
+        val definitions = LinkedBlockingQueue<String>()
+        super.getSoftwareDefinitions()?.let {
+            definitions.addAll(it)
+        }
+        definitions.addAll(getDefaultSoftware())
+        return definitions
     }
 
     open fun merge(configuration: Configuration) {

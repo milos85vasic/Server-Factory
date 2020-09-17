@@ -29,7 +29,7 @@ object ConfigurationManager : Initialization {
         }
         configuration = configurationFactory?.obtain(file)
         configuration?.let { config ->
-            config.software?.forEach {
+            config.getSoftwareDefinitions().forEach {
                 val path = Configuration.getConfigurationFilePath(it)
                 val softwareConfiguration = SoftwareConfiguration.obtain(path)
                 val variables = softwareConfiguration.variables

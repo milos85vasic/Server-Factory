@@ -7,10 +7,11 @@ import net.milosvasic.factory.remote.Remote
 import java.util.concurrent.LinkedBlockingQueue
 
 class StubConfiguration(
+
         name: String = String.EMPTY,
         remote: Remote,
         includes: LinkedBlockingQueue<String>?,
-        software: LinkedBlockingQueue<String>?,
+        software: LinkedBlockingQueue<String>,
         containers: LinkedBlockingQueue<String>?,
         variables: Node? = null
 

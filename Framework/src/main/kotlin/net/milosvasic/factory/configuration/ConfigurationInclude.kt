@@ -14,4 +14,6 @@ open class ConfigurationInclude(
     override fun toString(): String {
         return "ConfigurationInclude(\nincludes=$includes, \nvariables=$variables, \nsoftware=$software, \ncontainers=$containers\n)"
     }
+
+    open fun getSoftwareDefinitions() = software
 }
