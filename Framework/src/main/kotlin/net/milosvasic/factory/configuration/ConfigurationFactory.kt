@@ -67,6 +67,7 @@ abstract class ConfigurationFactory<T : Configuration> : ObtainParametrized<File
 
     private fun postInstantiate(configuration: T) {
 
+        // TODO: Find more appropriate way to initialize this
         if (configuration.includes == null) {
             configuration.includes = LinkedBlockingQueue()
         }

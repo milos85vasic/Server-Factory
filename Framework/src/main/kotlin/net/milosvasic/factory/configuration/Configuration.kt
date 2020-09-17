@@ -45,9 +45,9 @@ abstract class Configuration(
         }
     }
 
-    open fun getDefaultSoftware() = listOf("Definitions/Software/Docker")
+    open fun getDefaultSoftware() = listOf("Definitions/Software/Docker") // TODO: Make sure that this is dynamic
 
-    open fun getDefaultContainers() = listOf<String>()
+    open fun getDefaultContainers() = listOf<String>() // TODO: Make sure that this is dynamic
 
     override fun getSoftwareDefinitions(): LinkedBlockingQueue<String> {
 
