@@ -47,6 +47,8 @@ abstract class Configuration(
 
     open fun getDefaultSoftware() = listOf("Definitions/Software/Docker")
 
+    open fun getDefaultContainers() = listOf<String>()
+
     override fun getSoftwareDefinitions(): LinkedBlockingQueue<String> {
 
         val definitions = LinkedBlockingQueue<String>()
@@ -54,6 +56,16 @@ abstract class Configuration(
             definitions.addAll(it)
         }
         definitions.addAll(getDefaultSoftware())
+        return definitions
+    }
+
+    override fun getContainersDefinitions(): LinkedBlockingQueue<String> {
+
+        val definitions = LinkedBlockingQueue<String>()
+        super.getContainersDefinitions()?.let {
+            definitions.addAll(it)
+        }
+        definitions.addAll(getDefaultContainers())
         return definitions
     }
 

@@ -12,8 +12,11 @@ open class ConfigurationInclude(
 ) {
 
     override fun toString(): String {
-        return "ConfigurationInclude(\nincludes=$includes, \nvariables=$variables, \nsoftware=$software, \ncontainers=$containers\n)"
+
+        return "ConfigurationInclude(\nincludes=$includes, \nvariables=$variables, \nsoftware=${getSoftwareDefinitions()}, \ncontainers=${getContainersDefinitions()}\n)"
     }
 
     open fun getSoftwareDefinitions() = software
+
+    open fun getContainersDefinitions() = containers
 }

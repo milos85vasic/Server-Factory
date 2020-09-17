@@ -36,7 +36,7 @@ object ConfigurationManager : Initialization {
                 config.mergeVariables(variables)
                 softwareConfigurations.add(softwareConfiguration)
             }
-            config.containers?.forEach {
+            config.getContainersDefinitions().forEach {
                 val path = Configuration.getConfigurationFilePath(it)
                 val containerConfiguration = SoftwareConfiguration.obtain(path)
                 val variables = containerConfiguration.variables
