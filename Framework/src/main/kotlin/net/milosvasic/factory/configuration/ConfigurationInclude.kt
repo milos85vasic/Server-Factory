@@ -8,15 +8,12 @@ open class ConfigurationInclude(
         var includes: LinkedBlockingQueue<String>?,
         var software: LinkedBlockingQueue<String>?,
         var containers: LinkedBlockingQueue<String>?,
-        var variables: Node? = null
+        var variables: Node? = null,
+        var enabled: Boolean? = null
 ) {
 
     override fun toString(): String {
 
-        return "ConfigurationInclude(\nincludes=$includes, \nvariables=$variables, \nsoftware=${getSoftwareDefinitions()}, \ncontainers=${getContainersDefinitions()}\n)"
+        return "ConfigurationInclude(\nincludes=$includes, \nvariables=$variables, \nsoftware=$software}, \ncontainers=$containers\n)"
     }
-
-    open fun getSoftwareDefinitions() = software
-
-    open fun getContainersDefinitions() = containers
 }

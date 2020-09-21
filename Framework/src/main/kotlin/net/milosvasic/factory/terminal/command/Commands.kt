@@ -6,6 +6,7 @@ import net.milosvasic.factory.configuration.variable.Context
 import net.milosvasic.factory.configuration.variable.Key
 import net.milosvasic.factory.configuration.variable.PathBuilder
 import net.milosvasic.factory.configuration.variable.Variable
+import net.milosvasic.factory.fileLocationHere
 import net.milosvasic.factory.localhost
 import net.milosvasic.factory.remote.Remote
 import java.nio.file.InvalidPathException
@@ -13,13 +14,13 @@ import java.nio.file.InvalidPathException
 object Commands {
 
     const val rm = "rm"
-    const val here = "."
     const val cp = "cp -R"
     const val ssh = "ssh -p"
     const val scp = "scp -P"
     const val uname = "uname"
     const val sleep = "sleep"
     const val hostname = "hostname"
+    const val here = fileLocationHere
     const val tarExtension = ".tar.gz"
     private const val find = "find "
 

@@ -3,11 +3,14 @@ package net.milosvasic.factory.configuration
 import net.milosvasic.factory.EMPTY
 import net.milosvasic.factory.common.busy.Busy
 import net.milosvasic.factory.common.busy.BusyWorker
+import net.milosvasic.factory.common.filesystem.FilePathBuilder
 import net.milosvasic.factory.common.initialization.Initialization
 import net.milosvasic.factory.configuration.variable.Node
 import net.milosvasic.factory.configuration.variable.Variable
+import net.milosvasic.factory.fileLocationHere
 import net.milosvasic.factory.log
 import java.io.File
+import java.util.concurrent.LinkedBlockingQueue
 
 object ConfigurationManager : Initialization {
 
@@ -29,19 +32,57 @@ object ConfigurationManager : Initialization {
         }
         configuration = configurationFactory?.obtain(file)
         configuration?.let { config ->
-            config.getSoftwareDefinitions().forEach {
+            config.enabled?.let { enabled ->
+                if (!enabled) {
+
+                    throw IllegalStateException("Configuration is not enabled")
+                }
+            }
+            config.software?.let {
+
+                val path = FilePathBuilder()
+                        .addContext("Definitions")
+                        .addContext("Software")
+                        .getPath()
+
+                val directory = File(path)
+                findDefinitions(directory, it)
+            }
+            config.containers?.let {
+
+                val path = FilePathBuilder()
+                        .addContext("Definitions")
+                        .addContext("Containers")
+                        .getPath()
+
+                val directory = File(path)
+                findDefinitions(directory, it)
+            }
+            config.software?.forEach {
                 val path = Configuration.getConfigurationFilePath(it)
                 val softwareConfiguration = SoftwareConfiguration.obtain(path)
-                val variables = softwareConfiguration.variables
-                config.mergeVariables(variables)
-                softwareConfigurations.add(softwareConfiguration)
+                if (softwareConfiguration.enabled) {
+
+                    val variables = softwareConfiguration.variables
+                    config.mergeVariables(variables)
+                    softwareConfigurations.add(softwareConfiguration)
+                } else {
+
+                    log.w("Disabled software configuration: $path")
+                }
             }
-            config.getContainersDefinitions().forEach {
+            config.containers?.forEach {
                 val path = Configuration.getConfigurationFilePath(it)
                 val containerConfiguration = SoftwareConfiguration.obtain(path)
-                val variables = containerConfiguration.variables
-                config.mergeVariables(variables)
-                containersConfigurations.add(containerConfiguration)
+                if (containerConfiguration.enabled) {
+
+                    val variables = containerConfiguration.variables
+                    config.mergeVariables(variables)
+                    containersConfigurations.add(containerConfiguration)
+                } else {
+
+                    log.w("Disabled container configuration: $path")
+                }
             }
             printVariableNode(config.variables)
         }
@@ -128,6 +169,24 @@ object ConfigurationManager : Initialization {
                 }
                 nextPrefix += node.name
                 printVariableNode(child, nextPrefix)
+            }
+        }
+    }
+
+    private fun findDefinitions(directory: File, collection: LinkedBlockingQueue<String>) {
+
+        val files = directory.listFiles()
+        files?.forEach { file ->
+            if (file.isDirectory) {
+
+                findDefinitions(file, collection)
+            } else {
+                if (file.name == "Definition.json") {
+
+                    val definition = file.absolutePath
+                    log.v("Software definition found: $definition")
+                    collection.add(definition)
+                }
             }
         }
     }
