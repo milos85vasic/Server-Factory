@@ -15,10 +15,7 @@ import net.milosvasic.factory.component.docker.Docker
 import net.milosvasic.factory.component.docker.DockerInitializationFlowCallback
 import net.milosvasic.factory.component.installer.Installer
 import net.milosvasic.factory.component.installer.InstallerInitializationFlowCallback
-import net.milosvasic.factory.configuration.Configuration
-import net.milosvasic.factory.configuration.ConfigurationFactory
-import net.milosvasic.factory.configuration.ConfigurationManager
-import net.milosvasic.factory.configuration.SoftwareConfiguration
+import net.milosvasic.factory.configuration.*
 import net.milosvasic.factory.configuration.variable.Context
 import net.milosvasic.factory.configuration.variable.Key
 import net.milosvasic.factory.configuration.variable.PathBuilder
@@ -52,8 +49,7 @@ abstract class ServerFactory(val arguments: List<String> = listOf()) : Applicati
     private val terminationOperation = ServerFactoryTerminationOperation()
     private val subscribers = ConcurrentLinkedQueue<OperationResultListener>()
     private val initializationOperation = ServerFactoryInitializationOperation()
-    private val softwareConfigurations = mutableListOf<SoftwareConfiguration>()
-    private val containersConfigurations = mutableListOf<SoftwareConfiguration>()
+    private var configurations = mutableMapOf<SoftwareConfigurationType, MutableList<SoftwareConfiguration>>()
 
     private var connectionProvider: ConnectionProvider = object : ConnectionProvider {
 
@@ -85,9 +81,11 @@ abstract class ServerFactory(val arguments: List<String> = listOf()) : Applicati
                         throw IllegalStateException("Configuration is null")
                     }
                     configuration?.let { config ->
+                        SoftwareConfigurationType.values().forEach { type ->
 
-                        softwareConfigurations.addAll(ConfigurationManager.getSoftwareConfiguration())
-                        containersConfigurations.addAll(ConfigurationManager.getContainerConfiguration())
+                            val configurationItems = ConfigurationManager.getConfigurationItems(type)
+                            getConfigurationItems(type).addAll(configurationItems)
+                        }
                         log.v(config.name)
                         notifyInit(true)
                     }
@@ -126,8 +124,11 @@ abstract class ServerFactory(val arguments: List<String> = listOf()) : Applicati
                 it.terminate()
             }
             configuration = null
-            softwareConfigurations.clear()
-            containersConfigurations.clear()
+            SoftwareConfigurationType.values().forEach { type ->
+
+                val items = getConfigurationItems(type)
+                items.clear()
+            }
             notifyTerm()
         } catch (e: IllegalStateException) {
             notifyTerm(e)
@@ -290,12 +291,15 @@ abstract class ServerFactory(val arguments: List<String> = listOf()) : Applicati
     }
 
     private fun getInstallationFlow(installer: Installer, dockerInitFlow: InitializationFlow): InstallationFlow? {
-        if (softwareConfigurations.isEmpty()) {
+
+        val items = getConfigurationItems(SoftwareConfigurationType.SOFTWARE)
+        if (items.isEmpty()) {
             return null
         }
         val installFlow = InstallationFlow(installer)
         val dieCallback = DieOnFailureCallback()
-        softwareConfigurations.forEach {
+        items.forEach {
+
             installFlow.width(it)
         }
         return installFlow
@@ -306,7 +310,8 @@ abstract class ServerFactory(val arguments: List<String> = listOf()) : Applicati
     private fun getDockerFlow(docker: Docker, terminationFlow: FlowBuilder<*, *, *>): InstallationFlow {
 
         val dockerFlow = InstallationFlow(docker)
-        containersConfigurations.forEach { softwareConfiguration ->
+        val items = getConfigurationItems(SoftwareConfigurationType.CONTAINERS)
+        items.forEach { softwareConfiguration ->
             softwareConfiguration.software.forEach { software ->
                 dockerFlow.width(
                         SoftwareConfiguration(
@@ -339,13 +344,6 @@ abstract class ServerFactory(val arguments: List<String> = listOf()) : Applicati
                 .connect(dockerFlow)
                 .onFinish(initCallback)
     }
-
-    @Throws(IllegalArgumentException::class)
-    private fun getInitializationFlow(
-            initializer: Initializer,
-            nextFlow: FlowBuilder<*, *, *>
-
-    ) = getInitializationFlow(listOf(initializer), nextFlow)
 
     @Throws(IllegalArgumentException::class)
     private fun getInitializationFlow(
@@ -412,5 +410,15 @@ abstract class ServerFactory(val arguments: List<String> = listOf()) : Applicati
             throw IllegalArgumentException("Empty hostname obtained for the server")
         }
         return hostname
+    }
+
+    private fun getConfigurationItems(type: SoftwareConfigurationType): MutableList<SoftwareConfiguration> {
+
+        var configurationItems = configurations[type]
+        if (configurationItems == null) {
+            configurationItems = mutableListOf()
+            configurations[type] = configurationItems
+        }
+        return configurationItems
     }
 }

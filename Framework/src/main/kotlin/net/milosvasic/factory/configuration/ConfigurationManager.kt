@@ -85,10 +85,6 @@ object ConfigurationManager : Initialization {
         throw IllegalStateException("No configuration available")
     }
 
-    fun getSoftwareConfiguration() = getConfigurationItems(SoftwareConfigurationType.SOFTWARE)
-
-    fun getContainerConfiguration() = getConfigurationItems(SoftwareConfigurationType.CONTAINERS)
-
     @Synchronized
     override fun isInitialized(): Boolean {
         return configuration != null
@@ -127,7 +123,7 @@ object ConfigurationManager : Initialization {
         }
     }
 
-    private fun getConfigurationItems(type: SoftwareConfigurationType): MutableList<SoftwareConfiguration> {
+    fun getConfigurationItems(type: SoftwareConfigurationType): MutableList<SoftwareConfiguration> {
 
         var configurationItems = configurations[type]
         if (configurationItems == null) {
