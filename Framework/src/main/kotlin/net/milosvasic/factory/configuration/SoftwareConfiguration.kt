@@ -3,6 +3,7 @@ package net.milosvasic.factory.configuration
 import com.google.gson.GsonBuilder
 import com.google.gson.JsonParseException
 import net.milosvasic.factory.EMPTY
+import net.milosvasic.factory.common.filesystem.FilePathBuilder
 import net.milosvasic.factory.common.obtain.ObtainParametrized
 import net.milosvasic.factory.component.installer.step.InstallationStep
 import net.milosvasic.factory.component.installer.step.factory.InstallationStepFactories
@@ -15,7 +16,9 @@ data class SoftwareConfiguration(
         var configuration: String = String.EMPTY,
         var variables: Node? = null,
         val software: MutableList<SoftwareConfigurationItem> = mutableListOf(),
-        val includes: MutableList<String> = mutableListOf()
+        val includes: MutableList<String> = mutableListOf(),
+        val enabled: Boolean = true
+
 ) : ObtainParametrized<String, Map<String, List<InstallationStep<*>>>> {
 
     companion object : ObtainParametrized<String, SoftwareConfiguration> {
@@ -39,7 +42,16 @@ data class SoftwareConfiguration(
                 instance.configuration = configurationName
                 val included = mutableListOf<SoftwareConfiguration>()
                 instance.includes.forEach { include ->
-                    included.add(obtain(include))
+
+                    var path = include
+                    if (!include.startsWith(File.separator)) {
+
+                        path = FilePathBuilder()
+                                .addContext(configurationFile.parent)
+                                .addContext(include)
+                                .getPath()
+                    }
+                    included.add(obtain(path))
                 }
                 included.forEach { config ->
                     instance.merge(config)

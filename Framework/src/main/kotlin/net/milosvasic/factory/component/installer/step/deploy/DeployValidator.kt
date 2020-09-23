@@ -10,7 +10,7 @@ class DeployValidator : Validation<String> {
 
         Validator.Arguments.validateSingle(what)
         val arg = what[0]
-        val split = arg.split(Deploy.delimiter)
+        val split = arg.split(Deploy.DELIMITER)
         if (split.isEmpty()) {
             throw IllegalArgumentException("No delimited parameters available in form: 'from:to'")
         }

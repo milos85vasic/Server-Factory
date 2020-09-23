@@ -6,17 +6,17 @@ import java.util.regex.Pattern
 
 object Variable {
 
-    const val open = "{{"
-    const val close = "}}"
+    private const val OPEN = "{{"
+    private const val CLOSE = "}}"
 
-    private fun getRegex() = "${Pattern.quote(open)}(.*?)${Pattern.quote(close)}"
+    private fun getRegex() = "${Pattern.quote(OPEN)}(.*?)${Pattern.quote(CLOSE)}"
 
     private fun getPattern() = Pattern.compile(getRegex())
 
     @Throws(IllegalStateException::class)
     fun get(path: Path): String {
 
-        return parse("$open${path.getPath()}$close")
+        return parse("$OPEN${path.getPath()}$CLOSE")
     }
 
     @Throws(IllegalStateException::class)
@@ -45,7 +45,7 @@ object Variable {
                             if (variable == String.EMPTY) {
                                 noVariable(match)
                             }
-                            result = result.replace("$open$match$close", variable)
+                            result = result.replace("$OPEN$match$CLOSE", variable)
                         }
                     }
                 }

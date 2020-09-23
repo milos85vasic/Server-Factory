@@ -2,6 +2,7 @@ package net.milosvasic.factory.account
 
 enum class AccountType(val type: String) {
 
+    POSTMASTER("postmaster"),
     EMAIL("email"),
     UNKNOWN("unknown");
 

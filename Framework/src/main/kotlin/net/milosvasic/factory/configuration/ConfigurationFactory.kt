@@ -3,6 +3,7 @@ package net.milosvasic.factory.configuration
 import com.google.gson.GsonBuilder
 import com.google.gson.JsonParseException
 import com.google.gson.JsonSyntaxException
+import net.milosvasic.factory.common.filesystem.FilePathBuilder
 import net.milosvasic.factory.common.obtain.ObtainParametrized
 import net.milosvasic.factory.configuration.variable.Node
 import net.milosvasic.factory.log
@@ -26,7 +27,6 @@ abstract class ConfigurationFactory<T : Configuration> : ObtainParametrized<File
         val configurationFile = param[0]
         if (configurationFile.exists()) {
 
-            log.v("Configuration file: ${configurationFile.absolutePath}")
             val configurationJson = configurationFile.readText()
             val variablesDeserializer = Node.getDeserializer()
             val gsonBuilder = GsonBuilder()
@@ -36,11 +36,29 @@ abstract class ConfigurationFactory<T : Configuration> : ObtainParametrized<File
 
                 val configuration: T = gson.fromJson(configurationJson, getType())
                 postInstantiate(configuration)
+                configuration.enabled?.let { enabled ->
+                    if (enabled) {
+                        log.v("Configuration file: ${configurationFile.absolutePath}")
+                    } else {
+                        log.v("Configuration file: ${configurationFile.absolutePath} DISABLED")
+                    }
+                }
+
                 val iterator = configuration.includes?.iterator()
                 iterator?.let {
                     while (it.hasNext()) {
                         val include = it.next()
-                        val includeFile = File(include)
+                        var includeFile = File(include)
+                        if (!include.startsWith(File.separator)) {
+
+                            val path = FilePathBuilder()
+                                    .addContext(configurationFile.parent)
+                                    .addContext(include)
+                                    .getPath()
+
+                            includeFile = File(path)
+                        }
+
                         val includedConfiguration = obtain(includeFile)
                         configuration.merge(includedConfiguration)
                     }
@@ -67,6 +85,9 @@ abstract class ConfigurationFactory<T : Configuration> : ObtainParametrized<File
 
     private fun postInstantiate(configuration: T) {
 
+        if (configuration.enabled == null) {
+            configuration.enabled = true
+        }
         if (configuration.includes == null) {
             configuration.includes = LinkedBlockingQueue()
         }
