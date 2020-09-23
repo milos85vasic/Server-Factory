@@ -13,6 +13,8 @@ import java.util.concurrent.LinkedBlockingQueue
 
 object ConfigurationManager : Initialization {
 
+    private const val DIRECTORY_DEFINITIONS = "Definitions"
+
     private val busy = Busy()
     private var configurationPath = String.EMPTY
     private var configuration: Configuration? = null
@@ -39,23 +41,25 @@ object ConfigurationManager : Initialization {
             }
             config.software?.let {
 
+                val type = SoftwareConfigurationType.SOFTWARE
                 val path = FilePathBuilder()
-                        .addContext("Definitions")
-                        .addContext("Software")
+                        .addContext(DIRECTORY_DEFINITIONS)
+                        .addContext(type.label)
                         .getPath()
 
                 val directory = File(path)
-                findDefinitions(directory, it)
+                findDefinitions(type, directory, it)
             }
             config.containers?.let {
 
+                val type = SoftwareConfigurationType.CONTAINERS
                 val path = FilePathBuilder()
-                        .addContext("Definitions")
-                        .addContext("Containers")
+                        .addContext(DIRECTORY_DEFINITIONS)
+                        .addContext(type.label)
                         .getPath()
 
                 val directory = File(path)
-                findDefinitions(directory, it)
+                findDefinitions(type, directory, it)
             }
             config.software?.forEach {
                 val path = Configuration.getConfigurationFilePath(it)
@@ -172,18 +176,23 @@ object ConfigurationManager : Initialization {
         }
     }
 
-    private fun findDefinitions(directory: File, collection: LinkedBlockingQueue<String>) {
+    private fun findDefinitions(
+
+            type: SoftwareConfigurationType,
+            directory: File,
+            collection: LinkedBlockingQueue<String>
+    ) {
 
         val files = directory.listFiles()
         files?.forEach { file ->
             if (file.isDirectory) {
 
-                findDefinitions(file, collection)
+                findDefinitions(type, file, collection)
             } else {
                 if (file.name == Configuration.DEFAULT_CONFIGURATION_FILE) {
 
                     val definition = file.absolutePath
-                    log.v("Software definition found: $definition")
+                    log.v("${type.label} definition found: $definition")
                     collection.add(definition)
                 }
             }
