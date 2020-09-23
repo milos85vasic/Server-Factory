@@ -19,8 +19,7 @@ object ConfigurationManager : Initialization {
     private var configurationPath = String.EMPTY
     private var configuration: Configuration? = null
     private var configurationFactory: ConfigurationFactory<*>? = null
-    private val softwareConfigurations = mutableListOf<SoftwareConfiguration>()
-    private val containersConfigurations = mutableListOf<SoftwareConfiguration>()
+    private var configurations = mutableMapOf<SoftwareConfigurationType, MutableList<SoftwareConfiguration>>()
 
     @Throws(IllegalArgumentException::class, IllegalStateException::class)
     override fun initialize() {
@@ -39,54 +38,35 @@ object ConfigurationManager : Initialization {
                     throw IllegalStateException("Configuration is not enabled")
                 }
             }
-            config.software?.let {
+            config.getConfigurationMap().forEach { (type, items) ->
+                items?.let {
 
-                val type = SoftwareConfigurationType.SOFTWARE
-                val path = FilePathBuilder()
-                        .addContext(DIRECTORY_DEFINITIONS)
-                        .addContext(type.label)
-                        .getPath()
+                    val path = FilePathBuilder()
+                            .addContext(DIRECTORY_DEFINITIONS)
+                            .addContext(type.label)
+                            .getPath()
 
-                val directory = File(path)
-                findDefinitions(type, directory, it)
-            }
-            config.containers?.let {
+                    val directory = File(path)
+                    findDefinitions(type, directory, it)
 
-                val type = SoftwareConfigurationType.CONTAINERS
-                val path = FilePathBuilder()
-                        .addContext(DIRECTORY_DEFINITIONS)
-                        .addContext(type.label)
-                        .getPath()
+                    it.forEach { item ->
+                        val configurationPath = Configuration.getConfigurationFilePath(item)
+                        val obtainedConfiguration = SoftwareConfiguration.obtain(configurationPath)
+                        if (obtainedConfiguration.enabled) {
 
-                val directory = File(path)
-                findDefinitions(type, directory, it)
-            }
-            config.software?.forEach {
-                val path = Configuration.getConfigurationFilePath(it)
-                val softwareConfiguration = SoftwareConfiguration.obtain(path)
-                if (softwareConfiguration.enabled) {
+                            val variables = obtainedConfiguration.variables
+                            config.mergeVariables(variables)
 
-                    val variables = softwareConfiguration.variables
-                    config.mergeVariables(variables)
-                    softwareConfigurations.add(softwareConfiguration)
-                } else {
+                            val configurationItems = getConfigurationItems(type)
+                            configurationItems.add(obtainedConfiguration)
+                        } else {
 
-                    log.w("Disabled software configuration: $path")
+                            log.w("Disabled ${type.label.toLowerCase()} configuration: $configurationPath")
+                        }
+                    }
                 }
             }
-            config.containers?.forEach {
-                val path = Configuration.getConfigurationFilePath(it)
-                val containerConfiguration = SoftwareConfiguration.obtain(path)
-                if (containerConfiguration.enabled) {
 
-                    val variables = containerConfiguration.variables
-                    config.mergeVariables(variables)
-                    containersConfigurations.add(containerConfiguration)
-                } else {
-
-                    log.w("Disabled container configuration: $path")
-                }
-            }
             printVariableNode(config.variables)
         }
         if (configuration == null) {
@@ -105,9 +85,9 @@ object ConfigurationManager : Initialization {
         throw IllegalStateException("No configuration available")
     }
 
-    fun getSoftwareConfiguration() = softwareConfigurations
+    fun getSoftwareConfiguration() = getConfigurationItems(SoftwareConfigurationType.SOFTWARE)
 
-    fun getContainerConfiguration() = containersConfigurations
+    fun getContainerConfiguration() = getConfigurationItems(SoftwareConfigurationType.CONTAINERS)
 
     @Synchronized
     override fun isInitialized(): Boolean {
@@ -147,6 +127,39 @@ object ConfigurationManager : Initialization {
         }
     }
 
+    private fun getConfigurationItems(type: SoftwareConfigurationType): MutableList<SoftwareConfiguration> {
+
+        var configurationItems = configurations[type]
+        if (configurationItems == null) {
+            configurationItems = mutableListOf()
+            configurations[type] = configurationItems
+        }
+        return configurationItems
+    }
+
+    private fun findDefinitions(
+
+            type: SoftwareConfigurationType,
+            directory: File,
+            collection: LinkedBlockingQueue<String>
+    ) {
+
+        val files = directory.listFiles()
+        files?.forEach { file ->
+            if (file.isDirectory) {
+
+                findDefinitions(type, file, collection)
+            } else {
+                if (file.name == Configuration.DEFAULT_CONFIGURATION_FILE) {
+
+                    val definition = file.absolutePath
+                    log.v("${type.label} definition found: $definition")
+                    collection.add(definition)
+                }
+            }
+        }
+    }
+
     private fun printVariableNode(variableNode: Node?, prefix: String = String.EMPTY) {
         val prefixEnd = "-> "
         variableNode?.let { node ->
@@ -172,29 +185,6 @@ object ConfigurationManager : Initialization {
                 }
                 nextPrefix += node.name
                 printVariableNode(child, nextPrefix)
-            }
-        }
-    }
-
-    private fun findDefinitions(
-
-            type: SoftwareConfigurationType,
-            directory: File,
-            collection: LinkedBlockingQueue<String>
-    ) {
-
-        val files = directory.listFiles()
-        files?.forEach { file ->
-            if (file.isDirectory) {
-
-                findDefinitions(type, file, collection)
-            } else {
-                if (file.name == Configuration.DEFAULT_CONFIGURATION_FILE) {
-
-                    val definition = file.absolutePath
-                    log.v("${type.label} definition found: $definition")
-                    collection.add(definition)
-                }
             }
         }
     }

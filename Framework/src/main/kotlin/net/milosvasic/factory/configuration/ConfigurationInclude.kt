@@ -16,4 +16,10 @@ open class ConfigurationInclude(
 
         return "ConfigurationInclude(\nincludes=$includes, \nvariables=$variables, \nsoftware=$software}, \ncontainers=$containers\n)"
     }
+
+    fun getConfigurationMap() = mapOf(
+
+            SoftwareConfigurationType.SOFTWARE to software,
+            SoftwareConfigurationType.CONTAINERS to containers
+    )
 }
