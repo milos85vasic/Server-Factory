@@ -5,15 +5,12 @@ import net.milosvasic.factory.error.ERROR
 import net.milosvasic.logger.CompositeLogger
 import net.milosvasic.logger.ConsoleLogger
 import net.milosvasic.logger.FilesystemLogger
-import java.io.File
 import kotlin.system.exitProcess
 
-const val fileLocationHere = "."
+const val LOCALHOST = "127.0.0.1"
+const val FILE_LOCATION_HERE = "."
 
 var tag = BuildInfo.NAME
-
-const val localhost = "127.0.0.1"
-
 val compositeLogger = CompositeLogger()
 
 val log = object : Logger {

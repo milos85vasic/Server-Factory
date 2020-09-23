@@ -1,10 +1,10 @@
 package net.milosvasic.factory.remote
 
 import com.google.gson.annotations.SerializedName
-import net.milosvasic.factory.localhost
+import net.milosvasic.factory.LOCALHOST
 
 data class Remote(
-    val host: String = localhost,
-    val port: Int,
-    @SerializedName("user") val account: String
+        val host: String = LOCALHOST,
+        val port: Int,
+        @SerializedName("user") val account: String
 )

@@ -20,14 +20,15 @@ import java.nio.file.InvalidPathException
 open class Deploy(what: String, private val where: String) : RemoteOperationInstallationStep<SSH>() {
 
     companion object {
-        const val delimiter = ":"
-        const val prototypePrefix = "proto."
+
+        const val DELIMITER = ":"
+        const val PROTOTYPE_PREFIX = "proto."
     }
 
     private val whatFile = File(what)
     private var remote: Remote? = null
     private var terminal: Terminal? = null
-    private val excludes = listOf("$prototypePrefix*")
+    private val excludes = listOf("$PROTOTYPE_PREFIX*")
     private val localPath = localPath().absolutePath
 
     private val onDirectoryCreated = object : DataHandler<OperationResult> {
@@ -117,7 +118,7 @@ open class Deploy(what: String, private val where: String) : RemoteOperationInst
 
     override fun getOperation() = DeployOperation()
 
-    protected open fun getScpCommand() = Commands.scp
+    protected open fun getScpCommand() = Commands.SCP
 
     @Throws(InvalidPathException::class)
     protected open fun getScp(remote: Remote): TerminalCommand = ScpCommand(getLocalTar(), where, remote)
@@ -129,7 +130,7 @@ open class Deploy(what: String, private val where: String) : RemoteOperationInst
             files.forEach { file ->
                 if (file.isDirectory) {
                     processFiles(file)
-                } else if (file.name.toLowerCase().startsWith(prototypePrefix)) {
+                } else if (file.name.toLowerCase().startsWith(PROTOTYPE_PREFIX)) {
                     processFile(directory, file)
                 }
             }
@@ -143,7 +144,7 @@ open class Deploy(what: String, private val where: String) : RemoteOperationInst
             files.forEach { file ->
                 if (file.isDirectory) {
                     cleanupFiles(file)
-                } else if (file.name.toLowerCase().startsWith(prototypePrefix)) {
+                } else if (file.name.toLowerCase().startsWith(PROTOTYPE_PREFIX)) {
                     val toRemove = File(directory, getName(file))
                     cleanupFile(toRemove)
                 }
@@ -185,7 +186,7 @@ open class Deploy(what: String, private val where: String) : RemoteOperationInst
         }
     }
 
-    private fun getName(file: File) = file.name.toLowerCase().replace(prototypePrefix, "")
+    private fun getName(file: File) = file.name.toLowerCase().replace(PROTOTYPE_PREFIX, "")
 
     private fun localPath(): File {
         whatFile.parentFile?.let {
@@ -202,7 +203,7 @@ open class Deploy(what: String, private val where: String) : RemoteOperationInst
         }
         val excluded = mutableListOf<String>()
         excludes.forEach {
-            val exclude = FindAndRemoveCommand(it, Commands.here)
+            val exclude = FindAndRemoveCommand(it, Commands.HERE)
             excluded.add(exclude.command)
         }
         return ConcatenateCommand(*excluded.toTypedArray())
@@ -222,7 +223,7 @@ open class Deploy(what: String, private val where: String) : RemoteOperationInst
 
         return FilePathBuilder()
                 .addContext(where)
-                .addContext("${whatFile.name}${Commands.tarExtension}")
+                .addContext("${whatFile.name}${Commands.TAR_EXTENSION}")
                 .build()
     }
 
@@ -231,7 +232,7 @@ open class Deploy(what: String, private val where: String) : RemoteOperationInst
 
         return FilePathBuilder()
                 .addContext(localPath)
-                .addContext("${whatFile.name}${Commands.tarExtension}")
+                .addContext("${whatFile.name}${Commands.TAR_EXTENSION}")
                 .build()
     }
 }

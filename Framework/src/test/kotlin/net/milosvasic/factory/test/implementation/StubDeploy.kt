@@ -20,7 +20,7 @@ class StubDeploy(
     @Throws(InvalidPathException::class)
     override fun getScp(remote: Remote) = CpCommand(getLocalTar(), where)
 
-    override fun getScpCommand() = Commands.cp
+    override fun getScpCommand() = Commands.CP
 
     @Throws(IllegalArgumentException::class)
     override fun getProtoCleanup(): TerminalCommand {

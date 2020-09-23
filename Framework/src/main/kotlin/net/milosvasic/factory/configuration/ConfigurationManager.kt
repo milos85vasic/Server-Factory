@@ -7,7 +7,6 @@ import net.milosvasic.factory.common.filesystem.FilePathBuilder
 import net.milosvasic.factory.common.initialization.Initialization
 import net.milosvasic.factory.configuration.variable.Node
 import net.milosvasic.factory.configuration.variable.Variable
-import net.milosvasic.factory.fileLocationHere
 import net.milosvasic.factory.log
 import java.io.File
 import java.util.concurrent.LinkedBlockingQueue
@@ -181,7 +180,7 @@ object ConfigurationManager : Initialization {
 
                 findDefinitions(file, collection)
             } else {
-                if (file.name == "Definition.json") {
+                if (file.name == Configuration.DEFAULT_CONFIGURATION_FILE) {
 
                     val definition = file.absolutePath
                     log.v("Software definition found: $definition")

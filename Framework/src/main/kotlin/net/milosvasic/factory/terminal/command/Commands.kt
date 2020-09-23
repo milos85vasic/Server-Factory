@@ -1,47 +1,46 @@
 package net.milosvasic.factory.terminal.command
 
 import net.milosvasic.factory.EMPTY
+import net.milosvasic.factory.FILE_LOCATION_HERE
+import net.milosvasic.factory.LOCALHOST
 import net.milosvasic.factory.common.filesystem.FilePathBuilder
 import net.milosvasic.factory.configuration.variable.Context
 import net.milosvasic.factory.configuration.variable.Key
 import net.milosvasic.factory.configuration.variable.PathBuilder
 import net.milosvasic.factory.configuration.variable.Variable
-import net.milosvasic.factory.fileLocationHere
-import net.milosvasic.factory.localhost
 import net.milosvasic.factory.remote.Remote
 import java.nio.file.InvalidPathException
 
 object Commands {
 
-    const val rm = "rm"
-    const val cp = "cp -R"
-    const val ssh = "ssh -p"
-    const val scp = "scp -P"
-    const val uname = "uname"
-    const val sleep = "sleep"
-    const val hostname = "hostname"
-    const val here = fileLocationHere
-    const val tarExtension = ".tar.gz"
-    private const val find = "find "
+    const val RM = "rm"
+    const val CP = "cp -R"
+    const val SSH = "ssh -p"
+    const val SCP = "scp -P"
+    const val UNAME = "uname"
+    const val HOSTNAME = "hostname"
+    const val HERE = FILE_LOCATION_HERE
+    const val TAR_EXTENSION = ".tar.gz"
 
-    private const val cd = "cd"
-    private const val link = "ln -s"
-    private const val netstat = "ss"
-    private const val telnet = "telnet"
-    private const val mkdir = "mkdir -p"
-    private const val chmod = "chmod -R"
-    private const val chgrp = "chgrp -R"
-    private const val chown = "chown -R"
-    private const val openssl = "openssl"
-    private const val tarCompress = "tar -cjf"
-    private const val tarDecompress = "tar -xvf"
+    private const val CD = "cd"
+    private const val FIND = "find "
+    private const val LINK = "ln -s"
+    private const val NETSTAT = "ss"
+    private const val SLEEP = "sleep"
+    private const val MKDIR = "mkdir -p"
+    private const val CHMOD = "chmod -R"
+    private const val CHGRP = "chgrp -R"
+    private const val CHOWN = "chown -R"
+    private const val OPENSSL = "openssl"
+    private const val TAR_COMPRESS = "tar -cjf"
+    private const val TAR_DECOMPRESS = "tar -xvf"
 
     fun echo(what: String) = "echo '$what'"
 
     fun printf(what: String) = "printf '$what'"
 
-    fun ssh(user: String = "root", command: String, port: Int = 22, host: String = localhost): String {
-        return "$ssh $port $user@$host $command"
+    fun ssh(user: String = "root", command: String, port: Int = 22, host: String = LOCALHOST): String {
+        return "$SSH $port $user@$host $command"
     }
 
     fun ping(host: String, timeoutInSeconds: Int = 3): String {
@@ -52,39 +51,39 @@ object Commands {
 
     fun getApplicationInfo(application: String): String = "which $application"
 
-    fun reboot(rebootIn: Int = 2) = "( $sleep $rebootIn ; reboot ) & "
+    fun reboot(rebootIn: Int = 2) = "( $SLEEP $rebootIn ; reboot ) & "
 
     fun grep(what: String) = "grep \"$what\""
 
     fun scp(what: String, where: String, remote: Remote): String {
 
-        return "$scp ${remote.port} $what ${remote.account}@${remote.host}:$where"
+        return "$SCP ${remote.port} $what ${remote.account}@${remote.host}:$where"
     }
 
     fun cp(what: String, where: String): String {
 
-        return "$cp $what $where"
+        return "$CP $what $where"
     }
 
-    fun find(what: String, where: String) = "$find$where -name \"$what\""
+    fun find(what: String, where: String) = "$FIND$where -name \"$what\""
 
     fun tar(what: String, where: String): String {
 
         val destination = where.replace(".tar", "").replace(".gz", "")
-        return "$tarCompress $destination$tarExtension -C $what ."
+        return "$TAR_COMPRESS $destination$TAR_EXTENSION -C $what ."
     }
 
-    fun unTar(what: String, where: String) = "$tarDecompress $what -C $where"
+    fun unTar(what: String, where: String) = "$TAR_DECOMPRESS $what -C $where"
 
-    fun rm(what: String) = "$rm $what"
+    fun rm(what: String) = "$RM $what"
 
-    fun chmod(where: String, mode: String) = "$chmod $mode $where"
+    fun chmod(where: String, mode: String) = "$CHMOD $mode $where"
 
-    fun chgrp(group: String, directory: String) = "$chgrp $group $directory"
+    fun chgrp(group: String, directory: String) = "$CHGRP $group $directory"
 
-    fun chown(account: String, directory: String) = "$chown $account $directory"
+    fun chown(account: String, directory: String) = "$CHOWN $account $directory"
 
-    fun mkdir(path: String) = "$mkdir $path"
+    fun mkdir(path: String) = "$MKDIR $path"
 
     fun concatenate(vararg commands: String): String {
         var result = String.EMPTY
@@ -103,7 +102,7 @@ object Commands {
 
     fun cat(what: String) = "cat $what"
 
-    fun openssl(command: String) = Variable.parse("$openssl $command")
+    fun openssl(command: String) = Variable.parse("$OPENSSL $command")
 
     @Throws(InvalidPathException::class)
     fun generatePrivateKey(path: String, name: String): String {
@@ -114,7 +113,7 @@ object Commands {
                 .addContext(keyName)
                 .build()
 
-        return "$openssl genrsa -out $param"
+        return "$OPENSSL genrsa -out $param"
     }
 
     @Throws(IllegalArgumentException::class, IllegalStateException::class)
@@ -122,7 +121,7 @@ object Commands {
 
         val params = getOpensslSubject()
         val requestKey = getRequestKeyName(reqName)
-        val cmd = "$openssl req -new -key"
+        val cmd = "$OPENSSL req -new -key"
 
         val reqKey = FilePathBuilder()
                 .addContext(path)
@@ -205,7 +204,7 @@ object Commands {
         val passOut = "-passout pass:$passPhrase"
         val password = "$passIn $passOut"
 
-        return "cd $home && $openssl $req $password"
+        return "cd $home && $OPENSSL $req $password"
     }
 
     fun getPrivateKyName(name: String): String {
@@ -234,11 +233,11 @@ object Commands {
         return fullName
     }
 
-    fun cd(where: String) = "$cd $where"
+    fun cd(where: String) = "$CD $where"
 
-    fun link(what: String, where: String) = "$link $what $where"
+    fun link(what: String, where: String) = "$LINK $what $where"
 
-    fun portAvailable(port: Int) = "! $netstat -tulpn | ${grep(":$port")}"
+    fun portAvailable(port: Int) = "! $NETSTAT -tulpn | ${grep(":$port")}"
 
     fun portTaken(port: Int, timeout: Int): String {
 

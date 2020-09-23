@@ -3,7 +3,6 @@ package net.milosvasic.factory.configuration
 import net.milosvasic.factory.EMPTY
 import net.milosvasic.factory.common.filesystem.FilePathBuilder
 import net.milosvasic.factory.configuration.variable.Node
-import net.milosvasic.factory.log
 import net.milosvasic.factory.remote.Remote
 import java.io.File
 import java.nio.file.InvalidPathException
@@ -30,16 +29,17 @@ abstract class Configuration(
 
     companion object {
 
+        const val DEFAULT_CONFIGURATION_FILE = "Definition.json"
+
         @Throws(InvalidPathException::class)
         fun getConfigurationFilePath(path: String): String {
 
             var fullPath = path
-            val defaultConfigurationFile = "Definition.json"
             if (!path.endsWith(".json")) {
 
                 val param = FilePathBuilder()
                         .addContext(File.separator)
-                        .addContext(defaultConfigurationFile)
+                        .addContext(DEFAULT_CONFIGURATION_FILE)
                         .build()
 
                 fullPath += param

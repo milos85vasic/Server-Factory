@@ -13,7 +13,7 @@ data class Node(
 
     companion object : GsonDeserialization<Node> {
 
-        const val contextSeparator = "."
+        const val CONTEXT_SEPARATOR = "."
 
         override fun getDeserializer(): JsonDeserializer<Node> {
             return object : JsonDeserializer<Node> {
@@ -165,7 +165,7 @@ data class Node(
 
     fun get(what: String): Any? {
 
-        val path = what.split(contextSeparator)
+        val path = what.split(CONTEXT_SEPARATOR)
         val iterator = path.iterator()
         var node = this
         while (iterator.hasNext()) {

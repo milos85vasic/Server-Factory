@@ -86,7 +86,7 @@ class MainInstallationStepFactory : InstallationStepFactory {
                 val validator = DeployValidator()
                 if (validator.validate(definition.getValue())) {
 
-                    val fromTo = definition.getValue().split(Deploy.delimiter)
+                    val fromTo = definition.getValue().split(Deploy.DELIMITER)
                     val from = fromTo[0].trim()
                     val to = fromTo[1].trim()
                     return Deploy(from, to)
@@ -143,7 +143,7 @@ class MainInstallationStepFactory : InstallationStepFactory {
         val validator = PortCheckValidator()
         if (validator.validate(arg)) {
 
-            val split = arg.split(PortCheck.delimiter)
+            val split = arg.split(PortCheck.DELIMITER)
             val ports = mutableListOf<Int>()
             split.forEach {
                 val port = it.trim().toInt()

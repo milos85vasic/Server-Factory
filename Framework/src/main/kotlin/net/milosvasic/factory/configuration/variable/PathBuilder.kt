@@ -7,7 +7,7 @@ class PathBuilder : HierarchyPathBuilder<Path, Context, Key, String>() {
     private val builder = StringBuilder()
 
     override val separator: String
-        get() = Node.contextSeparator
+        get() = Node.CONTEXT_SEPARATOR
 
     fun getPath(): String = builder.toString()
 

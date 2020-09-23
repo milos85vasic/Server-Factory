@@ -16,15 +16,15 @@ import java.nio.file.InvalidPathException
 
 open class Stack(
         private val composeYmlPath: String,
-        composeFileName: String = defaultComposeFileName,
-        private val composeFileExtension: String = defaultComposeFileExtension
+        composeFileName: String = DEFAULT_COMPOSE_FILE_NAME,
+        private val composeFileExtension: String = DEFAULT_COMPOSE_FILE_EXTENSION
 
 ) : DockerInstallationStep() {
 
     companion object {
 
-        private const val defaultComposeFileName: String = "docker-compose"
-        private const val defaultComposeFileExtension: String = ".yml"
+        private const val DEFAULT_COMPOSE_FILE_NAME: String = "docker-compose"
+        private const val DEFAULT_COMPOSE_FILE_EXTENSION: String = ".yml"
     }
 
     private val flags = "-d --remove-orphans"

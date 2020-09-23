@@ -25,7 +25,7 @@ class DatabaseStep(val path: String) : RemoteOperationInstallationStep<SSH>() {
 
     companion object {
 
-        const val defaultConfigurationFile = "configuration.json"
+        const val DEFAULT_CONFIGURATION_FILE = "configuration.json"
     }
 
     @Throws(IllegalArgumentException::class, IllegalStateException::class)
@@ -38,7 +38,7 @@ class DatabaseStep(val path: String) : RemoteOperationInstallationStep<SSH>() {
 
             val configurationFile = FilePathBuilder()
                     .addContext(path)
-                    .addContext(defaultConfigurationFile)
+                    .addContext(DEFAULT_CONFIGURATION_FILE)
                     .build()
 
             val configurationDataHandler = object : DataHandler<OperationResult> {

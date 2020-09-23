@@ -1,5 +1,6 @@
 package net.milosvasic.factory.component.database.manager
 
+import net.milosvasic.factory.LOCALHOST
 import net.milosvasic.factory.common.DataHandler
 import net.milosvasic.factory.common.Registration
 import net.milosvasic.factory.common.busy.BusyWorker
@@ -16,7 +17,6 @@ import net.milosvasic.factory.configuration.variable.Variable
 import net.milosvasic.factory.execution.flow.callback.FlowCallback
 import net.milosvasic.factory.execution.flow.implementation.CommandFlow
 import net.milosvasic.factory.execution.flow.implementation.initialization.InitializationFlow
-import net.milosvasic.factory.localhost
 import net.milosvasic.factory.log
 import net.milosvasic.factory.operation.OperationResult
 import net.milosvasic.factory.operation.OperationResultListener
@@ -107,7 +107,7 @@ open class DatabaseManager(entryPoint: Connection) :
             when (databaseType) {
                 Type.Postgres -> {
 
-                    val host = localhost
+                    val host = LOCALHOST
 
                     val portPath = PathBuilder()
                             .addContext(Context.Service)
