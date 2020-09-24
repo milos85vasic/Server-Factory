@@ -11,6 +11,8 @@ open class OperationResult(
 ) {
 
     override fun toString(): String {
-        return "OperationResult(operation=$operation, success=$success, data='$data', exception=$exception, errorData='$errorData')"
+
+        return "OperationResult(operation=$operation, success=$success, " +
+                "data='$data', exception=$exception, errorData='$errorData')"
     }
 }
