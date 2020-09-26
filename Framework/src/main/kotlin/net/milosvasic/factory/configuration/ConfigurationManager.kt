@@ -5,6 +5,7 @@ import net.milosvasic.factory.common.busy.Busy
 import net.milosvasic.factory.common.busy.BusyWorker
 import net.milosvasic.factory.common.filesystem.FilePathBuilder
 import net.milosvasic.factory.common.initialization.Initialization
+import net.milosvasic.factory.configuration.recipe.FileConfigurationRecipe
 import net.milosvasic.factory.configuration.variable.Node
 import net.milosvasic.factory.configuration.variable.Variable
 import net.milosvasic.factory.log
@@ -30,7 +31,8 @@ object ConfigurationManager : Initialization {
 
             throw IllegalStateException("Configuration factory was not provided")
         }
-        configuration = configurationFactory?.obtain(file)
+        val recipe = FileConfigurationRecipe(file)
+        configuration = configurationFactory?.obtain(recipe)
         configuration?.let { config ->
             config.enabled?.let { enabled ->
                 if (!enabled) {
