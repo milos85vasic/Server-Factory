@@ -1,7 +1,6 @@
 package net.milosvasic.factory.configuration
 
 import net.milosvasic.factory.EMPTY
-import net.milosvasic.factory.FILE_LOCATION_HERE
 import net.milosvasic.factory.common.busy.Busy
 import net.milosvasic.factory.common.busy.BusyWorker
 import net.milosvasic.factory.common.filesystem.FilePathBuilder
@@ -57,11 +56,11 @@ object ConfigurationManager : Initialization {
                                 .addContext(type.label)
                                 .getPath()
 
+                        var directory = File(path)
                         val home = System.getProperty("user.home")
-                        val directory = if (path.startsWith(home)) {
-                            File(path.replace(home, "/usr/local/bin"))
-                        } else {
-                            File(path)
+                        val installationDirectory = "/usr/local/bin"
+                        if (directory.absolutePath.startsWith(home)) {
+                            directory = File(directory.absolutePath.replace(home, installationDirectory))
                         }
                         findDefinitions(type, directory, it)
 
