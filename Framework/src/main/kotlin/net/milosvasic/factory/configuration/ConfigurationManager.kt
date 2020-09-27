@@ -57,7 +57,12 @@ object ConfigurationManager : Initialization {
                                 .addContext(type.label)
                                 .getPath()
 
-                        val directory = File(path)
+                        val home = System.getProperty("user.home")
+                        val directory = if (path.startsWith(home)) {
+                            File(path.replace(home, "/usr/local/bin"))
+                        } else {
+                            File(path)
+                        }
                         findDefinitions(type, directory, it)
 
                         it.forEach { item ->
