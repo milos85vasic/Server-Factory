@@ -53,7 +53,6 @@ object ConfigurationManager : Initialization {
                     items?.let {
 
                         val path = FilePathBuilder()
-                                .addContext(FILE_LOCATION_HERE)
                                 .addContext(DIRECTORY_DEFINITIONS)
                                 .addContext(type.label)
                                 .getPath()
