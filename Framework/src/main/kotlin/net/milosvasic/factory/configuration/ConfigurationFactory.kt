@@ -27,8 +27,7 @@ abstract class ConfigurationFactory<T : Configuration> : ObtainParametrized<Conf
     override fun obtain(vararg param: ConfigurationRecipe<*>): T {
 
         Validator.Arguments.validateSingle(param)
-        val recipe = param[0]
-        return when (recipe) {
+        return when (val recipe = param[0]) {
             is FileConfigurationRecipe -> {
 
                 obtain(recipe.data)
