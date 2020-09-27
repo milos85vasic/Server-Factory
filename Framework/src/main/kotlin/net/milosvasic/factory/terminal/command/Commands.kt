@@ -237,7 +237,7 @@ object Commands {
 
     fun link(what: String, where: String) = "$LINK $what $where"
 
-    fun portAvailable(port: Int) = "! $NETSTAT -tulpn | ${grep(":$port")}"
+    fun portAvailable(port: Int) = "! lsof -i:$port | grep LISTEN"
 
     fun portTaken(port: Int, timeout: Int): String {
 
