@@ -1,9 +1,6 @@
 package net.milosvasic.factory.validation
 
-import net.milosvasic.factory.validation.parameters.NoArgumentsExpectedException
-import net.milosvasic.factory.validation.parameters.NoParameterValidation
-import net.milosvasic.factory.validation.parameters.SingleParameterExpectedException
-import net.milosvasic.factory.validation.parameters.SingleParameterValidation
+import net.milosvasic.factory.validation.parameters.*
 
 object Validator {
 
@@ -20,6 +17,13 @@ object Validator {
         fun validateEmpty(vararg params: Any) {
 
             val validation = NoParameterValidation<Any>()
+            validation.validate(*params)
+        }
+
+        @Throws(ArgumentsExpectedException::class)
+        fun validateNotEmpty(vararg params: Any) {
+
+            val validation = ParametersAvailableValidation<Any>()
             validation.validate(*params)
         }
     }

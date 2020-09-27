@@ -1,13 +1,11 @@
 package net.milosvasic.factory.application.server_factory
 
-import net.milosvasic.factory.EMPTY
-import net.milosvasic.factory.application.ArgumentsValidator
+import net.milosvasic.factory.*
 import net.milosvasic.factory.common.Application
 import net.milosvasic.factory.common.busy.Busy
 import net.milosvasic.factory.common.busy.BusyDelegation
 import net.milosvasic.factory.common.busy.BusyException
 import net.milosvasic.factory.common.busy.BusyWorker
-import net.milosvasic.factory.common.exception.EmptyDataException
 import net.milosvasic.factory.common.initialization.Initializer
 import net.milosvasic.factory.common.initialization.Termination
 import net.milosvasic.factory.component.database.manager.DatabaseManager
@@ -26,8 +24,6 @@ import net.milosvasic.factory.execution.flow.callback.TerminationCallback
 import net.milosvasic.factory.execution.flow.implementation.CommandFlow
 import net.milosvasic.factory.execution.flow.implementation.InstallationFlow
 import net.milosvasic.factory.execution.flow.implementation.initialization.InitializationFlow
-import net.milosvasic.factory.fail
-import net.milosvasic.factory.log
 import net.milosvasic.factory.operation.OperationResult
 import net.milosvasic.factory.operation.OperationResultListener
 import net.milosvasic.factory.os.HostInfoDataHandler
@@ -35,12 +31,11 @@ import net.milosvasic.factory.os.HostNameDataHandler
 import net.milosvasic.factory.remote.Connection
 import net.milosvasic.factory.remote.ConnectionProvider
 import net.milosvasic.factory.remote.ssh.SSH
-import net.milosvasic.factory.tag
 import net.milosvasic.factory.terminal.TerminalCommand
 import net.milosvasic.factory.terminal.command.*
 import java.util.concurrent.ConcurrentLinkedQueue
 
-abstract class ServerFactory(val arguments: List<String> = listOf()) : Application, BusyDelegation {
+abstract class ServerFactory(private val builder: ServerFactoryBuilder) : Application, BusyDelegation {
 
     protected var configuration: Configuration? = null
 
@@ -62,51 +57,46 @@ abstract class ServerFactory(val arguments: List<String> = listOf()) : Applicati
         }
     }
 
-    @Throws(IllegalStateException::class)
+    @Throws(IllegalStateException::class, IllegalArgumentException::class)
     override fun initialize() {
         checkInitialized()
         busy()
-        val argumentsValidator = ArgumentsValidator()
         try {
-            if (argumentsValidator.validate(arguments.toTypedArray())) {
-                tag = getLogTag()
-                val configurationFile = arguments[0]
-                try {
-                    ConfigurationManager.setConfigurationPath(configurationFile)
-                    ConfigurationManager.setConfigurationFactory(getConfigurationFactory())
-                    ConfigurationManager.initialize()
 
-                    configuration = ConfigurationManager.getConfiguration()
-                    if (configuration == null) {
-                        throw IllegalStateException("Configuration is null")
-                    }
-                    configuration?.let { config ->
-                        SoftwareConfigurationType.values().forEach { type ->
+            tag = getLogTag()
+            builder.getLogger()?.let {
 
-                            val configurationItems = ConfigurationManager.getConfigurationItems(type)
-                            getConfigurationItems(type).addAll(configurationItems)
-                        }
-                        log.v(config.name)
-                        notifyInit(true)
-                    }
-                } catch (e: IllegalArgumentException) {
-
-                    notifyInit(e)
-                } catch (e: IllegalStateException) {
-
-                    notifyInit(e)
-                } catch (e: RuntimeException) {
-
-                    notifyInit(e)
-                }
-            } else {
-
-                log.e("Invalid configuration")
-                notifyInit(false)
+                compositeLogger.addLogger(it)
             }
-        } catch (e: EmptyDataException) {
+            try {
 
-            notifyInit(e)
+                ConfigurationManager.setConfigurationRecipe(builder.getRecipe())
+                ConfigurationManager.setConfigurationFactory(getConfigurationFactory())
+                ConfigurationManager.initialize()
+
+                configuration = ConfigurationManager.getConfiguration()
+                if (configuration == null) {
+                    throw IllegalStateException("Configuration is null")
+                }
+                configuration?.let { config ->
+                    SoftwareConfigurationType.values().forEach { type ->
+
+                        val configurationItems = ConfigurationManager.getConfigurationItems(type)
+                        getConfigurationItems(type).addAll(configurationItems)
+                    }
+                    log.v(config.name)
+                    notifyInit()
+                }
+            } catch (e: IllegalArgumentException) {
+
+                notifyInit(e)
+            } catch (e: IllegalStateException) {
+
+                notifyInit(e)
+            } catch (e: RuntimeException) {
+
+                notifyInit(e)
+            }
         } catch (e: IllegalArgumentException) {
 
             notifyInit(e)
@@ -262,9 +252,10 @@ abstract class ServerFactory(val arguments: List<String> = listOf()) : Applicati
 
     protected open fun getHostNameSetCommand(hostname: String): TerminalCommand = HostNameSetCommand(hostname)
 
-    private fun notifyInit(success: Boolean) {
+    private fun notifyInit() {
+
         free()
-        val result = OperationResult(initializationOperation, success)
+        val result = OperationResult(initializationOperation, true)
         notify(result)
     }
 

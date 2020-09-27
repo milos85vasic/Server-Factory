@@ -1,7 +1,9 @@
 package net.milosvasic.factory.test
 
+import net.milosvasic.factory.application.server_factory.ServerFactoryBuilder
 import net.milosvasic.factory.common.busy.BusyException
 import net.milosvasic.factory.component.installer.step.factory.InstallationStepFactories
+import net.milosvasic.factory.configuration.recipe.FileConfigurationRecipe
 import net.milosvasic.factory.execution.flow.callback.FlowCallback
 import net.milosvasic.factory.execution.flow.implementation.initialization.InitializationFlow
 import net.milosvasic.factory.fail
@@ -13,6 +15,7 @@ import net.milosvasic.factory.test.implementation.StubSSH
 import net.milosvasic.factory.test.implementation.StubServerFactory
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
+import java.io.File
 
 class StackStepTest : BaseTest() {
 
@@ -33,7 +36,10 @@ class StackStepTest : BaseTest() {
 
         val stepFactory = StubInstallationStepFactory(listOf())
         InstallationStepFactories.addFactory(stepFactory)
-        val factory = StubServerFactory(listOf(mocks))
+        val file = File(mocks)
+        val recipe = FileConfigurationRecipe(file)
+        val builder = ServerFactoryBuilder().setRecipe(recipe)
+        val factory = StubServerFactory(builder)
         factory.setConnectionProvider(connectionProvider)
 
         val callback = object : FlowCallback {

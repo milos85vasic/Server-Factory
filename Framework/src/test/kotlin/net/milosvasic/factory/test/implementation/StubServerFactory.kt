@@ -1,6 +1,7 @@
 package net.milosvasic.factory.test.implementation
 
 import net.milosvasic.factory.application.server_factory.ServerFactory
+import net.milosvasic.factory.application.server_factory.ServerFactoryBuilder
 import net.milosvasic.factory.component.docker.Docker
 import net.milosvasic.factory.component.installer.Installer
 import net.milosvasic.factory.configuration.ConfigurationFactory
@@ -8,7 +9,7 @@ import net.milosvasic.factory.remote.Connection
 import net.milosvasic.factory.terminal.command.EchoCommand
 import net.milosvasic.factory.terminal.command.UnameCommand
 
-class StubServerFactory(arguments: List<String> = listOf()) : ServerFactory(arguments) {
+class StubServerFactory(builder: ServerFactoryBuilder) : ServerFactory(builder) {
 
     private val recipeRegistrar = StubRecipeRegistrar()
 

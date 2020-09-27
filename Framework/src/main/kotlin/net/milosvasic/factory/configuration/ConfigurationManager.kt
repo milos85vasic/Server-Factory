@@ -5,10 +5,13 @@ import net.milosvasic.factory.common.busy.Busy
 import net.milosvasic.factory.common.busy.BusyWorker
 import net.milosvasic.factory.common.filesystem.FilePathBuilder
 import net.milosvasic.factory.common.initialization.Initialization
+import net.milosvasic.factory.configuration.recipe.ConfigurationRecipe
 import net.milosvasic.factory.configuration.recipe.FileConfigurationRecipe
+import net.milosvasic.factory.configuration.recipe.RawJsonConfigurationRecipe
 import net.milosvasic.factory.configuration.variable.Node
 import net.milosvasic.factory.configuration.variable.Variable
 import net.milosvasic.factory.log
+import net.milosvasic.factory.validation.JsonValidator
 import java.io.File
 import java.util.concurrent.LinkedBlockingQueue
 
@@ -17,65 +20,71 @@ object ConfigurationManager : Initialization {
     private const val DIRECTORY_DEFINITIONS = "Definitions"
 
     private val busy = Busy()
-    private var configurationPath = String.EMPTY
     private var configuration: Configuration? = null
+    private var recipe: ConfigurationRecipe<*>? = null
     private var configurationFactory: ConfigurationFactory<*>? = null
     private var configurations = mutableMapOf<SoftwareConfigurationType, MutableList<SoftwareConfiguration>>()
 
     @Throws(IllegalArgumentException::class, IllegalStateException::class)
     override fun initialize() {
+
         checkInitialized()
         BusyWorker.busy(busy)
-        val file = File(configurationPath)
         if (configurationFactory == null) {
 
             throw IllegalStateException("Configuration factory was not provided")
         }
-        val recipe = FileConfigurationRecipe(file)
-        configuration = configurationFactory?.obtain(recipe)
-        configuration?.let { config ->
-            config.enabled?.let { enabled ->
-                if (!enabled) {
+        if (recipe == null) {
 
-                    throw IllegalStateException("Configuration is not enabled")
+            throw IllegalStateException("Configuration recipe was not provided")
+        }
+        recipe?.let { rcp ->
+
+            configuration = configurationFactory?.obtain(rcp)
+            configuration?.let { config ->
+                config.enabled?.let { enabled ->
+                    if (!enabled) {
+
+                        throw IllegalStateException("Configuration is not enabled")
+                    }
                 }
-            }
-            config.getConfigurationMap().forEach { (type, items) ->
-                items?.let {
+                config.getConfigurationMap().forEach { (type, items) ->
+                    items?.let {
 
-                    val path = FilePathBuilder()
-                            .addContext(DIRECTORY_DEFINITIONS)
-                            .addContext(type.label)
-                            .getPath()
+                        val path = FilePathBuilder()
+                                .addContext(DIRECTORY_DEFINITIONS)
+                                .addContext(type.label)
+                                .getPath()
 
-                    val directory = File(path)
-                    findDefinitions(type, directory, it)
+                        val directory = File(path)
+                        findDefinitions(type, directory, it)
 
-                    it.forEach { item ->
-                        val configurationPath = Configuration.getConfigurationFilePath(item)
-                        val obtainedConfiguration = SoftwareConfiguration.obtain(configurationPath)
-                        if (obtainedConfiguration.enabled) {
+                        it.forEach { item ->
+                            val configurationPath = Configuration.getConfigurationFilePath(item)
+                            val obtainedConfiguration = SoftwareConfiguration.obtain(configurationPath)
+                            if (obtainedConfiguration.enabled) {
 
-                            val variables = obtainedConfiguration.variables
-                            config.mergeVariables(variables)
+                                val variables = obtainedConfiguration.variables
+                                config.mergeVariables(variables)
 
-                            val configurationItems = getConfigurationItems(type)
-                            configurationItems.add(obtainedConfiguration)
-                        } else {
+                                val configurationItems = getConfigurationItems(type)
+                                configurationItems.add(obtainedConfiguration)
+                            } else {
 
-                            log.w("Disabled ${type.label.toLowerCase()} configuration: $configurationPath")
+                                log.w("Disabled ${type.label.toLowerCase()} configuration: $configurationPath")
+                            }
                         }
                     }
                 }
+
+                printVariableNode(config.variables)
             }
+            if (configuration == null) {
 
-            printVariableNode(config.variables)
+                throw IllegalStateException("Configuration was not initialised")
+            }
+            BusyWorker.free(busy)
         }
-        if (configuration == null) {
-
-            throw IllegalStateException("Configuration was not initialised")
-        }
-        BusyWorker.free(busy)
     }
 
     @Throws(IllegalStateException::class)
@@ -94,12 +103,29 @@ object ConfigurationManager : Initialization {
 
     @Synchronized
     @Throws(IllegalArgumentException::class, IllegalStateException::class)
-    fun setConfigurationPath(path: String) {
+    fun setConfigurationRecipe(recipe: ConfigurationRecipe<*>) {
+
         checkInitialized()
-        val validator = ConfigurationPathValidator()
-        if (validator.validate(path)) {
-            configurationPath = path
+        when (recipe) {
+            is FileConfigurationRecipe -> {
+
+                val path = recipe.data.absolutePath
+                val validator = ConfigurationPathValidator()
+                validator.validate(path)
+            }
+            is RawJsonConfigurationRecipe -> {
+
+                val json = recipe.data
+                val validator = JsonValidator()
+                validator.validate(json)
+            }
+            else -> {
+
+                throw IllegalArgumentException("Unsupported recipe type: ${recipe::class.simpleName}")
+            }
         }
+
+        this.recipe = recipe
     }
 
     @Synchronized
