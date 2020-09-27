@@ -56,6 +56,7 @@ object ConfigurationManager : Initialization {
                                 .addContext(type.label)
                                 .getPath()
 
+                        log.v("Definitions search path: $path")
                         val directory = File(path)
                         findDefinitions(type, directory, it)
 
