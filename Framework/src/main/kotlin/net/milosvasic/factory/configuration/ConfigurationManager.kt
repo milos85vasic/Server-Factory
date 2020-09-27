@@ -56,11 +56,15 @@ object ConfigurationManager : Initialization {
                                 .addContext(type.label)
                                 .getPath()
 
-                        var directory = File(path)
                         val home = System.getProperty("user.home")
-                        val installationDirectory = "/usr/local/bin"
-                        if (directory.absolutePath.startsWith(home)) {
-                            directory = File(directory.absolutePath.replace(home, installationDirectory))
+                        val homePath = FilePathBuilder()
+                                .addContext(home)
+                                .addContext(path)
+                                .getPath()
+
+                        var directory = File(path)
+                        if (directory.absolutePath == homePath) {
+                            directory = File(directory.absolutePath.replace(home, "/usr/local/bin"))
                         }
                         findDefinitions(type, directory, it)
 
