@@ -86,7 +86,7 @@ abstract class ConfigurationFactory<T : Configuration> : ObtainParametrized<Conf
                 postInstantiate(configuration)
                 configuration.enabled?.let { enabled ->
                     if (enabled) {
-                        log.v("Configuration file: ${configurationFile.absolutePath}")
+                        log.d("Configuration file: ${configurationFile.absolutePath}")
                     } else {
                         log.w("Configuration file is disabled: ${configurationFile.absolutePath}")
                     }

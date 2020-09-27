@@ -1,6 +1,7 @@
 package net.milosvasic.factory.configuration
 
 import net.milosvasic.factory.EMPTY
+import net.milosvasic.factory.FILE_LOCATION_HERE
 import net.milosvasic.factory.common.busy.Busy
 import net.milosvasic.factory.common.busy.BusyWorker
 import net.milosvasic.factory.common.filesystem.FilePathBuilder
@@ -52,11 +53,11 @@ object ConfigurationManager : Initialization {
                     items?.let {
 
                         val path = FilePathBuilder()
+                                .addContext(FILE_LOCATION_HERE)
                                 .addContext(DIRECTORY_DEFINITIONS)
                                 .addContext(type.label)
                                 .getPath()
 
-                        log.v("Definitions search path: $path")
                         val directory = File(path)
                         findDefinitions(type, directory, it)
 
@@ -169,6 +170,7 @@ object ConfigurationManager : Initialization {
             collection: LinkedBlockingQueue<String>
     ) {
 
+        log.v("Searching for definitions: ${directory.absolutePath}")
         val files = directory.listFiles()
         files?.forEach { file ->
             if (file.isDirectory) {
@@ -178,7 +180,7 @@ object ConfigurationManager : Initialization {
                 if (file.name == Configuration.DEFAULT_CONFIGURATION_FILE) {
 
                     val definition = file.absolutePath
-                    log.v("${type.label} definition found: $definition")
+                    log.i("${type.label} definition found: $definition")
                     collection.add(definition)
                 }
             }
@@ -198,7 +200,7 @@ object ConfigurationManager : Initialization {
                     val nodeValue = Variable.parse(value)
                     node.name.let { name ->
                         if (name != String.EMPTY) {
-                            log.v("Configuration variable:$printablePrefix$name -> $nodeValue")
+                            log.d("Configuration variable:$printablePrefix$name -> $nodeValue")
                         }
                     }
                 }

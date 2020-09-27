@@ -29,7 +29,7 @@ data class SoftwareConfiguration(
             Validator.Arguments.validateSingle(param)
             val configurationName = param[0]
             val configurationFile = File(configurationName)
-            log.v("Configuration file: ${configurationFile.absolutePath}")
+            log.d("Configuration file: ${configurationFile.absolutePath}")
             if (configurationFile.exists()) {
 
                 val json = configurationFile.readText()
