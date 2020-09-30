@@ -58,6 +58,10 @@ interface Key {
             override fun key() = "CERTIFICATES"
         }
 
+        val CaBundle = object : Key {
+            override fun key() = "CA_BUNDLE"
+        }
+
         val PortExposed = object : Key {
             override fun key() = "PORT_EXPOSED"
         }

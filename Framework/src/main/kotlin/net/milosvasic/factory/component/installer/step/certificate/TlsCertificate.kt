@@ -34,6 +34,12 @@ class TlsCertificate(name: String) : Certificate(name) {
                     .setKey(Key.Certificates)
                     .build()
 
+            val pathCaBundle = PathBuilder()
+                    .addContext(Context.Server)
+                    .addContext(Context.Certification)
+                    .setKey(Key.CaBundle)
+                    .build()
+
             val pathPassPhrase = PathBuilder()
                     .addContext(Context.Server)
                     .addContext(Context.Certification)
@@ -41,6 +47,7 @@ class TlsCertificate(name: String) : Certificate(name) {
                     .build()
 
             val certificatesPath = Variable.get(path)
+            val caBundle = Variable.get(pathCaBundle)
             val passPhrase = Variable.get(pathPassPhrase)
 
             val passIn = "-passin pass:$passPhrase"
@@ -62,11 +69,12 @@ class TlsCertificate(name: String) : Certificate(name) {
                             .addContext("$hostname.key")
                             .build()
             )
+
             val caVerificationCommand = TestCommand(
 
                     FilePathBuilder()
                             .addContext(certificatesPath)
-                            .addContext("ca-bundle.crt")
+                            .addContext(caBundle)
                             .build()
             )
 
