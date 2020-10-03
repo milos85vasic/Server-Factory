@@ -9,10 +9,13 @@ import net.milosvasic.factory.component.installer.step.InstallationStep
 import net.milosvasic.factory.component.installer.step.factory.InstallationStepFactories
 import net.milosvasic.factory.configuration.variable.Node
 import net.milosvasic.factory.log
+import net.milosvasic.factory.merge
 import net.milosvasic.factory.validation.Validator
 import java.io.File
 
 data class SoftwareConfiguration(
+
+        var overrides: MutableMap<String, MutableMap<String, SoftwareConfiguration>> = mutableMapOf(),
         var configuration: String = String.EMPTY,
         var variables: Node? = null,
         val software: MutableList<SoftwareConfigurationItem> = mutableListOf(),
@@ -101,5 +104,6 @@ data class SoftwareConfiguration(
         }
         software.addAll(configuration.software)
         includes.addAll(configuration.includes)
+        overrides.merge(configuration.overrides)
     }
 }

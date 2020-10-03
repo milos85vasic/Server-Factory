@@ -148,6 +148,9 @@ abstract class ConfigurationFactory<T : Configuration> : ObtainParametrized<Conf
         if (configuration.variables == null) {
             configuration.variables = Node()
         }
+        if (configuration.overrides == null) {
+            configuration.overrides = mutableMapOf()
+        }
         onInstantiated(configuration)
     }
 }

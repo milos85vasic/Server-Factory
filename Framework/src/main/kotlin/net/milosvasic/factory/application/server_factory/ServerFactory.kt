@@ -306,6 +306,7 @@ abstract class ServerFactory(private val builder: ServerFactoryBuilder) : Applic
             softwareConfiguration.software.forEach { software ->
                 dockerFlow.width(
                         SoftwareConfiguration(
+                                softwareConfiguration.overrides,
                                 softwareConfiguration.configuration,
                                 softwareConfiguration.variables,
                                 mutableListOf(software),

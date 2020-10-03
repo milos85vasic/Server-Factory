@@ -1,6 +1,7 @@
 package net.milosvasic.factory
 
 import net.milosvasic.factory.common.Logger
+import net.milosvasic.factory.configuration.SoftwareConfiguration
 import net.milosvasic.factory.error.ERROR
 import net.milosvasic.logger.CompositeLogger
 import net.milosvasic.logger.ConsoleLogger
@@ -79,6 +80,33 @@ fun fail(e: Exception) {
     val error = ERROR.FATAL_EXCEPTION
     System.err.println(error.message)
     exitProcess(error.code)
+}
+
+fun MutableMap<String, MutableMap<String, SoftwareConfiguration>>.merge(
+        overrides: MutableMap<String, MutableMap<String, SoftwareConfiguration>>
+) {
+    if (overrides.isEmpty()) {
+        return
+    }
+    overrides.forEach { (key, value) ->
+
+        if (this[key] == null) {
+            this[key] = value
+        } else {
+
+            this[key]?.let { item ->
+                value.forEach { (subKey, subValue) ->
+
+                    if (item[subKey] == null) {
+                        item[subKey] = subValue
+                    } else {
+
+                        item[subKey]?.merge(subValue)
+                    }
+                }
+            }
+        }
+    }
 }
 
 val String.Companion.EMPTY: String

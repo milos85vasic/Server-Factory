@@ -9,6 +9,7 @@ open class ConfigurationInclude(
         var software: LinkedBlockingQueue<String>?,
         var containers: LinkedBlockingQueue<String>?,
         var variables: Node? = null,
+        var overrides: MutableMap<String, MutableMap<String, SoftwareConfiguration>>?,
         var enabled: Boolean? = null
 ) {
 
