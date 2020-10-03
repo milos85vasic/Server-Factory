@@ -117,7 +117,6 @@ object ConfigurationManager : Initialization {
     fun getConfiguration(): Configuration {
 
         checkNotInitialized()
-        loadConfigurationCheck()
         configuration?.let {
             return it
         }
