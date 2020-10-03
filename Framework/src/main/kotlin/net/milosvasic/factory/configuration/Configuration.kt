@@ -91,6 +91,7 @@ abstract class Configuration(
     }
 
     override fun toString(): String {
+
         return "Configuration(\nname='$name', \nremote=$remote\n)\n${super.toString()}"
     }
 }

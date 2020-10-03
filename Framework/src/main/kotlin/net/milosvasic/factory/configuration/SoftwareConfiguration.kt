@@ -11,13 +11,11 @@ import net.milosvasic.factory.configuration.variable.Node
 import net.milosvasic.factory.log
 import net.milosvasic.factory.merge
 import net.milosvasic.factory.os.OSType
-import net.milosvasic.factory.os.OperatingSystem
 import net.milosvasic.factory.validation.Validator
 import java.io.File
 
 data class SoftwareConfiguration(
 
-        var operatingSystem: OperatingSystem?,
         var overrides: MutableMap<String, MutableMap<String, SoftwareConfiguration>>? = mutableMapOf(),
         var configuration: String = String.EMPTY,
         var variables: Node? = null,
@@ -27,12 +25,19 @@ data class SoftwareConfiguration(
 
 ) : ObtainParametrized<String, Map<String, List<InstallationStep<*>>>> {
 
+    private var operatingSystem: String? = null
+
     companion object : ObtainParametrized<String, SoftwareConfiguration> {
 
         @Throws(IllegalArgumentException::class, JsonParseException::class)
         override fun obtain(vararg param: String): SoftwareConfiguration {
 
-            Validator.Arguments.validateSingle(param)
+            val validator = SoftwareConfigurationObtainParametersValidator()
+            if (!validator.validate(*param)) {
+
+                throw IllegalArgumentException("Expected two arguments")
+            }
+            val operatingSystem = param[1]
             val configurationName = param[0]
             val configurationFile = File(configurationName)
             log.d("Configuration file: ${configurationFile.absolutePath}")
@@ -46,6 +51,7 @@ data class SoftwareConfiguration(
 
                 val instance = gson.fromJson(json, SoftwareConfiguration::class.java)
                 instance.configuration = configurationName
+                instance.operatingSystem = operatingSystem
                 val included = mutableListOf<SoftwareConfiguration>()
                 instance.includes?.forEach { include ->
 
@@ -57,9 +63,11 @@ data class SoftwareConfiguration(
                                 .addContext(include)
                                 .getPath()
                     }
-                    included.add(obtain(path))
+                    included.add(obtain(path, operatingSystem))
                 }
                 included.forEach { config ->
+
+                    config.setOperatingSystem(operatingSystem)
                     instance.merge(config)
                 }
                 // TODO: Handle vars.
@@ -103,7 +111,7 @@ data class SoftwareConfiguration(
 
             throw IllegalArgumentException("No operating system information provided for remote host")
         }
-        if (operatingSystem?.getType() == OSType.UNKNOWN) {
+        if (operatingSystem == OSType.UNKNOWN.osName) {
 
             throw IllegalArgumentException("Operating system information provided for remote host is unknown")
         }
@@ -138,7 +146,7 @@ data class SoftwareConfiguration(
             operatingSystem?.let { os ->
                 it[SoftwareConfigurationOverride.OS.type]?.let { osOverrides ->
 
-                    val cfg = osOverrides[os.getName()]
+                    val cfg = osOverrides[os]
                     cfg?.let {
                         merge(it)
                     }
@@ -153,6 +161,11 @@ data class SoftwareConfiguration(
             return it
         }
         return true
+    }
+
+    fun setOperatingSystem(operatingSystem: String) {
+
+        this.operatingSystem = operatingSystem
     }
 
     private fun merge(toMerge: Node?) {

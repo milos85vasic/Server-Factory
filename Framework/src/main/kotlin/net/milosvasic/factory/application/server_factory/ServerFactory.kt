@@ -20,6 +20,7 @@ import net.milosvasic.factory.configuration.variable.PathBuilder
 import net.milosvasic.factory.configuration.variable.Variable
 import net.milosvasic.factory.execution.flow.FlowBuilder
 import net.milosvasic.factory.execution.flow.callback.DieOnFailureCallback
+import net.milosvasic.factory.execution.flow.callback.FlowCallback
 import net.milosvasic.factory.execution.flow.callback.TerminationCallback
 import net.milosvasic.factory.execution.flow.implementation.CommandFlow
 import net.milosvasic.factory.execution.flow.implementation.InstallationFlow
@@ -80,14 +81,14 @@ abstract class ServerFactory(private val builder: ServerFactoryBuilder) : Applic
                     throw IllegalStateException("Configuration is null")
                 }
 
-                val callback = object : DieOnFailureCallback() {
+                val ssh = getConnection()
 
+                val callback = object : FlowCallback {
                     override fun onFinish(success: Boolean) {
-                        super.onFinish(success)
                         if (success) {
                             try {
 
-                                ConfigurationManager.load()
+                                ConfigurationManager.load(ssh.getRemoteOS())
                                 configuration?.let { config ->
                                     SoftwareConfigurationType.values().forEach { type ->
 
@@ -104,12 +105,17 @@ abstract class ServerFactory(private val builder: ServerFactoryBuilder) : Applic
 
                                 notifyInit(e)
                             }
+                        } else {
+
+                            val e = IllegalStateException("Initialization failure")
+                            notifyInit(e)
                         }
                     }
                 }
 
-                val ssh = getConnection()
-                getCommandFlow(ssh, callback).run()
+                getCommandFlow(ssh, DieOnFailureCallback())
+                        .onFinish(callback)
+                        .run()
             } catch (e: IllegalArgumentException) {
 
                 notifyInit(e)
@@ -326,16 +332,17 @@ abstract class ServerFactory(private val builder: ServerFactoryBuilder) : Applic
         val items = getConfigurationItems(SoftwareConfigurationType.CONTAINERS)
         items.forEach { softwareConfiguration ->
             softwareConfiguration.software?.forEach { software ->
-                dockerFlow.width(
-                        SoftwareConfiguration(
-                                docker.getOperatingSystem(),
-                                softwareConfiguration.overrides,
-                                softwareConfiguration.configuration,
-                                softwareConfiguration.variables,
-                                mutableListOf(software),
-                                softwareConfiguration.includes
-                        )
+
+                val configuration = SoftwareConfiguration(
+                        softwareConfiguration.overrides,
+                        softwareConfiguration.configuration,
+                        softwareConfiguration.variables,
+                        mutableListOf(software),
+                        softwareConfiguration.includes
                 )
+
+                configuration.setOperatingSystem(docker.getOperatingSystem().getType().osName)
+                dockerFlow.width(configuration)
             }
         }
 

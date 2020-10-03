@@ -11,6 +11,7 @@ import net.milosvasic.factory.configuration.recipe.RawJsonConfigurationRecipe
 import net.milosvasic.factory.configuration.variable.Node
 import net.milosvasic.factory.configuration.variable.Variable
 import net.milosvasic.factory.log
+import net.milosvasic.factory.os.OperatingSystem
 import net.milosvasic.factory.validation.JsonValidator
 import java.io.File
 import java.util.concurrent.LinkedBlockingQueue
@@ -50,7 +51,7 @@ object ConfigurationManager : Initialization {
     }
 
     @Throws(IllegalStateException::class, IllegalArgumentException::class)
-    fun load() {
+    fun load(operatingSystem: OperatingSystem) {
 
         checkNotInitialized()
         nullConfigurationCheck()
@@ -90,8 +91,9 @@ object ConfigurationManager : Initialization {
                     findDefinitions(type, directory, it)
 
                     it.forEach { item ->
+                        val os = operatingSystem.getType().osName
                         val configurationPath = Configuration.getConfigurationFilePath(item)
-                        val obtainedConfiguration = SoftwareConfiguration.obtain(configurationPath)
+                        val obtainedConfiguration = SoftwareConfiguration.obtain(configurationPath, os)
                         if (obtainedConfiguration.isEnabled()) {
 
                             val variables = obtainedConfiguration.variables
@@ -128,8 +130,6 @@ object ConfigurationManager : Initialization {
 
         return configuration != null
     }
-
-    fun isLoaded() = loaded.get()
 
     @Synchronized
     @Throws(IllegalArgumentException::class, IllegalStateException::class)
@@ -252,14 +252,6 @@ object ConfigurationManager : Initialization {
 
         if (configuration == null) {
             throw IllegalStateException("Configuration was not initialised")
-        }
-    }
-
-    @Throws(IllegalStateException::class)
-    private fun loadConfigurationCheck() {
-
-        if (!loaded.get()) {
-            throw IllegalStateException("Configuration has not been loaded")
         }
     }
 
