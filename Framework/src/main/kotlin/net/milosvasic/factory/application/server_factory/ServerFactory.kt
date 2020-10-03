@@ -78,6 +78,7 @@ abstract class ServerFactory(private val builder: ServerFactoryBuilder) : Applic
                 if (configuration == null) {
                     throw IllegalStateException("Configuration is null")
                 }
+                notifyInit()
             } catch (e: IllegalArgumentException) {
 
                 notifyInit(e)
@@ -377,7 +378,6 @@ abstract class ServerFactory(private val builder: ServerFactoryBuilder) : Applic
                             getConfigurationItems(type).addAll(configurationItems)
                         }
                         log.v(config.name)
-                        notifyInit()
                     }
                 } catch (e: IllegalStateException) {
 
