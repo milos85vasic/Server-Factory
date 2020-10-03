@@ -10,17 +10,20 @@ import net.milosvasic.factory.component.installer.step.factory.InstallationStepF
 import net.milosvasic.factory.configuration.variable.Node
 import net.milosvasic.factory.log
 import net.milosvasic.factory.merge
+import net.milosvasic.factory.os.OSType
+import net.milosvasic.factory.os.OperatingSystem
 import net.milosvasic.factory.validation.Validator
 import java.io.File
 
 data class SoftwareConfiguration(
 
-        var overrides: MutableMap<String, MutableMap<String, SoftwareConfiguration>> = mutableMapOf(),
+        var operatingSystem: OperatingSystem?,
+        var overrides: MutableMap<String, MutableMap<String, SoftwareConfiguration>>? = mutableMapOf(),
         var configuration: String = String.EMPTY,
         var variables: Node? = null,
-        val software: MutableList<SoftwareConfigurationItem> = mutableListOf(),
-        val includes: MutableList<String> = mutableListOf(),
-        val enabled: Boolean = true
+        var software: MutableList<SoftwareConfigurationItem>? = mutableListOf(),
+        var includes: MutableList<String>? = mutableListOf(),
+        var enabled: Boolean? = true
 
 ) : ObtainParametrized<String, Map<String, List<InstallationStep<*>>>> {
 
@@ -44,7 +47,7 @@ data class SoftwareConfiguration(
                 val instance = gson.fromJson(json, SoftwareConfiguration::class.java)
                 instance.configuration = configurationName
                 val included = mutableListOf<SoftwareConfiguration>()
-                instance.includes.forEach { include ->
+                instance.includes?.forEach { include ->
 
                     var path = include
                     if (!include.startsWith(File.separator)) {
@@ -77,7 +80,7 @@ data class SoftwareConfiguration(
         val os = param[0]
         val factories = InstallationStepFactories
         val installationSteps = mutableMapOf<String, List<InstallationStep<*>>>()
-        software.forEach {
+        software?.forEach {
             val steps = it.installationSteps[os]
             steps?.let { recipe ->
                 val items = mutableListOf<InstallationStep<*>>()
@@ -93,17 +96,73 @@ data class SoftwareConfiguration(
         return installationSteps
     }
 
+    @Throws(IllegalArgumentException::class)
     fun merge(configuration: SoftwareConfiguration) {
 
-        configuration.variables?.let { toAppend ->
+        if (operatingSystem == null) {
+
+            throw IllegalArgumentException("No operating system information provided for remote host")
+        }
+        if (operatingSystem?.getType() == OSType.UNKNOWN) {
+
+            throw IllegalArgumentException("Operating system information provided for remote host is unknown")
+        }
+
+        merge(configuration.variables)
+
+        configuration.software?.let {
+
+            if (software == null) {
+                software = mutableListOf()
+            }
+            software?.addAll(it)
+        }
+
+        configuration.includes?.let {
+
+            if (includes == null) {
+                includes = mutableListOf()
+            }
+            includes?.addAll(it)
+        }
+
+        configuration.overrides?.let {
+
+            if (overrides == null) {
+                overrides = mutableMapOf()
+            }
+            overrides?.merge(it)
+        }
+
+        overrides?.let {
+            operatingSystem?.let { os ->
+                it[SoftwareConfigurationOverride.OS.type]?.let { osOverrides ->
+
+                    val cfg = osOverrides[os.getName()]
+                    cfg?.let {
+                        merge(it)
+                    }
+                }
+            }
+        }
+    }
+
+    fun isEnabled(): Boolean {
+
+        enabled?.let {
+            return it
+        }
+        return true
+    }
+
+    private fun merge(toMerge: Node?) {
+
+        toMerge?.let { toAppend ->
             if (variables == null) {
                 variables = toAppend
             } else {
                 variables?.append(toAppend)
             }
         }
-        software.addAll(configuration.software)
-        includes.addAll(configuration.includes)
-        overrides.merge(configuration.overrides)
     }
 }

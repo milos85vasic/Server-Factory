@@ -303,9 +303,10 @@ abstract class ServerFactory(private val builder: ServerFactoryBuilder) : Applic
         val dockerFlow = InstallationFlow(docker)
         val items = getConfigurationItems(SoftwareConfigurationType.CONTAINERS)
         items.forEach { softwareConfiguration ->
-            softwareConfiguration.software.forEach { software ->
+            softwareConfiguration.software?.forEach { software ->
                 dockerFlow.width(
                         SoftwareConfiguration(
+                                docker.getOperatingSystem(),
                                 softwareConfiguration.overrides,
                                 softwareConfiguration.configuration,
                                 softwareConfiguration.variables,

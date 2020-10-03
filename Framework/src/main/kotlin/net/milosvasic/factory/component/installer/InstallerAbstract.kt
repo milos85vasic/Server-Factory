@@ -158,6 +158,8 @@ abstract class InstallerAbstract(entryPoint: Connection) :
         }
     }
 
+    fun getOperatingSystem() = entryPoint.getRemoteOS()
+
     @Throws(IllegalStateException::class)
     protected abstract fun initialization()
 

@@ -71,7 +71,7 @@ object ConfigurationManager : Initialization {
                         it.forEach { item ->
                             val configurationPath = Configuration.getConfigurationFilePath(item)
                             val obtainedConfiguration = SoftwareConfiguration.obtain(configurationPath)
-                            if (obtainedConfiguration.enabled) {
+                            if (obtainedConfiguration.isEnabled()) {
 
                                 val variables = obtainedConfiguration.variables
                                 config.mergeVariables(variables)
