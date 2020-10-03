@@ -51,6 +51,7 @@ abstract class ServerFactory(private val builder: ServerFactoryBuilder) : Applic
         @Throws(IllegalArgumentException::class)
         override fun obtain(): Connection {
             configuration?.let { config ->
+
                 return SSH(config.remote)
             }
             throw IllegalArgumentException("No valid configuration available for creating a connection")
@@ -78,7 +79,34 @@ abstract class ServerFactory(private val builder: ServerFactoryBuilder) : Applic
                 if (configuration == null) {
                     throw IllegalStateException("Configuration is null")
                 }
-                notifyInit()
+
+                val callback = object : DieOnFailureCallback() {
+
+                    override fun onFinish(success: Boolean) {
+                        super.onFinish(success)
+                        if (success) {
+                            try {
+
+                                ConfigurationManager.load()
+                                configuration?.let { config ->
+                                    SoftwareConfigurationType.values().forEach { type ->
+
+                                        val configurationItems = ConfigurationManager.getConfigurationItems(type)
+                                        getConfigurationItems(type).addAll(configurationItems)
+                                    }
+                                    log.v(config.name)
+                                }
+                            } catch (e: IllegalStateException) {
+
+                                fail(e)
+                            }
+                            notifyInit()
+                        }
+                    }
+                }
+
+                val ssh = getConnection()
+                getCommandFlow(ssh, callback).run()
             } catch (e: IllegalArgumentException) {
 
                 notifyInit(e)
@@ -154,9 +182,8 @@ abstract class ServerFactory(private val builder: ServerFactoryBuilder) : Applic
             val installationFlow = getInstallationFlow(installer, dockerInitFlow) ?: dockerInitFlow
             val initializers = listOf<Initializer>(installer, databaseManager)
             val initFlow = getInitializationFlow(initializers, installationFlow)
-            val commandFlow = getCommandFlow(ssh, initFlow)
 
-            commandFlow.run()
+            initFlow.run()
         } catch (e: IllegalArgumentException) {
 
             fail(e)
@@ -352,7 +379,7 @@ abstract class ServerFactory(private val builder: ServerFactoryBuilder) : Applic
     }
 
     @Throws(IllegalArgumentException::class, IllegalStateException::class)
-    private fun getCommandFlow(ssh: Connection, initFlow: InitializationFlow): CommandFlow {
+    private fun getCommandFlow(ssh: Connection, dieCallback: DieOnFailureCallback): CommandFlow {
 
         val os = ssh.getRemoteOS()
         val hostname = getHostname()
@@ -362,36 +389,13 @@ abstract class ServerFactory(private val builder: ServerFactoryBuilder) : Applic
         val hostNameCommand = HostNameCommand()
         val hostInfoCommand = getHostInfoCommand()
         val testCommand = EchoCommand("Hello")
-        val dieCallback = DieOnFailureCallback()
-
-        val hostInfoDataHandler = object : HostInfoDataHandler(os) {
-
-            override fun onData(data: OperationResult?) {
-                super.onData(data)
-                try {
-
-                    ConfigurationManager.load()
-                    configuration?.let { config ->
-                        SoftwareConfigurationType.values().forEach { type ->
-
-                            val configurationItems = ConfigurationManager.getConfigurationItems(type)
-                            getConfigurationItems(type).addAll(configurationItems)
-                        }
-                        log.v(config.name)
-                    }
-                } catch (e: IllegalStateException) {
-
-                    fail(e)
-                }
-            }
-        }
 
         val flow = CommandFlow()
                 .width(terminal)
                 .perform(pingCommand)
                 .width(ssh)
                 .perform(testCommand)
-                .perform(hostInfoCommand, hostInfoDataHandler)
+                .perform(hostInfoCommand, HostInfoDataHandler(os))
                 .perform(hostNameCommand, HostNameDataHandler(os))
 
         if (hostname != String.EMPTY) {
@@ -399,9 +403,7 @@ abstract class ServerFactory(private val builder: ServerFactoryBuilder) : Applic
             flow.perform(getHostNameSetCommand(hostname), HostNameDataHandler(os, hostname))
         }
 
-        return flow
-                .onFinish(dieCallback)
-                .connect(initFlow)
+        return flow.onFinish(dieCallback)
     }
 
     @Throws(IllegalArgumentException::class, IllegalStateException::class)
