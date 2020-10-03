@@ -51,6 +51,7 @@ abstract class Configuration(
         }
     }
 
+    @Throws(IllegalArgumentException::class)
     open fun merge(configuration: Configuration) {
 
         configuration.enabled?.let { enabled ->

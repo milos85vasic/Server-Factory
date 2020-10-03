@@ -82,6 +82,7 @@ fun fail(e: Exception) {
     exitProcess(error.code)
 }
 
+@Throws(IllegalArgumentException::class)
 fun MutableMap<String, MutableMap<String, SoftwareConfiguration>>.merge(
         overrides: MutableMap<String, MutableMap<String, SoftwareConfiguration>>
 ) {

@@ -96,11 +96,11 @@ abstract class ServerFactory(private val builder: ServerFactoryBuilder) : Applic
                                     }
                                     log.v(config.name)
                                 }
+                                notifyInit()
                             } catch (e: IllegalStateException) {
 
-                                fail(e)
+                                notifyInit(e)
                             }
-                            notifyInit()
                         }
                     }
                 }
