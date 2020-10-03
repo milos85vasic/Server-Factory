@@ -49,7 +49,7 @@ object ConfigurationManager : Initialization {
         }
     }
 
-    @Throws(IllegalStateException::class)
+    @Throws(IllegalStateException::class, IllegalArgumentException::class)
     fun load() {
 
         checkNotInitialized()

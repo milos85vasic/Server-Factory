@@ -100,6 +100,9 @@ abstract class ServerFactory(private val builder: ServerFactoryBuilder) : Applic
                             } catch (e: IllegalStateException) {
 
                                 notifyInit(e)
+                            } catch (e: IllegalArgumentException) {
+
+                                notifyInit(e)
                             }
                         }
                     }
