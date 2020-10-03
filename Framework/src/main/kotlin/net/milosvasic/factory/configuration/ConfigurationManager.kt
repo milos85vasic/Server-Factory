@@ -14,12 +14,15 @@ import net.milosvasic.factory.log
 import net.milosvasic.factory.validation.JsonValidator
 import java.io.File
 import java.util.concurrent.LinkedBlockingQueue
+import java.util.concurrent.atomic.AtomicBoolean
 
 object ConfigurationManager : Initialization {
 
     private const val DIRECTORY_DEFINITIONS = "Definitions"
 
     private val busy = Busy()
+    private var loaded = AtomicBoolean()
+    private val loading = AtomicBoolean()
     private var configuration: Configuration? = null
     private var recipe: ConfigurationRecipe<*>? = null
     private var configurationFactory: ConfigurationFactory<*>? = null
@@ -41,64 +44,80 @@ object ConfigurationManager : Initialization {
         recipe?.let { rcp ->
 
             configuration = configurationFactory?.obtain(rcp)
-            configuration?.let { config ->
-                config.enabled?.let { enabled ->
-                    if (!enabled) {
-
-                        throw IllegalStateException("Configuration is not enabled")
-                    }
-                }
-                config.getConfigurationMap().forEach { (type, items) ->
-                    items?.let {
-
-                        val path = FilePathBuilder()
-                                .addContext(DIRECTORY_DEFINITIONS)
-                                .addContext(type.label)
-                                .getPath()
-
-                        val home = System.getProperty("user.home")
-                        val homePath = FilePathBuilder()
-                                .addContext(home)
-                                .addContext(path)
-                                .getPath()
-
-                        var directory = File(path)
-                        if (directory.absolutePath == homePath) {
-                            directory = File(directory.absolutePath.replace(home, "/usr/local/bin"))
-                        }
-                        findDefinitions(type, directory, it)
-
-                        it.forEach { item ->
-                            val configurationPath = Configuration.getConfigurationFilePath(item)
-                            val obtainedConfiguration = SoftwareConfiguration.obtain(configurationPath)
-                            if (obtainedConfiguration.isEnabled()) {
-
-                                val variables = obtainedConfiguration.variables
-                                config.mergeVariables(variables)
-
-                                val configurationItems = getConfigurationItems(type)
-                                configurationItems.add(obtainedConfiguration)
-                            } else {
-
-                                log.w("Disabled ${type.label.toLowerCase()} configuration: $configurationPath")
-                            }
-                        }
-                    }
-                }
-
-                printVariableNode(config.variables)
-            }
-            if (configuration == null) {
-
-                throw IllegalStateException("Configuration was not initialised")
-            }
+            nullConfigurationCheck()
             BusyWorker.free(busy)
         }
     }
 
     @Throws(IllegalStateException::class)
-    fun getConfiguration(): Configuration {
+    fun load() {
+
         checkNotInitialized()
+        nullConfigurationCheck()
+        if (loaded.get()) {
+
+            throw IllegalStateException("Configuration is already loaded")
+        }
+        if (loading.get()) {
+            return
+        }
+        loading.set(true)
+        configuration?.let { config ->
+            config.enabled?.let { enabled ->
+                if (!enabled) {
+
+                    throw IllegalStateException("Configuration is not enabled")
+                }
+            }
+            config.getConfigurationMap().forEach { (type, items) ->
+                items?.let {
+
+                    val path = FilePathBuilder()
+                            .addContext(DIRECTORY_DEFINITIONS)
+                            .addContext(type.label)
+                            .getPath()
+
+                    val home = System.getProperty("user.home")
+                    val homePath = FilePathBuilder()
+                            .addContext(home)
+                            .addContext(path)
+                            .getPath()
+
+                    var directory = File(path)
+                    if (directory.absolutePath == homePath) {
+                        directory = File(directory.absolutePath.replace(home, "/usr/local/bin"))
+                    }
+                    findDefinitions(type, directory, it)
+
+                    it.forEach { item ->
+                        val configurationPath = Configuration.getConfigurationFilePath(item)
+                        val obtainedConfiguration = SoftwareConfiguration.obtain(configurationPath)
+                        if (obtainedConfiguration.isEnabled()) {
+
+                            val variables = obtainedConfiguration.variables
+                            config.mergeVariables(variables)
+
+                            val configurationItems = getConfigurationItems(type)
+                            configurationItems.add(obtainedConfiguration)
+                        } else {
+
+                            log.w("Disabled ${type.label.toLowerCase()} configuration: $configurationPath")
+                        }
+                    }
+                }
+            }
+
+            printVariableNode(config.variables)
+        }
+        loaded.set(true)
+        loading.set(false)
+    }
+
+    @Throws(IllegalStateException::class)
+    fun getConfiguration(): Configuration {
+
+        checkNotInitialized()
+        loadConfigurationCheck()
         configuration?.let {
             return it
         }
@@ -107,14 +126,18 @@ object ConfigurationManager : Initialization {
 
     @Synchronized
     override fun isInitialized(): Boolean {
+
         return configuration != null
     }
+
+    fun isLoaded() = loaded.get()
 
     @Synchronized
     @Throws(IllegalArgumentException::class, IllegalStateException::class)
     fun setConfigurationRecipe(recipe: ConfigurationRecipe<*>) {
 
         checkInitialized()
+        notLoadConfigurationCheck()
         when (recipe) {
             is FileConfigurationRecipe -> {
 
@@ -140,7 +163,9 @@ object ConfigurationManager : Initialization {
     @Synchronized
     @Throws(IllegalArgumentException::class, IllegalStateException::class)
     fun setConfigurationFactory(factory: ConfigurationFactory<*>) {
+
         checkInitialized()
+        notLoadConfigurationCheck()
         configurationFactory = factory
     }
 
@@ -171,7 +196,6 @@ object ConfigurationManager : Initialization {
     }
 
     private fun findDefinitions(
-
             type: SoftwareConfigurationType,
             directory: File,
             collection: LinkedBlockingQueue<String>
@@ -195,6 +219,7 @@ object ConfigurationManager : Initialization {
     }
 
     private fun printVariableNode(variableNode: Node?, prefix: String = String.EMPTY) {
+
         val prefixEnd = "-> "
         variableNode?.let { node ->
             if (node.value != String.EMPTY) {
@@ -220,6 +245,30 @@ object ConfigurationManager : Initialization {
                 nextPrefix += node.name
                 printVariableNode(child, nextPrefix)
             }
+        }
+    }
+
+    @Throws(IllegalStateException::class)
+    private fun nullConfigurationCheck() {
+
+        if (configuration == null) {
+            throw IllegalStateException("Configuration was not initialised")
+        }
+    }
+
+    @Throws(IllegalStateException::class)
+    private fun loadConfigurationCheck() {
+
+        if (!loaded.get()) {
+            throw IllegalStateException("Configuration has not been loaded")
+        }
+    }
+
+    @Throws(IllegalStateException::class)
+    private fun notLoadConfigurationCheck() {
+
+        if (loaded.get()) {
+            throw IllegalStateException("Configuration has been already loaded")
         }
     }
 }

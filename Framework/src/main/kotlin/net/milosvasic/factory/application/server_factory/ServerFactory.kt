@@ -61,13 +61,37 @@ abstract class ServerFactory(private val builder: ServerFactoryBuilder) : Applic
     override fun initialize() {
         checkInitialized()
         busy()
+        try {
 
-        tag = getLogTag()
-        builder.getLogger()?.let {
+            tag = getLogTag()
+            builder.getLogger()?.let {
 
-            compositeLogger.addLogger(it)
+                compositeLogger.addLogger(it)
+            }
+            try {
+
+                ConfigurationManager.setConfigurationRecipe(builder.getRecipe())
+                ConfigurationManager.setConfigurationFactory(getConfigurationFactory())
+                ConfigurationManager.initialize()
+
+                configuration = ConfigurationManager.getConfiguration()
+                if (configuration == null) {
+                    throw IllegalStateException("Configuration is null")
+                }
+            } catch (e: IllegalArgumentException) {
+
+                notifyInit(e)
+            } catch (e: IllegalStateException) {
+
+                notifyInit(e)
+            } catch (e: RuntimeException) {
+
+                notifyInit(e)
+            }
+        } catch (e: IllegalArgumentException) {
+
+            notifyInit(e)
         }
-        notifyInit()
     }
 
     @Throws(IllegalStateException::class)
@@ -345,15 +369,7 @@ abstract class ServerFactory(private val builder: ServerFactoryBuilder) : Applic
                 super.onData(data)
                 try {
 
-                    // TODO: Move basic init. into initialization block so we have access to connection
-                    ConfigurationManager.setConfigurationRecipe(builder.getRecipe())
-                    ConfigurationManager.setConfigurationFactory(getConfigurationFactory())
-                    ConfigurationManager.initialize()
-
-                    configuration = ConfigurationManager.getConfiguration()
-                    if (configuration == null) {
-                        throw IllegalStateException("Configuration is null")
-                    }
+                    ConfigurationManager.load()
                     configuration?.let { config ->
                         SoftwareConfigurationType.values().forEach { type ->
 
@@ -363,13 +379,7 @@ abstract class ServerFactory(private val builder: ServerFactoryBuilder) : Applic
                         log.v(config.name)
                         notifyInit()
                     }
-                } catch (e: IllegalArgumentException) {
-
-                    fail(e)
                 } catch (e: IllegalStateException) {
-
-                    fail(e)
-                } catch (e: RuntimeException) {
 
                     fail(e)
                 }
