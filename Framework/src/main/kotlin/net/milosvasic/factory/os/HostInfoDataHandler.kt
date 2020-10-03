@@ -4,7 +4,7 @@ import net.milosvasic.factory.common.DataHandler
 import net.milosvasic.factory.log
 import net.milosvasic.factory.operation.OperationResult
 
-class HostInfoDataHandler(private val os: OperatingSystem) : DataHandler<OperationResult> {
+open class HostInfoDataHandler(private val os: OperatingSystem) : DataHandler<OperationResult> {
 
     override fun onData(data: OperationResult?) {
         data?.let {
