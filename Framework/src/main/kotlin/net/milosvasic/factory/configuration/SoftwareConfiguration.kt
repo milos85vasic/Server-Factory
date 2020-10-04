@@ -9,7 +9,6 @@ import net.milosvasic.factory.component.installer.step.InstallationStep
 import net.milosvasic.factory.component.installer.step.factory.InstallationStepFactories
 import net.milosvasic.factory.configuration.variable.Node
 import net.milosvasic.factory.log
-import net.milosvasic.factory.merge
 import net.milosvasic.factory.os.OSType
 import net.milosvasic.factory.validation.Validator
 import java.io.File
@@ -135,14 +134,6 @@ data class SoftwareConfiguration(
         }
 
         configuration.overrides?.let {
-
-            if (overrides == null) {
-                overrides = mutableMapOf()
-            }
-            overrides?.merge(it)
-        }
-
-        overrides?.let {
             operatingSystem?.let { os ->
                 it[SoftwareConfigurationOverride.OS.type]?.let { osOverrides ->
 

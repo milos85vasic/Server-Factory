@@ -45,6 +45,7 @@ val log = object : Logger {
     }
 
     private fun getMessage(exception: Exception): String {
+
         var message = "Error: $exception"
         exception.message?.let {
             message = it

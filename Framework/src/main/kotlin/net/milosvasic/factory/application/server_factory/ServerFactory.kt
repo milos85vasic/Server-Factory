@@ -341,7 +341,8 @@ abstract class ServerFactory(private val builder: ServerFactoryBuilder) : Applic
                         softwareConfiguration.includes
                 )
 
-                configuration.setOperatingSystem(docker.getOperatingSystem().getType().osName)
+                val osName = getConnection().getRemoteOS().getType().osName
+                configuration.setOperatingSystem(osName)
                 dockerFlow.width(configuration)
             }
         }
