@@ -42,6 +42,7 @@ abstract class ServerFactory(private val builder: ServerFactoryBuilder) : Applic
 
     private val busy = Busy()
     private val terminators = ConcurrentLinkedQueue<Termination>()
+    private val connectionPool = mutableMapOf<String, Connection>()
     private val terminationOperation = ServerFactoryTerminationOperation()
     private val subscribers = ConcurrentLinkedQueue<OperationResultListener>()
     private val initializationOperation = ServerFactoryInitializationOperation()
@@ -53,7 +54,13 @@ abstract class ServerFactory(private val builder: ServerFactoryBuilder) : Applic
         override fun obtain(): Connection {
             configuration?.let { config ->
 
-                return SSH(config.remote)
+                val key = config.remote.toString()
+                connectionPool[key]?.let {
+                    return it
+                }
+                val connection = SSH(config.remote)
+                connectionPool[key] = connection
+                return connection
             }
             throw IllegalArgumentException("No valid configuration available for creating a connection")
         }

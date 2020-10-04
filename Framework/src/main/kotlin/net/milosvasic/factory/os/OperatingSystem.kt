@@ -23,6 +23,7 @@ data class OperatingSystem(
     }
 
     fun parseAndSetSystemInfo(data: String) {
+
         val osLineString = "Operating System:"
         val archLineString = "Architecture:"
         val lines = data.split("\n")
