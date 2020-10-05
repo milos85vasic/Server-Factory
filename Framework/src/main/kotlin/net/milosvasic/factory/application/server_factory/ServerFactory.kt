@@ -29,6 +29,7 @@ import net.milosvasic.factory.operation.OperationResult
 import net.milosvasic.factory.operation.OperationResultListener
 import net.milosvasic.factory.os.HostInfoDataHandler
 import net.milosvasic.factory.os.HostNameDataHandler
+import net.milosvasic.factory.os.OperatingSystem
 import net.milosvasic.factory.remote.Connection
 import net.milosvasic.factory.remote.ConnectionProvider
 import net.milosvasic.factory.remote.ssh.SSH
@@ -285,6 +286,8 @@ abstract class ServerFactory(private val builder: ServerFactoryBuilder) : Applic
 
     protected open fun getDatabaseManager(ssh: Connection) = DatabaseManager(ssh)
 
+    protected open fun getHostInfoDataHandler(os: OperatingSystem) = HostInfoDataHandler(os)
+
     protected open fun getHostNameSetCommand(hostname: String): TerminalCommand = HostNameSetCommand(hostname)
 
     private fun notifyInit() {
@@ -414,7 +417,7 @@ abstract class ServerFactory(private val builder: ServerFactoryBuilder) : Applic
                 .perform(pingCommand)
                 .width(ssh)
                 .perform(testCommand)
-                .perform(hostInfoCommand, HostInfoDataHandler(os))
+                .perform(hostInfoCommand, getHostInfoDataHandler(os))
                 .perform(hostNameCommand, HostNameDataHandler(os))
 
         if (hostname != String.EMPTY) {

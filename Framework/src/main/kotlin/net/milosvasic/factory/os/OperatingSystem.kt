@@ -81,6 +81,11 @@ data class OperatingSystem(
 
     fun getType() = type
 
+    fun setType(type: OSType) {
+
+        this.type = type
+    }
+
     fun getHostname() = hostname
 
     fun getArchitecture() = architecture
