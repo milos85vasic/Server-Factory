@@ -12,7 +12,7 @@ class StubConfiguration(
 
         name: String = String.EMPTY,
         remote: Remote,
-        uses: LinkedBlockingQueue<Definition>?,
+        uses: LinkedBlockingQueue<String>?,
         includes: LinkedBlockingQueue<String>?,
         software: LinkedBlockingQueue<String>,
         containers: LinkedBlockingQueue<String>?,

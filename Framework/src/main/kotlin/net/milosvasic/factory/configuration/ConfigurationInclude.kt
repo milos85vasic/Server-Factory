@@ -1,12 +1,11 @@
 package net.milosvasic.factory.configuration
 
-import net.milosvasic.factory.configuration.definition.Definition
 import net.milosvasic.factory.configuration.variable.Node
 import java.util.concurrent.LinkedBlockingQueue
 
 open class ConfigurationInclude(
 
-        var uses: LinkedBlockingQueue<Definition>?,
+        var uses: LinkedBlockingQueue<String>?,
         var includes: LinkedBlockingQueue<String>?,
         var software: LinkedBlockingQueue<String>?,
         var containers: LinkedBlockingQueue<String>?,

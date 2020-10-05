@@ -14,7 +14,7 @@ abstract class Configuration(
 
         val name: String = String.EMPTY,
         val remote: Remote,
-        uses: LinkedBlockingQueue<Definition>?,
+        uses: LinkedBlockingQueue<String>?,
         includes: LinkedBlockingQueue<String>?,
         software: LinkedBlockingQueue<String>?,
         containers: LinkedBlockingQueue<String>?,

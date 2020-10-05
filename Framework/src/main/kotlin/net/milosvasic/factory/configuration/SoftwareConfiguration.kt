@@ -7,7 +7,6 @@ import net.milosvasic.factory.common.filesystem.FilePathBuilder
 import net.milosvasic.factory.common.obtain.ObtainParametrized
 import net.milosvasic.factory.component.installer.step.InstallationStep
 import net.milosvasic.factory.component.installer.step.factory.InstallationStepFactories
-import net.milosvasic.factory.configuration.definition.Definition
 import net.milosvasic.factory.configuration.variable.Node
 import net.milosvasic.factory.log
 import net.milosvasic.factory.os.OSType
@@ -16,7 +15,7 @@ import java.io.File
 
 data class SoftwareConfiguration(
 
-        var uses: MutableList<Definition> = mutableListOf(),
+        var uses: MutableList<String> = mutableListOf(),
         var overrides: MutableMap<String, MutableMap<String, SoftwareConfiguration>>? = mutableMapOf(),
         var configuration: String = String.EMPTY,
         var variables: Node? = null,
