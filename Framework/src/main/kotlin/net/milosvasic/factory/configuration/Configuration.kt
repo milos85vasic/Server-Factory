@@ -12,6 +12,7 @@ import java.util.concurrent.LinkedBlockingQueue
 
 abstract class Configuration(
 
+        definition: Definition? = null,
         val name: String = String.EMPTY,
         val remote: Remote,
         uses: LinkedBlockingQueue<String>?,
@@ -24,6 +25,7 @@ abstract class Configuration(
 
 ) : ConfigurationInclude(
 
+        definition,
         uses,
         includes,
         software,

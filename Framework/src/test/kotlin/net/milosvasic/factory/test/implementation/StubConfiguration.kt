@@ -10,6 +10,7 @@ import java.util.concurrent.LinkedBlockingQueue
 
 class StubConfiguration(
 
+        definition: Definition? = null,
         name: String = String.EMPTY,
         remote: Remote,
         uses: LinkedBlockingQueue<String>?,
@@ -19,4 +20,4 @@ class StubConfiguration(
         variables: Node? = null,
         overrides: MutableMap<String, MutableMap<String, SoftwareConfiguration>>?
 
-) : Configuration(name, remote, uses, includes, software, containers, variables, overrides)
+) : Configuration(definition, name, remote, uses, includes, software, containers, variables, overrides)

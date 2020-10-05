@@ -344,6 +344,8 @@ abstract class ServerFactory(private val builder: ServerFactoryBuilder) : Applic
             softwareConfiguration.software?.forEach { software ->
 
                 val configuration = SoftwareConfiguration(
+
+                        softwareConfiguration.definition,
                         softwareConfiguration.uses,
                         softwareConfiguration.overrides,
                         softwareConfiguration.configuration,
@@ -351,7 +353,6 @@ abstract class ServerFactory(private val builder: ServerFactoryBuilder) : Applic
                         mutableListOf(software),
                         softwareConfiguration.includes
                 )
-
                 val osName = getConnection().getRemoteOS().getType().osName
                 configuration.setOperatingSystem(osName)
                 dockerFlow.width(configuration)

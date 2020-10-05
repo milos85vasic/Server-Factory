@@ -1,5 +1,7 @@
 package net.milosvasic.factory.configuration.definition
 
+import net.milosvasic.factory.common.filesystem.FilePathBuilder
+
 data class Definition(
 
         val name: String,
@@ -16,5 +18,15 @@ data class Definition(
             }
         }
         return DefinitionType.Unknown
+    }
+
+    override fun toString(): String {
+
+        val builder = FilePathBuilder()
+                .addContext(getType().type)
+                .addContext(group)
+                .addContext(name)
+
+        return "${builder.getPath()}:$version"
     }
 }
