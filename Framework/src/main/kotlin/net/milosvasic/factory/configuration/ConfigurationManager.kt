@@ -101,6 +101,12 @@ object ConfigurationManager : Initialization {
 
                             val configurationItems = getConfigurationItems(type)
                             configurationItems.add(obtainedConfiguration)
+
+                            log.i("${type.label} definition file: $item")
+                            obtainedConfiguration.definition?.let { definition ->
+
+                                log.i("${type.label} definition: $definition")
+                            }
                         } else {
 
                             log.w("Disabled ${type.label.toLowerCase()} configuration: $configurationPath")
@@ -210,7 +216,6 @@ object ConfigurationManager : Initialization {
                 if (file.name == Configuration.DEFAULT_CONFIGURATION_FILE) {
 
                     val definition = file.absolutePath
-                    log.i("${type.label} definition found: $definition")
                     collection.add(definition)
                 }
             }
