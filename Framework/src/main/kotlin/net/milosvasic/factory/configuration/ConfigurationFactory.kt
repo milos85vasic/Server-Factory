@@ -136,6 +136,9 @@ abstract class ConfigurationFactory<T : Configuration> : ObtainParametrized<Conf
         if (configuration.enabled == null) {
             configuration.enabled = true
         }
+        if (configuration.uses == null) {
+            configuration.uses = LinkedBlockingQueue()
+        }
         if (configuration.includes == null) {
             configuration.includes = LinkedBlockingQueue()
         }

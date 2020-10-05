@@ -341,6 +341,7 @@ abstract class ServerFactory(private val builder: ServerFactoryBuilder) : Applic
             softwareConfiguration.software?.forEach { software ->
 
                 val configuration = SoftwareConfiguration(
+                        softwareConfiguration.uses,
                         softwareConfiguration.overrides,
                         softwareConfiguration.configuration,
                         softwareConfiguration.variables,

@@ -4,6 +4,7 @@ import net.milosvasic.factory.application.server_factory.ServerFactoryBuilder
 import net.milosvasic.factory.common.busy.BusyException
 import net.milosvasic.factory.component.installer.step.factory.InstallationStepFactories
 import net.milosvasic.factory.configuration.recipe.FileConfigurationRecipe
+import net.milosvasic.factory.error.ERROR
 import net.milosvasic.factory.execution.flow.callback.FlowCallback
 import net.milosvasic.factory.execution.flow.implementation.initialization.InitializationFlow
 import net.milosvasic.factory.fail
@@ -45,7 +46,10 @@ class StackStepTest : BaseTest() {
         val callback = object : FlowCallback {
             override fun onFinish(success: Boolean) {
 
-                assert(success)
+                if (!success) {
+
+                    fail(ERROR.INITIALIZATION_FAILURE)
+                }
                 initialized = success
                 if (success) {
                     try {

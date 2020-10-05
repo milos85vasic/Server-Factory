@@ -2,6 +2,7 @@ package net.milosvasic.factory.configuration
 
 import net.milosvasic.factory.EMPTY
 import net.milosvasic.factory.common.filesystem.FilePathBuilder
+import net.milosvasic.factory.configuration.definition.Definition
 import net.milosvasic.factory.configuration.variable.Node
 import net.milosvasic.factory.merge
 import net.milosvasic.factory.remote.Remote
@@ -13,6 +14,7 @@ abstract class Configuration(
 
         val name: String = String.EMPTY,
         val remote: Remote,
+        uses: LinkedBlockingQueue<Definition>?,
         includes: LinkedBlockingQueue<String>?,
         software: LinkedBlockingQueue<String>?,
         containers: LinkedBlockingQueue<String>?,
@@ -22,6 +24,7 @@ abstract class Configuration(
 
 ) : ConfigurationInclude(
 
+        uses,
         includes,
         software,
         containers,
@@ -59,6 +62,9 @@ abstract class Configuration(
 
                 configuration.includes?.let {
                     includes?.addAll(it)
+                }
+                configuration.uses?.let {
+                    uses?.addAll(it)
                 }
                 configuration.variables?.let {
                     variables?.append(it)
