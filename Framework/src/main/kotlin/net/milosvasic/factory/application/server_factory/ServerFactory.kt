@@ -339,7 +339,7 @@ abstract class ServerFactory(private val builder: ServerFactoryBuilder) : Applic
     private fun getDockerFlow(docker: Docker, terminationFlow: FlowBuilder<*, *, *>): InstallationFlow {
 
         val dockerFlow = InstallationFlow(docker)
-        val items = getConfigurationItems(SoftwareConfigurationType.CONTAINERS)
+        val items = getConfigurationItems(SoftwareConfigurationType.STACKS)
         items.forEach { softwareConfiguration ->
             softwareConfiguration.software?.forEach { software ->
 

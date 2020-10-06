@@ -19,7 +19,7 @@ open class ConfigurationInclude(
     fun getConfigurationMap() = mapOf(
 
             SoftwareConfigurationType.SOFTWARE to software,
-            SoftwareConfigurationType.CONTAINERS to containers
+            SoftwareConfigurationType.STACKS to containers
     )
 
     override fun toString(): String {
