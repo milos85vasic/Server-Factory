@@ -23,8 +23,8 @@ data class Definition(
     override fun toString(): String {
 
         val builder = FilePathBuilder()
-                .addContext(getType().type)
                 .addContext(group)
+                .addContext(getType().type)
                 .addContext(name)
 
         return "${builder.getPath()}:$version"
