@@ -4,6 +4,6 @@ enum class DefinitionType(val type: String) {
 
     Stack("stack"),
     Software("software"),
-    Container("container"),
+    Docker("docker"),
     Unknown("unknown")
 }
