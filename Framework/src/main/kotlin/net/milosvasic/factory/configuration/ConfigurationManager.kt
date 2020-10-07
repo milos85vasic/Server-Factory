@@ -5,6 +5,8 @@ import net.milosvasic.factory.common.busy.Busy
 import net.milosvasic.factory.common.busy.BusyWorker
 import net.milosvasic.factory.common.filesystem.FilePathBuilder
 import net.milosvasic.factory.common.initialization.Initialization
+import net.milosvasic.factory.configuration.group.Group
+import net.milosvasic.factory.configuration.group.GroupValidator
 import net.milosvasic.factory.configuration.group.MainGroup
 import net.milosvasic.factory.configuration.recipe.ConfigurationRecipe
 import net.milosvasic.factory.configuration.recipe.FileConfigurationRecipe
@@ -94,13 +96,11 @@ object ConfigurationManager : Initialization {
                             .addContext(Repository.REPOSITORY_DETAILS_FILE)
                             .getPath()
 
-                    val mainGroup = MainGroup()
+                    val wrapped = Group(group)
+                    val validator = GroupValidator()
                     val groupDetailsFile = File(groupDetailsPath)
-                    if (
-                            groupDetailsFile.exists() &&
-                            !group.contains(" ") &&
-                            (group == mainGroup.name || group.contains("."))
-                    ) {
+
+                    if (groupDetailsFile.exists() && validator.validate(wrapped)) {
 
                         log.i("Definitions group: $group")
                         config.getConfigurationMap().forEach { (type, items) ->
