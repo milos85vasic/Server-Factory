@@ -21,7 +21,8 @@ abstract class Configuration(
         containers: LinkedBlockingQueue<String>?,
         variables: Node? = null,
         overrides: MutableMap<String, MutableMap<String, SoftwareConfiguration>>?,
-        enabled: Boolean? = null
+        enabled: Boolean? = null,
+        docker: LinkedBlockingQueue<String>?
 
 ) : ConfigurationInclude(
 
@@ -32,7 +33,8 @@ abstract class Configuration(
         containers,
         variables,
         overrides,
-        enabled
+        enabled,
+        docker
 ) {
 
     companion object {
@@ -76,6 +78,9 @@ abstract class Configuration(
                 }
                 configuration.containers?.let {
                     containers?.addAll(it)
+                }
+                configuration.docker?.let {
+                    docker?.addAll(it)
                 }
                 configuration.overrides?.let {
                     overrides?.let { ods ->

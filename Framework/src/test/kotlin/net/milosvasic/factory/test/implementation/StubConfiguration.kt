@@ -18,6 +18,7 @@ class StubConfiguration(
         software: LinkedBlockingQueue<String>,
         containers: LinkedBlockingQueue<String>?,
         variables: Node? = null,
-        overrides: MutableMap<String, MutableMap<String, SoftwareConfiguration>>?
+        overrides: MutableMap<String, MutableMap<String, SoftwareConfiguration>>?,
+        docker: LinkedBlockingQueue<String>?
 
-) : Configuration(definition, name, remote, uses, includes, software, containers, variables, overrides)
+) : Configuration(definition, name, remote, uses, includes, software, containers, variables, overrides, docker = docker)

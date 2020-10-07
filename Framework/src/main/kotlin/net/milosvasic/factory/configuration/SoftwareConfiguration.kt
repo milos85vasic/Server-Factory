@@ -22,7 +22,7 @@ data class SoftwareConfiguration(
         var configuration: String = String.EMPTY,
         var variables: Node? = null,
         var software: MutableList<SoftwareConfigurationItem>? = mutableListOf(),
-        var includes: MutableList<String>? = mutableListOf(),
+        var includes: MutableSet<String>? = mutableSetOf(),
         var enabled: Boolean? = true
 
 ) : ObtainParametrized<String, Map<String, List<InstallationStep<*>>>> {
@@ -131,7 +131,7 @@ data class SoftwareConfiguration(
         configuration.includes?.let {
 
             if (includes == null) {
-                includes = mutableListOf()
+                includes = mutableSetOf()
             }
             includes?.addAll(it)
         }

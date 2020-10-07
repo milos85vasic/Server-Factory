@@ -13,19 +13,20 @@ open class ConfigurationInclude(
         var containers: LinkedBlockingQueue<String>?,
         var variables: Node? = null,
         var overrides: MutableMap<String, MutableMap<String, SoftwareConfiguration>>?,
-        var enabled: Boolean? = null
+        var enabled: Boolean? = null,
+        var docker: LinkedBlockingQueue<String>?
 ) {
 
     fun getConfigurationMap() = mapOf(
 
             SoftwareConfigurationType.SOFTWARE to software,
             SoftwareConfigurationType.STACKS to containers,
-            SoftwareConfigurationType.DOCKER to software
+            SoftwareConfigurationType.DOCKER to docker
     )
 
     override fun toString(): String {
 
         return "ConfigurationInclude(definition=$definition, uses=$uses, includes=$includes, software=$software, " +
-                "containers=$containers, variables=$variables, overrides=$overrides, enabled=$enabled)"
+                "containers=$containers, docker=$docker, variables=$variables, overrides=$overrides, enabled=$enabled)"
     }
 }
