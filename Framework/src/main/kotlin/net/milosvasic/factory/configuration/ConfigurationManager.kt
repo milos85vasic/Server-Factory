@@ -24,6 +24,8 @@ import java.util.concurrent.atomic.AtomicBoolean
 object ConfigurationManager : Initialization {
 
     private const val DIRECTORY_DEFINITIONS = "Definitions"
+    // TODO: MSF-284 - Make sure that this is default value for the installation location that will be provided
+    //  by application execution arguments that will originally be provided through installation script.
     private const val DIRECTORY_INSTALLATION_LOCATION = "/usr/local/bin"
 
     private val busy = Busy()
