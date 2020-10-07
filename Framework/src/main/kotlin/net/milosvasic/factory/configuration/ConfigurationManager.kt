@@ -70,47 +70,81 @@ object ConfigurationManager : Initialization {
                     throw IllegalStateException("Configuration is not enabled")
                 }
             }
-            config.getConfigurationMap().forEach { (type, items) ->
-                items?.let {
 
-                    val path = FilePathBuilder()
+            val definitionsHomePath = FilePathBuilder()
+                    .addContext(DIRECTORY_DEFINITIONS)
+                    .getPath()
+
+            val definitionsDirectory = File(definitionsHomePath)
+            val groups = definitionsDirectory.list()
+            groups?.forEach { group ->
+
+                val groupPath = FilePathBuilder()
+                        .addContext(DIRECTORY_DEFINITIONS)
+                        .addContext(group)
+                        .getPath()
+
+                val groupFile = File(groupPath)
+                if (groupFile.isDirectory) {
+
+                    val groupDetailsPath = FilePathBuilder()
                             .addContext(DIRECTORY_DEFINITIONS)
-                            .addContext(type.label)
+                            .addContext(group)
+                            .addContext(Repository.REPOSITORY_DETAILS_FILE)
                             .getPath()
 
-                    val home = System.getProperty("user.home")
-                    val homePath = FilePathBuilder()
-                            .addContext(home)
-                            .addContext(path)
-                            .getPath()
+                    val groupDetailsFile = File(groupDetailsPath)
+                    if (groupDetailsFile.exists()) {
 
-                    var directory = File(path)
-                    if (directory.absolutePath == homePath) {
-                        directory = File(directory.absolutePath.replace(home, "/usr/local/bin"))
-                    }
-                    findDefinitions(type, directory, it)
+                        log.i("Definitions group: $group")
+                        config.getConfigurationMap().forEach { (type, items) ->
+                            items?.let {
 
-                    it.forEach { item ->
-                        val os = operatingSystem.getType().osName
-                        val configurationPath = Configuration.getConfigurationFilePath(item)
-                        val obtainedConfiguration = SoftwareConfiguration.obtain(configurationPath, os)
-                        if (obtainedConfiguration.isEnabled()) {
+                                val path = FilePathBuilder()
+                                        .addContext(DIRECTORY_DEFINITIONS)
+                                        .addContext(groupFile.name.replace(" ", "_"))
+                                        .addContext(type.label)
+                                        .getPath()
 
-                            val variables = obtainedConfiguration.variables
-                            config.mergeVariables(variables)
+                                val home = System.getProperty("user.home")
+                                val homePath = FilePathBuilder()
+                                        .addContext(home)
+                                        .addContext(path)
+                                        .getPath()
 
-                            val configurationItems = getConfigurationItems(type)
-                            configurationItems.add(obtainedConfiguration)
+                                var directory = File(path)
+                                if (directory.absolutePath == homePath) {
+                                    directory = File(directory.absolutePath.replace(home, "/usr/local/bin"))
+                                }
+                                findDefinitions(type, directory, it)
 
-                            log.i("${type.label} definition file: $item")
-                            obtainedConfiguration.definition?.let { definition ->
+                                it.forEach { item ->
+                                    val os = operatingSystem.getType().osName
+                                    val configurationPath = Configuration.getConfigurationFilePath(item)
+                                    val obtainedConfiguration = SoftwareConfiguration.obtain(configurationPath, os)
+                                    if (obtainedConfiguration.isEnabled()) {
 
-                                log.i("${type.label} definition: $definition")
+                                        val variables = obtainedConfiguration.variables
+                                        config.mergeVariables(variables)
+
+                                        val configurationItems = getConfigurationItems(type)
+                                        configurationItems.add(obtainedConfiguration)
+
+                                        log.i("${type.label} definition file: $item")
+                                        obtainedConfiguration.definition?.let { definition ->
+
+                                            log.i("${type.label} definition: $definition")
+                                        }
+                                    } else {
+
+                                        log.w("Disabled ${type.label.toLowerCase()} configuration: $configurationPath")
+                                    }
+                                }
                             }
-                        } else {
-
-                            log.w("Disabled ${type.label.toLowerCase()} configuration: $configurationPath")
                         }
+                    } else {
+
+                        log.v("Skipping '$group', not a definitions group")
                     }
                 }
             }
