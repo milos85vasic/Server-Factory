@@ -12,6 +12,10 @@ interface Context {
             override fun context() = "SYSTEM"
         }
 
+        val Installation = object : Context {
+            override fun context() = "INSTALLATION"
+        }
+
         val Server = object : Context {
             override fun context() = "SERVER"
         }

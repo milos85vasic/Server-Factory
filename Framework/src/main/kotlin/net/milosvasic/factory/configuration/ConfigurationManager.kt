@@ -7,7 +7,6 @@ import net.milosvasic.factory.common.filesystem.FilePathBuilder
 import net.milosvasic.factory.common.initialization.Initialization
 import net.milosvasic.factory.configuration.group.Group
 import net.milosvasic.factory.configuration.group.GroupValidator
-import net.milosvasic.factory.configuration.group.MainGroup
 import net.milosvasic.factory.configuration.recipe.ConfigurationRecipe
 import net.milosvasic.factory.configuration.recipe.FileConfigurationRecipe
 import net.milosvasic.factory.configuration.recipe.RawJsonConfigurationRecipe
@@ -25,6 +24,7 @@ import java.util.concurrent.atomic.AtomicBoolean
 object ConfigurationManager : Initialization {
 
     private const val DIRECTORY_DEFINITIONS = "Definitions"
+    private const val DIRECTORY_INSTALLATION_LOCATION = "/usr/local/bin"
 
     private val busy = Busy()
     private var loaded = AtomicBoolean()
@@ -124,7 +124,9 @@ object ConfigurationManager : Initialization {
 
                                 var directory = File(path)
                                 if (directory.absolutePath == homePath) {
-                                    directory = File(directory.absolutePath.replace(home, "/usr/local/bin"))
+
+                                    val replaced = directory.absolutePath.replace(home, DIRECTORY_INSTALLATION_LOCATION)
+                                    directory = File(replaced)
                                 }
                                 findDefinitions(type, directory, it)
 
@@ -321,11 +323,30 @@ object ConfigurationManager : Initialization {
         if (node == null) {
             node = Node()
         }
-        val homeKey = Key.Home.key()
-        val systemCtx = Context.System.context()
-        val systemHomeNode = Node(name = homeKey, value = "zzz")
-        val systemVariables = mutableListOf(systemHomeNode)
-        val systemNode = Node(name = systemCtx, children = systemVariables)
+
+        val keyHome = Key.Home.key()
+        val ctxSystem = Context.System.context()
+        val ctxInstallation = Context.Installation.context()
+
+        // TODO: MSG-283 - Prevent nodes overwriting if user has already defined it
+        val systemHome = getHomeDirectory()
+        val systemHomeNode = Node(name = keyHome, value = systemHome.absolutePath)
+        val installationHomeNode = Node(name = keyHome, value = DIRECTORY_INSTALLATION_LOCATION)
+        val installationVariables = mutableListOf(installationHomeNode)
+        val installationNode = Node(name = ctxInstallation, children = installationVariables)
+        val systemVariables = mutableListOf(systemHomeNode, installationNode)
+        val systemNode = Node(name = ctxSystem, children = systemVariables)
         node?.children?.add(systemNode)
+    }
+
+    private fun getHomeDirectory(): File {
+
+        val home = System.getProperty("user.home")
+        val homePath = FilePathBuilder().addContext(home).getPath()
+        var systemHome = File("")
+        if (systemHome.absolutePath == homePath) {
+            systemHome = File(DIRECTORY_INSTALLATION_LOCATION)
+        }
+        return systemHome
     }
 }
