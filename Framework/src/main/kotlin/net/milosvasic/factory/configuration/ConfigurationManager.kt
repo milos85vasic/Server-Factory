@@ -11,6 +11,8 @@ import net.milosvasic.factory.configuration.group.MainGroup
 import net.milosvasic.factory.configuration.recipe.ConfigurationRecipe
 import net.milosvasic.factory.configuration.recipe.FileConfigurationRecipe
 import net.milosvasic.factory.configuration.recipe.RawJsonConfigurationRecipe
+import net.milosvasic.factory.configuration.variable.Context
+import net.milosvasic.factory.configuration.variable.Key
 import net.milosvasic.factory.configuration.variable.Node
 import net.milosvasic.factory.configuration.variable.Variable
 import net.milosvasic.factory.log
@@ -73,6 +75,8 @@ object ConfigurationManager : Initialization {
                     throw IllegalStateException("Configuration is not enabled")
                 }
             }
+
+            initializeSystemVariables(config)
 
             val definitionsHomePath = FilePathBuilder()
                     .addContext(DIRECTORY_DEFINITIONS)
@@ -306,5 +310,22 @@ object ConfigurationManager : Initialization {
         if (loaded.get()) {
             throw IllegalStateException("Configuration has been already loaded")
         }
+    }
+
+    private fun initializeSystemVariables(config: Configuration) {
+
+        var node: Node? = null
+        config.variables?.let {
+            node = it
+        }
+        if (node == null) {
+            node = Node()
+        }
+        val homeKey = Key.Home.key()
+        val systemCtx = Context.System.context()
+        val systemHomeNode = Node(name = homeKey, value = "zzz")
+        val systemVariables = mutableListOf(systemHomeNode)
+        val systemNode = Node(name = systemCtx, children = systemVariables)
+        node?.children?.add(systemNode)
     }
 }

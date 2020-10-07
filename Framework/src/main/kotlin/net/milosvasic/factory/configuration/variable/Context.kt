@@ -8,6 +8,10 @@ interface Context {
 
     companion object {
 
+        val System = object : Context {
+            override fun context() = "SYSTEM"
+        }
+
         val Server = object : Context {
             override fun context() = "SERVER"
         }
