@@ -5,6 +5,7 @@ import net.milosvasic.factory.common.busy.Busy
 import net.milosvasic.factory.common.busy.BusyWorker
 import net.milosvasic.factory.common.filesystem.FilePathBuilder
 import net.milosvasic.factory.common.initialization.Initialization
+import net.milosvasic.factory.configuration.group.MainGroup
 import net.milosvasic.factory.configuration.recipe.ConfigurationRecipe
 import net.milosvasic.factory.configuration.recipe.FileConfigurationRecipe
 import net.milosvasic.factory.configuration.recipe.RawJsonConfigurationRecipe
@@ -93,8 +94,13 @@ object ConfigurationManager : Initialization {
                             .addContext(Repository.REPOSITORY_DETAILS_FILE)
                             .getPath()
 
+                    val mainGroup = MainGroup()
                     val groupDetailsFile = File(groupDetailsPath)
-                    if (groupDetailsFile.exists()) {
+                    if (
+                            groupDetailsFile.exists() &&
+                            !group.contains(" ") &&
+                            (group == mainGroup.name || group.contains("."))
+                    ) {
 
                         log.i("Definitions group: $group")
                         config.getConfigurationMap().forEach { (type, items) ->
@@ -102,7 +108,7 @@ object ConfigurationManager : Initialization {
 
                                 val path = FilePathBuilder()
                                         .addContext(DIRECTORY_DEFINITIONS)
-                                        .addContext(groupFile.name.replace(" ", "_"))
+                                        .addContext(group)
                                         .addContext(type.label)
                                         .getPath()
 
@@ -144,7 +150,7 @@ object ConfigurationManager : Initialization {
                         }
                     } else {
 
-                        log.v("Skipping '$group', not a definitions group")
+                        log.v("Skipping '$group', it is not a valid group directory")
                     }
                 }
             }
