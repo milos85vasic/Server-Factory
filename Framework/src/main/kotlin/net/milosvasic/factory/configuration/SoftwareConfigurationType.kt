@@ -4,5 +4,5 @@ enum class SoftwareConfigurationType(val label: String) {
 
     STACKS("Stacks"),
     SOFTWARE("Software"),
-    CONTAINERS("Containers")
+    DOCKER("Docker")
 }
