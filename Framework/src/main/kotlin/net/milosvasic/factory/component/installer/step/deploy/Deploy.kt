@@ -21,8 +21,8 @@ open class Deploy(what: String, private val where: String) : RemoteOperationInst
 
     companion object {
 
-        const val DELIMITER_FROM_TO = ":"
-        const val DELIMITER_DEFINITION = "@"
+        const val SEPARATOR_FROM_TO = ":"
+        const val SEPARATOR_DEFINITION = "@"
         const val PROTOTYPE_PREFIX = "proto."
     }
 

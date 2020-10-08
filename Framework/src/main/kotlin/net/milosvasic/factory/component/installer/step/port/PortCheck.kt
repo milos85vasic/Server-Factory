@@ -14,7 +14,7 @@ data class PortCheck(
 
     companion object {
 
-        const val DELIMITER = ","
+        const val SEPARATOR = ","
     }
 
     @Throws(IllegalArgumentException::class)

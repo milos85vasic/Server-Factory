@@ -20,7 +20,7 @@ class StubInstallationStepFactory(private val protoStubs: List<String>) : Instal
                 val validator = DeployValidator()
                 if (validator.validate(definition.getValue())) {
 
-                    val fromTo = definition.getValue().split(Deploy.DELIMITER_FROM_TO)
+                    val fromTo = definition.getValue().split(Deploy.SEPARATOR_FROM_TO)
                     val from = fromTo[0].trim()
                     val to = fromTo[1].trim()
                     return StubDeploy(from, to, protoStubs)

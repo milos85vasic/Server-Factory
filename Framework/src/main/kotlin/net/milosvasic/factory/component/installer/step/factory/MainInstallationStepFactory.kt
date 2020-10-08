@@ -24,6 +24,7 @@ import net.milosvasic.factory.component.installer.step.reboot.Reboot
 import net.milosvasic.factory.component.packaging.item.Group
 import net.milosvasic.factory.component.packaging.item.Package
 import net.milosvasic.factory.configuration.InstallationStepDefinition
+import net.milosvasic.factory.configuration.definition.Definition
 import net.milosvasic.factory.terminal.command.RawTerminalCommand
 import net.milosvasic.factory.validation.Validator
 
@@ -86,15 +87,18 @@ class MainInstallationStepFactory : InstallationStepFactory {
                 val validator = DeployValidator()
                 if (validator.validate(definition.getValue())) {
 
-                    val defFromTo = definition.getValue().split(Deploy.DELIMITER_DEFINITION)
+                    val defFromTo = definition.getValue().split(Deploy.SEPARATOR_DEFINITION)
                     if (defFromTo.size == 1) {
 
-                        val fromTo = definition.getValue().split(Deploy.DELIMITER_FROM_TO)
+                        val fromTo = definition.getValue().split(Deploy.SEPARATOR_FROM_TO)
                         val from = fromTo[0].trim()
                         val to = fromTo[1].trim()
                         return Deploy(from, to)
                     } else {
 
+                        val defPath = defFromTo[0]
+                        val def = Definition.fromString(defPath)
+                        val rest = defFromTo[1]
                         throw IllegalArgumentException("Not supported: ${definition.getValue()}")
                     }
                 } else {
@@ -150,7 +154,7 @@ class MainInstallationStepFactory : InstallationStepFactory {
         val validator = PortCheckValidator()
         if (validator.validate(arg)) {
 
-            val split = arg.split(PortCheck.DELIMITER)
+            val split = arg.split(PortCheck.SEPARATOR)
             val ports = mutableListOf<Int>()
             split.forEach {
                 val port = it.trim().toInt()
