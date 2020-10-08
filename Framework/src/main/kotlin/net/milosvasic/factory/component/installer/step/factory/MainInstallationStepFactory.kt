@@ -98,6 +98,7 @@ class MainInstallationStepFactory : InstallationStepFactory {
 
                         val defPath = defFromTo[0]
                         val def = Definition.fromString(defPath)
+                        val defHome = def.getHome()
                         val rest = defFromTo[1]
                         throw IllegalArgumentException("Not supported: ${definition.getValue()}")
                     }

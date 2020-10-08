@@ -5,6 +5,7 @@ import net.milosvasic.factory.common.busy.Busy
 import net.milosvasic.factory.common.busy.BusyWorker
 import net.milosvasic.factory.common.filesystem.FilePathBuilder
 import net.milosvasic.factory.common.initialization.Initialization
+import net.milosvasic.factory.configuration.definition.Definition
 import net.milosvasic.factory.configuration.group.Group
 import net.milosvasic.factory.configuration.group.GroupValidator
 import net.milosvasic.factory.configuration.recipe.ConfigurationRecipe
@@ -23,7 +24,7 @@ import java.util.concurrent.atomic.AtomicBoolean
 
 object ConfigurationManager : Initialization {
 
-    private const val DIRECTORY_DEFINITIONS = "Definitions"
+    private const val DIRECTORY_DEFINITIONS = Definition.DIRECTORY_ROOT
     // TODO: MSF-284 - Make sure that this is default value for the installation location that will be provided
     //  by application execution arguments that will originally be provided through installation script.
     private const val DIRECTORY_INSTALLATION_LOCATION = "/usr/local/bin"
