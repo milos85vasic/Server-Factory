@@ -1,5 +1,6 @@
 package net.milosvasic.factory.component.installer.step.factory
 
+import net.milosvasic.factory.common.filesystem.FilePathBuilder
 import net.milosvasic.factory.component.docker.step.DockerInstallationStepType
 import net.milosvasic.factory.component.docker.step.dockerfile.Build
 import net.milosvasic.factory.component.docker.step.network.Network
@@ -100,7 +101,14 @@ class MainInstallationStepFactory : InstallationStepFactory {
                         val def = Definition.fromString(defPath)
                         val defHome = def.getHome()
                         val rest = defFromTo[1]
-                        throw IllegalArgumentException("Not supported: ${definition.getValue()}")
+                        val restSplit = rest.split(Deploy.SEPARATOR_FROM_TO)
+
+                        val from = FilePathBuilder()
+                                .addContext(defHome)
+                                .addContext(restSplit[0].trim())
+                                .getPath()
+                        val to = restSplit[1].trim()
+                        return Deploy(from, to)
                     }
                 } else {
 
