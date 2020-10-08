@@ -86,10 +86,17 @@ class MainInstallationStepFactory : InstallationStepFactory {
                 val validator = DeployValidator()
                 if (validator.validate(definition.getValue())) {
 
-                    val fromTo = definition.getValue().split(Deploy.DELIMITER)
-                    val from = fromTo[0].trim()
-                    val to = fromTo[1].trim()
-                    return Deploy(from, to)
+                    val defFromTo = definition.getValue().split(Deploy.DELIMITER_DEFINITION)
+                    if (defFromTo.size == 1) {
+
+                        val fromTo = definition.getValue().split(Deploy.DELIMITER_FROM_TO)
+                        val from = fromTo[0].trim()
+                        val to = fromTo[1].trim()
+                        return Deploy(from, to)
+                    } else {
+
+                        throw IllegalArgumentException("Not supported: ${definition.getValue()}")
+                    }
                 } else {
 
                     throw IllegalArgumentException("Invalid deploy parameters")
