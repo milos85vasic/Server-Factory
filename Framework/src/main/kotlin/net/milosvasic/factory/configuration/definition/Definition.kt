@@ -18,6 +18,7 @@ data class Definition(
     companion object {
 
         const val VERSION_SEPARATOR = ":"
+        const val CURRENT_DEFINITION = "this"
         const val DIRECTORY_ROOT = "Definitions"
         val PATH_SEPARATOR = FilePathBuilder().separator
 
@@ -28,11 +29,17 @@ data class Definition(
             if (validator.validate(string)) {
 
                 val params = string.split(VERSION_SEPARATOR)
-                val path = params[0]
-                val version = params[1]
-                val pathParams = path.split(PATH_SEPARATOR)
+                if (params.size == 1) {
 
-                return Definition(pathParams[2], pathParams[0], pathParams[1], version)
+                    throw IllegalArgumentException("Not supported: $string")
+                } else {
+
+                    val path = params[0]
+                    val version = params[1]
+                    val pathParams = path.split(PATH_SEPARATOR)
+
+                    return Definition(pathParams[2], pathParams[0], pathParams[1], version)
+                }
             }
             throw IllegalArgumentException("Invalid parameter: $string")
         }

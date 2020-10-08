@@ -1,6 +1,7 @@
 package net.milosvasic.factory.configuration.definition
 
 import net.milosvasic.factory.common.Validation
+import net.milosvasic.factory.component.installer.step.deploy.Deploy
 import net.milosvasic.factory.validation.Validator
 
 class DefinitionValidator : Validation<String> {
@@ -11,19 +12,22 @@ class DefinitionValidator : Validation<String> {
         Validator.Arguments.validateSingle(what)
         val param = what[0]
         val invalidDefinitionError = IllegalArgumentException("Invalid definition: $param")
-        if (!param.contains(Definition.VERSION_SEPARATOR)) {
+        if (param != Definition.CURRENT_DEFINITION) {
 
-            throw invalidDefinitionError
-        }
+            if (!param.contains(Definition.VERSION_SEPARATOR)) {
 
-        val separators = param.chars().filter { value ->
+                throw invalidDefinitionError
+            }
 
-            value.toChar().toString() == Definition.PATH_SEPARATOR
-        }.count().toInt()
+            val separators = param.chars().filter { value ->
 
-        if (separators != 2) {
+                value.toChar().toString() == Definition.PATH_SEPARATOR
+            }.count().toInt()
 
-            throw invalidDefinitionError
+            if (separators != 2) {
+
+                throw invalidDefinitionError
+            }
         }
         return true
     }
