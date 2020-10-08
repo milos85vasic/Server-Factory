@@ -14,8 +14,13 @@ class DeployValidator : Validation<String> {
         if (split.isEmpty()) {
             throw IllegalArgumentException("No delimited parameters available in form: 'from:to'")
         }
-        if (split.size != 2 && split.size != 3) {
-            throw IllegalArgumentException("No valid delimited parameters available in form: 'from:to'")
+        val fromToError = IllegalArgumentException("No valid delimited parameters available in form: 'from:to'")
+        if (arg.contains(Deploy.DELIMITER_DEFINITION) && split.size != 3) {
+
+            throw fromToError
+        } else if (split.size != 2) {
+
+            throw fromToError
         }
         return true
     }
