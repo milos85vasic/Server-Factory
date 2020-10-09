@@ -98,7 +98,11 @@ class MainInstallationStepFactory : InstallationStepFactory {
                     } else {
 
                         val defPath = defFromTo[0]
-                        val def = Definition.fromString(defPath)
+                        val def = if (defPath == Definition.CURRENT_DEFINITION) {
+                            definition.getDefinition()
+                        } else {
+                            Definition.fromString(defPath)
+                        }
                         val defHome = def.getHome()
                         val rest = defFromTo[1]
                         val restSplit = rest.split(Deploy.SEPARATOR_FROM_TO)

@@ -95,7 +95,12 @@ data class SoftwareConfiguration(
             steps?.let { recipe ->
                 val items = mutableListOf<InstallationStep<*>>()
                 recipe.forEach { definition ->
-                    items.add(factories.obtain(definition))
+
+                    this.definition?.let { def ->
+                        definition.setDefinition(def)
+                    }
+                    val step = factories.obtain(definition)
+                    items.add(step)
                 }
                 installationSteps[it.name] = items
             }
