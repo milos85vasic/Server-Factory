@@ -12,8 +12,5 @@
     "DOCKER": {
       "DOCKER_COMPOSE_PATH": "/usr/local/bin"
     }
-  },
-  "containers": [
-    "Mocks/Stack/Docker.json"
-  ]
+  }
 }

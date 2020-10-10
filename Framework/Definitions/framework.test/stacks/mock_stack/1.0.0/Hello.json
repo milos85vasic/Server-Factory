@@ -15,7 +15,7 @@
           },
           {
             "type": "stubDeploy",
-            "value": "Mocks/Stack:build/Mocks/Stack"
+            "value": "this@:build/Mocks/Stack"
           },
           {
             "type": "stubStack",
