@@ -6,6 +6,8 @@ import net.milosvasic.factory.common.busy.BusyWorker
 import net.milosvasic.factory.common.filesystem.FilePathBuilder
 import net.milosvasic.factory.common.initialization.Initialization
 import net.milosvasic.factory.configuration.definition.Definition
+import net.milosvasic.factory.configuration.definition.provider.DefinitionProvider
+import net.milosvasic.factory.configuration.definition.provider.FilesystemDefinitionProvider
 import net.milosvasic.factory.configuration.group.Group
 import net.milosvasic.factory.configuration.group.GroupValidator
 import net.milosvasic.factory.configuration.recipe.ConfigurationRecipe
@@ -36,6 +38,7 @@ object ConfigurationManager : Initialization {
     private var configuration: Configuration? = null
     private var recipe: ConfigurationRecipe<*>? = null
     private var configurationFactory: ConfigurationFactory<*>? = null
+    private var definitionProvider: DefinitionProvider = FilesystemDefinitionProvider()
     private var configurations = mutableMapOf<SoftwareConfigurationType, MutableList<SoftwareConfiguration>>()
 
     @Throws(IllegalArgumentException::class, IllegalStateException::class)
@@ -90,6 +93,13 @@ object ConfigurationManager : Initialization {
             config.uses?.forEach { use ->
 
                 log.v("Required dependency: $use")
+                val definition = Definition.fromString(use)
+                if (definitionProvider.load(definition)) {
+
+                } else {
+
+                    throw IllegalStateException("Definition could not be loaded: $use")
+                }
             }
 
 //            val groups = definitionsDirectory.list()
