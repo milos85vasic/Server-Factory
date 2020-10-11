@@ -1,14 +1,9 @@
 package net.milosvasic.factory.configuration.definition.provider
 
-import net.milosvasic.factory.common.filesystem.FilePathBuilder
 import net.milosvasic.factory.configuration.Configuration
 import net.milosvasic.factory.configuration.SoftwareConfiguration
 import net.milosvasic.factory.configuration.SoftwareConfigurationType
 import net.milosvasic.factory.configuration.definition.Definition
-import net.milosvasic.factory.configuration.variable.Context
-import net.milosvasic.factory.configuration.variable.Key
-import net.milosvasic.factory.configuration.variable.PathBuilder
-import net.milosvasic.factory.configuration.variable.Variable
 import net.milosvasic.factory.log
 import net.milosvasic.factory.os.OperatingSystem
 import java.io.File
@@ -27,57 +22,31 @@ class FilesystemDefinitionProvider(configuration: Configuration, operatingSystem
         if (definitionHome.exists()) {
 
             log.w("Definition found: $definition")
-            configuration.getConfigurationMap().forEach { (type, items) ->
-                items?.let {
+            val type = SoftwareConfigurationType.STACKS
+            val items = configuration.getConfigurationMap()[type]
+            items?.let {
 
-                    val path = FilePathBuilder()
-                            .addContext(Definition.DIRECTORY_ROOT)
-                            .addContext(definition.group)
-                            .addContext(type.label)
-                            .getPath()
+                findDefinitions(type, definitionHome, it)
+                it.forEach { item ->
+                    val os = operatingSystem.getType().osName
+                    val configurationPath = Configuration.getConfigurationFilePath(item)
+                    val obtainedConfiguration = SoftwareConfiguration.obtain(configurationPath, os)
+                    if (obtainedConfiguration.isEnabled()) {
 
-                    val home = System.getProperty("user.home")
-                    val homePath = FilePathBuilder()
-                            .addContext(home)
-                            .addContext(path)
-                            .getPath()
+                        val variables = obtainedConfiguration.variables
+                        configuration.mergeVariables(variables)
 
-                    var directory = File(path)
-                    if (directory.absolutePath == homePath) {
+                        val configurationItems = getConfigurationItems(type)
+                        configurationItems.add(obtainedConfiguration)
 
-                        val installationLocationPath = PathBuilder()
-                                .addContext(Context.System)
-                                .addContext(Context.Installation)
-                                .setKey(Key.Home)
-                                .build()
+                        log.i("${type.label} definition file: $item")
+                        obtainedConfiguration.definition?.let { definition ->
 
-                        val directoryInstallationLocation = Variable.get(installationLocationPath)
-                        val replaced = directory.absolutePath.replace(home, directoryInstallationLocation)
-                        directory = File(replaced)
-                    }
-                    findDefinitions(type, directory, it)
-
-                    it.forEach { item ->
-                        val os = operatingSystem.getType().osName
-                        val configurationPath = Configuration.getConfigurationFilePath(item)
-                        val obtainedConfiguration = SoftwareConfiguration.obtain(configurationPath, os)
-                        if (obtainedConfiguration.isEnabled()) {
-
-                            val variables = obtainedConfiguration.variables
-                            configuration.mergeVariables(variables)
-
-                            val configurationItems = getConfigurationItems(type)
-                            configurationItems.add(obtainedConfiguration)
-
-                            log.i("${type.label} definition file: $item")
-                            obtainedConfiguration.definition?.let { definition ->
-
-                                log.i("${type.label} definition: $definition")
-                            }
-                        } else {
-
-                            log.w("Disabled ${type.label.toLowerCase()} configuration: $configurationPath")
+                            log.i("${type.label} definition: $definition")
                         }
+                    } else {
+
+                        log.w("Disabled ${type.label.toLowerCase()} configuration: $configurationPath")
                     }
                 }
             }
