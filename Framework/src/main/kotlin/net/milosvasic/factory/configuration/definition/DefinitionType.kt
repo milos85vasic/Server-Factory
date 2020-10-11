@@ -2,8 +2,8 @@ package net.milosvasic.factory.configuration.definition
 
 enum class DefinitionType(val type: String) {
 
-    Stack("stack"),
-    Software("software"),
+    Stacks("stacks"),
     Docker("docker"),
-    Unknown("unknown")
+    Unknown("unknown"),
+    Software("software")
 }
