@@ -1,8 +1,16 @@
 package net.milosvasic.factory.configuration.definition.provider
 
+import net.milosvasic.factory.configuration.Configuration
+import net.milosvasic.factory.configuration.SoftwareConfiguration
+import net.milosvasic.factory.configuration.SoftwareConfigurationType
 import net.milosvasic.factory.configuration.definition.Definition
+import net.milosvasic.factory.os.OperatingSystem
 
-interface DefinitionProvider {
+abstract class DefinitionProvider(
 
-    fun load(definition: Definition): Boolean
+        protected val configuration: Configuration,
+        protected val operatingSystem: OperatingSystem
+) {
+
+    abstract fun load(definition: Definition): MutableMap<SoftwareConfigurationType, MutableList<SoftwareConfiguration>>
 }

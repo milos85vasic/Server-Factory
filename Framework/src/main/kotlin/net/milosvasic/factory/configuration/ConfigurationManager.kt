@@ -8,8 +8,6 @@ import net.milosvasic.factory.common.initialization.Initialization
 import net.milosvasic.factory.configuration.definition.Definition
 import net.milosvasic.factory.configuration.definition.provider.DefinitionProvider
 import net.milosvasic.factory.configuration.definition.provider.FilesystemDefinitionProvider
-import net.milosvasic.factory.configuration.group.Group
-import net.milosvasic.factory.configuration.group.GroupValidator
 import net.milosvasic.factory.configuration.recipe.ConfigurationRecipe
 import net.milosvasic.factory.configuration.recipe.FileConfigurationRecipe
 import net.milosvasic.factory.configuration.recipe.RawJsonConfigurationRecipe
@@ -21,12 +19,9 @@ import net.milosvasic.factory.log
 import net.milosvasic.factory.os.OperatingSystem
 import net.milosvasic.factory.validation.JsonValidator
 import java.io.File
-import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.atomic.AtomicBoolean
 
 object ConfigurationManager : Initialization {
-
-    private const val DIRECTORY_DEFINITIONS = Definition.DIRECTORY_ROOT
 
     // TODO: MSF-284 - Make sure that this is default value for the installation location that will be provided
     //  by application execution arguments that will originally be provided through installation script.
@@ -37,8 +32,8 @@ object ConfigurationManager : Initialization {
     private val loading = AtomicBoolean()
     private var configuration: Configuration? = null
     private var recipe: ConfigurationRecipe<*>? = null
+    private lateinit var definitionProvider: DefinitionProvider
     private var configurationFactory: ConfigurationFactory<*>? = null
-    private var definitionProvider: DefinitionProvider = FilesystemDefinitionProvider()
     private var configurations = mutableMapOf<SoftwareConfigurationType, MutableList<SoftwareConfiguration>>()
 
     @Throws(IllegalArgumentException::class, IllegalStateException::class)
@@ -85,100 +80,14 @@ object ConfigurationManager : Initialization {
 
             initializeSystemVariables(config)
 
-            val definitionsHomePath = FilePathBuilder()
-                    .addContext(DIRECTORY_DEFINITIONS)
-                    .getPath()
-
-            val definitionsDirectory = File(definitionsHomePath)
             config.uses?.forEach { use ->
 
                 log.v("Required dependency: $use")
                 val definition = Definition.fromString(use)
-                if (definitionProvider.load(definition)) {
-
-                } else {
-
-                    throw IllegalStateException("Definition could not be loaded: $use")
-                }
+                definitionProvider = FilesystemDefinitionProvider(config, operatingSystem)
+                val data = definitionProvider.load(definition)
+                configurations.putAll(data)
             }
-
-//            val groups = definitionsDirectory.list()
-//            groups?.forEach { group ->
-//
-//                val groupPath = FilePathBuilder()
-//                        .addContext(DIRECTORY_DEFINITIONS)
-//                        .addContext(group)
-//                        .getPath()
-//
-//                val groupFile = File(groupPath)
-//                if (groupFile.isDirectory) {
-//
-//                    val groupDetailsPath = FilePathBuilder()
-//                            .addContext(DIRECTORY_DEFINITIONS)
-//                            .addContext(group)
-//                            .addContext(Repository.REPOSITORY_DETAILS_FILE)
-//                            .getPath()
-//
-//                    val wrapped = Group(group)
-//                    val validator = GroupValidator()
-//                    val groupDetailsFile = File(groupDetailsPath)
-//
-//                    if (groupDetailsFile.exists() && validator.validate(wrapped)) {
-//
-//                        log.i("Definitions group: $group")
-//                        config.getConfigurationMap().forEach { (type, items) ->
-//                            items?.let {
-//
-//                                val path = FilePathBuilder()
-//                                        .addContext(DIRECTORY_DEFINITIONS)
-//                                        .addContext(group)
-//                                        .addContext(type.label)
-//                                        .getPath()
-//
-//                                val home = System.getProperty("user.home")
-//                                val homePath = FilePathBuilder()
-//                                        .addContext(home)
-//                                        .addContext(path)
-//                                        .getPath()
-//
-//                                var directory = File(path)
-//                                if (directory.absolutePath == homePath) {
-//
-//                                    val replaced = directory.absolutePath.replace(home, DIRECTORY_INSTALLATION_LOCATION)
-//                                    directory = File(replaced)
-//                                }
-//                                findDefinitions(type, directory, it)
-//
-//                                it.forEach { item ->
-//                                    val os = operatingSystem.getType().osName
-//                                    val configurationPath = Configuration.getConfigurationFilePath(item)
-//                                    val obtainedConfiguration = SoftwareConfiguration.obtain(configurationPath, os)
-//                                    if (obtainedConfiguration.isEnabled()) {
-//
-//                                        val variables = obtainedConfiguration.variables
-//                                        config.mergeVariables(variables)
-//
-//                                        val configurationItems = getConfigurationItems(type)
-//                                        configurationItems.add(obtainedConfiguration)
-//
-//                                        log.i("${type.label} definition file: $item")
-//                                        obtainedConfiguration.definition?.let { definition ->
-//
-//                                            log.i("${type.label} definition: $definition")
-//                                        }
-//                                    } else {
-//
-//                                        log.w("Disabled ${type.label.toLowerCase()} configuration: $configurationPath")
-//                                    }
-//                                }
-//                            }
-//                        }
-//                    } else {
-//
-//                        log.v("Skipping '$group', it is not a valid group directory")
-//                    }
-//                }
-//            }
 
             printVariableNode(config.variables)
         }
@@ -252,38 +161,6 @@ object ConfigurationManager : Initialization {
     override fun checkNotInitialized() {
         if (!isInitialized()) {
             throw IllegalStateException("Configuration manager has not been initialized")
-        }
-    }
-
-    fun getConfigurationItems(type: SoftwareConfigurationType): MutableList<SoftwareConfiguration> {
-
-        var configurationItems = configurations[type]
-        if (configurationItems == null) {
-            configurationItems = mutableListOf()
-            configurations[type] = configurationItems
-        }
-        return configurationItems
-    }
-
-    private fun findDefinitions(
-            type: SoftwareConfigurationType,
-            directory: File,
-            collection: LinkedBlockingQueue<String>
-    ) {
-
-        log.v("Searching for definitions: ${directory.absolutePath}")
-        val files = directory.listFiles()
-        files?.forEach { file ->
-            if (file.isDirectory) {
-
-                findDefinitions(type, file, collection)
-            } else {
-                if (file.name == Configuration.DEFAULT_CONFIGURATION_FILE) {
-
-                    val definition = file.absolutePath
-                    collection.add(definition)
-                }
-            }
         }
     }
 
@@ -367,5 +244,15 @@ object ConfigurationManager : Initialization {
             systemHome = File(DIRECTORY_INSTALLATION_LOCATION)
         }
         return systemHome
+    }
+
+    fun getConfigurationItems(type: SoftwareConfigurationType): MutableList<SoftwareConfiguration> {
+
+        var configurationItems = configurations[type]
+        if (configurationItems == null) {
+            configurationItems = mutableListOf()
+            configurations[type] = configurationItems
+        }
+        return configurationItems
     }
 }
