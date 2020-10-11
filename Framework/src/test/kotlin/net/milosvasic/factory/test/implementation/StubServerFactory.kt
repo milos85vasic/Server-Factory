@@ -5,9 +5,7 @@ import net.milosvasic.factory.application.server_factory.ServerFactoryBuilder
 import net.milosvasic.factory.component.docker.Docker
 import net.milosvasic.factory.component.installer.Installer
 import net.milosvasic.factory.configuration.ConfigurationFactory
-import net.milosvasic.factory.log
 import net.milosvasic.factory.operation.OperationResult
-import net.milosvasic.factory.os.Architecture
 import net.milosvasic.factory.os.HostInfoDataHandler
 import net.milosvasic.factory.os.OSType
 import net.milosvasic.factory.os.OperatingSystem
