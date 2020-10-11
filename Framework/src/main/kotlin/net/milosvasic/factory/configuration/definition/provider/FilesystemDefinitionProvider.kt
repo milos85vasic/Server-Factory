@@ -30,6 +30,13 @@ class FilesystemDefinitionProvider(configuration: Configuration, operatingSystem
                     val variables = obtainedConfiguration.variables
                     configuration.mergeVariables(variables)
                     configurations.add(obtainedConfiguration)
+
+                    obtainedConfiguration.uses.forEach {
+
+                        log.v("Required definition dependency: $it")
+                        val childDefinition = Definition.fromString(it)
+                        load(childDefinition)
+                    }
                 } else {
 
                     log.w("Disabled configuration: $configurationPath")
