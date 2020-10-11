@@ -25,6 +25,7 @@ import java.util.concurrent.atomic.AtomicBoolean
 object ConfigurationManager : Initialization {
 
     private const val DIRECTORY_DEFINITIONS = Definition.DIRECTORY_ROOT
+
     // TODO: MSF-284 - Make sure that this is default value for the installation location that will be provided
     //  by application execution arguments that will originally be provided through installation script.
     private const val DIRECTORY_INSTALLATION_LOCATION = "/usr/local/bin"
@@ -86,83 +87,88 @@ object ConfigurationManager : Initialization {
                     .getPath()
 
             val definitionsDirectory = File(definitionsHomePath)
-            val groups = definitionsDirectory.list()
-            groups?.forEach { group ->
+            config.uses?.forEach { use ->
 
-                val groupPath = FilePathBuilder()
-                        .addContext(DIRECTORY_DEFINITIONS)
-                        .addContext(group)
-                        .getPath()
-
-                val groupFile = File(groupPath)
-                if (groupFile.isDirectory) {
-
-                    val groupDetailsPath = FilePathBuilder()
-                            .addContext(DIRECTORY_DEFINITIONS)
-                            .addContext(group)
-                            .addContext(Repository.REPOSITORY_DETAILS_FILE)
-                            .getPath()
-
-                    val wrapped = Group(group)
-                    val validator = GroupValidator()
-                    val groupDetailsFile = File(groupDetailsPath)
-
-                    if (groupDetailsFile.exists() && validator.validate(wrapped)) {
-
-                        log.i("Definitions group: $group")
-                        config.getConfigurationMap().forEach { (type, items) ->
-                            items?.let {
-
-                                val path = FilePathBuilder()
-                                        .addContext(DIRECTORY_DEFINITIONS)
-                                        .addContext(group)
-                                        .addContext(type.label)
-                                        .getPath()
-
-                                val home = System.getProperty("user.home")
-                                val homePath = FilePathBuilder()
-                                        .addContext(home)
-                                        .addContext(path)
-                                        .getPath()
-
-                                var directory = File(path)
-                                if (directory.absolutePath == homePath) {
-
-                                    val replaced = directory.absolutePath.replace(home, DIRECTORY_INSTALLATION_LOCATION)
-                                    directory = File(replaced)
-                                }
-                                findDefinitions(type, directory, it)
-
-                                it.forEach { item ->
-                                    val os = operatingSystem.getType().osName
-                                    val configurationPath = Configuration.getConfigurationFilePath(item)
-                                    val obtainedConfiguration = SoftwareConfiguration.obtain(configurationPath, os)
-                                    if (obtainedConfiguration.isEnabled()) {
-
-                                        val variables = obtainedConfiguration.variables
-                                        config.mergeVariables(variables)
-
-                                        val configurationItems = getConfigurationItems(type)
-                                        configurationItems.add(obtainedConfiguration)
-
-                                        log.i("${type.label} definition file: $item")
-                                        obtainedConfiguration.definition?.let { definition ->
-
-                                            log.i("${type.label} definition: $definition")
-                                        }
-                                    } else {
-
-                                        log.w("Disabled ${type.label.toLowerCase()} configuration: $configurationPath")
-                                    }
-                                }
-                            }
-                        }
-                    } else {
-
-                        log.v("Skipping '$group', it is not a valid group directory")
-                    }
-                }
+                log.v("Required dependency: $use")
             }
+
+//            val groups = definitionsDirectory.list()
+//            groups?.forEach { group ->
+//
+//                val groupPath = FilePathBuilder()
+//                        .addContext(DIRECTORY_DEFINITIONS)
+//                        .addContext(group)
+//                        .getPath()
+//
+//                val groupFile = File(groupPath)
+//                if (groupFile.isDirectory) {
+//
+//                    val groupDetailsPath = FilePathBuilder()
+//                            .addContext(DIRECTORY_DEFINITIONS)
+//                            .addContext(group)
+//                            .addContext(Repository.REPOSITORY_DETAILS_FILE)
+//                            .getPath()
+//
+//                    val wrapped = Group(group)
+//                    val validator = GroupValidator()
+//                    val groupDetailsFile = File(groupDetailsPath)
+//
+//                    if (groupDetailsFile.exists() && validator.validate(wrapped)) {
+//
+//                        log.i("Definitions group: $group")
+//                        config.getConfigurationMap().forEach { (type, items) ->
+//                            items?.let {
+//
+//                                val path = FilePathBuilder()
+//                                        .addContext(DIRECTORY_DEFINITIONS)
+//                                        .addContext(group)
+//                                        .addContext(type.label)
+//                                        .getPath()
+//
+//                                val home = System.getProperty("user.home")
+//                                val homePath = FilePathBuilder()
+//                                        .addContext(home)
+//                                        .addContext(path)
+//                                        .getPath()
+//
+//                                var directory = File(path)
+//                                if (directory.absolutePath == homePath) {
+//
+//                                    val replaced = directory.absolutePath.replace(home, DIRECTORY_INSTALLATION_LOCATION)
+//                                    directory = File(replaced)
+//                                }
+//                                findDefinitions(type, directory, it)
+//
+//                                it.forEach { item ->
+//                                    val os = operatingSystem.getType().osName
+//                                    val configurationPath = Configuration.getConfigurationFilePath(item)
+//                                    val obtainedConfiguration = SoftwareConfiguration.obtain(configurationPath, os)
+//                                    if (obtainedConfiguration.isEnabled()) {
+//
+//                                        val variables = obtainedConfiguration.variables
+//                                        config.mergeVariables(variables)
+//
+//                                        val configurationItems = getConfigurationItems(type)
+//                                        configurationItems.add(obtainedConfiguration)
+//
+//                                        log.i("${type.label} definition file: $item")
+//                                        obtainedConfiguration.definition?.let { definition ->
+//
+//                                            log.i("${type.label} definition: $definition")
+//                                        }
+//                                    } else {
+//
+//                                        log.w("Disabled ${type.label.toLowerCase()} configuration: $configurationPath")
+//                                    }
+//                                }
+//                            }
+//                        }
+//                    } else {
+//
+//                        log.v("Skipping '$group', it is not a valid group directory")
+//                    }
+//                }
+//            }
 
             printVariableNode(config.variables)
         }
