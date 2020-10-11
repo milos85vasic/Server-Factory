@@ -34,7 +34,7 @@ object ConfigurationManager : Initialization {
     private var recipe: ConfigurationRecipe<*>? = null
     private lateinit var definitionProvider: DefinitionProvider
     private var configurationFactory: ConfigurationFactory<*>? = null
-    private var configurations = mutableMapOf<SoftwareConfigurationType, MutableList<SoftwareConfiguration>>()
+    private var configurations = mutableListOf<SoftwareConfiguration>()
 
     @Throws(IllegalArgumentException::class, IllegalStateException::class)
     override fun initialize() {
@@ -82,11 +82,11 @@ object ConfigurationManager : Initialization {
 
             config.uses?.forEach { use ->
 
-                log.v("Required dependency: $use")
+                log.v("Required definition dependency: $use")
                 val definition = Definition.fromString(use)
                 definitionProvider = FilesystemDefinitionProvider(config, operatingSystem)
-                val data = definitionProvider.load(definition)
-                configurations.putAll(data)
+                val loaded = definitionProvider.load(definition)
+                configurations.addAll(loaded)
             }
 
             printVariableNode(config.variables)
@@ -246,13 +246,5 @@ object ConfigurationManager : Initialization {
         return systemHome
     }
 
-    fun getConfigurationItems(type: SoftwareConfigurationType): MutableList<SoftwareConfiguration> {
-
-        var configurationItems = configurations[type]
-        if (configurationItems == null) {
-            configurationItems = mutableListOf()
-            configurations[type] = configurationItems
-        }
-        return configurationItems
-    }
+    fun getConfigurationItems() = configurations
 }

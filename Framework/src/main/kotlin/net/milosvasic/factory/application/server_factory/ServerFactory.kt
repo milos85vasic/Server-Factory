@@ -44,10 +44,10 @@ abstract class ServerFactory(private val builder: ServerFactoryBuilder) : Applic
     private val busy = Busy()
     private val terminators = ConcurrentLinkedQueue<Termination>()
     private val connectionPool = mutableMapOf<String, Connection>()
+    private var configurations = mutableListOf<SoftwareConfiguration>()
     private val terminationOperation = ServerFactoryTerminationOperation()
     private val subscribers = ConcurrentLinkedQueue<OperationResultListener>()
     private val initializationOperation = ServerFactoryInitializationOperation()
-    private var configurations = mutableMapOf<SoftwareConfigurationType, MutableList<SoftwareConfiguration>>()
 
     private var connectionProvider: ConnectionProvider = object : ConnectionProvider {
 
@@ -98,11 +98,9 @@ abstract class ServerFactory(private val builder: ServerFactoryBuilder) : Applic
 
                                 ConfigurationManager.load(ssh.getRemoteOS())
                                 configuration?.let { config ->
-                                    SoftwareConfigurationType.values().forEach { type ->
 
-                                        val configurationItems = ConfigurationManager.getConfigurationItems(type)
-                                        getConfigurationItems(type).addAll(configurationItems)
-                                    }
+                                    val configurationItems = ConfigurationManager.getConfigurationItems()
+                                    configurations.addAll(configurationItems)
                                     log.v(config.name)
                                 }
                                 notifyInit()
@@ -151,11 +149,7 @@ abstract class ServerFactory(private val builder: ServerFactoryBuilder) : Applic
                 it.terminate()
             }
             configuration = null
-            SoftwareConfigurationType.values().forEach { type ->
-
-                val items = getConfigurationItems(type)
-                items.clear()
-            }
+            configurations.clear()
             notifyTerm()
         } catch (e: IllegalStateException) {
             notifyTerm(e)
@@ -339,7 +333,7 @@ abstract class ServerFactory(private val builder: ServerFactoryBuilder) : Applic
     private fun getDockerFlow(docker: Docker, terminationFlow: FlowBuilder<*, *, *>): InstallationFlow {
 
         val dockerFlow = InstallationFlow(docker)
-        val items = getConfigurationItems(SoftwareConfigurationType.STACKS)
+        val items = getConfigurationItems(SoftwareConfigurationType.DOCKER)
         items.forEach { softwareConfiguration ->
             softwareConfiguration.software?.forEach { software ->
 
@@ -446,11 +440,30 @@ abstract class ServerFactory(private val builder: ServerFactoryBuilder) : Applic
 
     private fun getConfigurationItems(type: SoftwareConfigurationType): MutableList<SoftwareConfiguration> {
 
-        var configurationItems = configurations[type]
-        if (configurationItems == null) {
-            configurationItems = mutableListOf()
-            configurations[type] = configurationItems
+        val typeDocker = SoftwareConfigurationType.DOCKER
+        val items = mutableListOf<SoftwareConfiguration>()
+        configurations.forEach { item ->
+            item.software?.let { softwareItems ->
+                softwareItems.forEach { softwareItem ->
+                    when (type) {
+                        typeDocker -> {
+                            if (softwareItem.installationSteps.containsKey(type.label)) {
+                                if (!items.contains(item)) {
+                                    items.add(item)
+                                }
+                            }
+                        }
+                        else -> {
+                            if (!softwareItem.installationSteps.containsKey(typeDocker.label)) {
+                                if (!items.contains(item)) {
+                                    items.add(item)
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         }
-        return configurationItems
+        return items
     }
 }

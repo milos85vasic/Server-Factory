@@ -2,7 +2,6 @@ package net.milosvasic.factory.configuration
 
 enum class SoftwareConfigurationType(val label: String) {
 
-    STACKS("Stacks"),
-    SOFTWARE("Software"),
-    DOCKER("Docker")
+    DOCKER("Docker"),
+    SOFTWARE("Software")
 }

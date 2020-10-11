@@ -145,11 +145,8 @@ abstract class ConfigurationFactory<T : Configuration> : ObtainParametrized<Conf
         if (configuration.software == null) {
             configuration.software = LinkedBlockingQueue()
         }
-        if (configuration.containers == null) {
-            configuration.containers = LinkedBlockingQueue()
-        }
-        if (configuration.docker == null) {
-            configuration.docker = LinkedBlockingQueue()
+        if (configuration.stacks == null) {
+            configuration.stacks = LinkedBlockingQueue()
         }
         if (configuration.variables == null) {
             configuration.variables = Node()
