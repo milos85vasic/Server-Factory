@@ -11,10 +11,7 @@ import net.milosvasic.factory.configuration.definition.provider.FilesystemDefini
 import net.milosvasic.factory.configuration.recipe.ConfigurationRecipe
 import net.milosvasic.factory.configuration.recipe.FileConfigurationRecipe
 import net.milosvasic.factory.configuration.recipe.RawJsonConfigurationRecipe
-import net.milosvasic.factory.configuration.variable.Context
-import net.milosvasic.factory.configuration.variable.Key
-import net.milosvasic.factory.configuration.variable.Node
-import net.milosvasic.factory.configuration.variable.Variable
+import net.milosvasic.factory.configuration.variable.*
 import net.milosvasic.factory.log
 import net.milosvasic.factory.os.OperatingSystem
 import net.milosvasic.factory.validation.JsonValidator
@@ -164,6 +161,8 @@ object ConfigurationManager : Initialization {
         }
     }
 
+    fun getConfigurationItems() = configurations
+
     private fun printVariableNode(variableNode: Node?, prefix: String = String.EMPTY) {
 
         val prefixEnd = "-> "
@@ -220,19 +219,57 @@ object ConfigurationManager : Initialization {
             node = Node()
         }
 
-        val keyHome = Key.Home.key()
-        val ctxSystem = Context.System.context()
-        val ctxInstallation = Context.Installation.context()
+        val keyHome = Key.Home
+        val ctxSystem = Context.System
+        val ctxInstallation = Context.Installation
 
-        // TODO: MSG-283 - Prevent nodes overwriting if user has already defined it
-        val systemHome = getHomeDirectory()
-        val systemHomeNode = Node(name = keyHome, value = systemHome.absolutePath)
-        val installationHomeNode = Node(name = keyHome, value = DIRECTORY_INSTALLATION_LOCATION)
-        val installationVariables = mutableListOf(installationHomeNode)
-        val installationNode = Node(name = ctxInstallation, children = installationVariables)
-        val systemVariables = mutableListOf(systemHomeNode, installationNode)
-        val systemNode = Node(name = ctxSystem, children = systemVariables)
-        node?.children?.add(systemNode)
+        val pathSystemHome = PathBuilder()
+                .addContext(ctxSystem)
+                .setKey(keyHome)
+                .build()
+
+        val pathSystemInstallationHome = PathBuilder()
+                .addContext(ctxSystem)
+                .addContext(ctxInstallation)
+                .setKey(keyHome)
+                .build()
+
+        val systemHomeVariable = checkAndGetVariable(pathSystemHome)
+        val systemInstallationHomeVariable = checkAndGetVariable(pathSystemInstallationHome)
+
+        val systemVariables = mutableListOf<Node>()
+        if (systemHomeVariable.isEmpty()) {
+
+            val systemHome = getHomeDirectory()
+            val systemHomeNode = Node(name = keyHome.key(), value = systemHome.absolutePath)
+            systemVariables.add(systemHomeNode)
+        }
+        if (systemInstallationHomeVariable.isEmpty()) {
+
+            val installationHomeNode = Node(name = keyHome.key(), value = DIRECTORY_INSTALLATION_LOCATION)
+            val installationVariables = mutableListOf(installationHomeNode)
+            val installationNode = Node(name = ctxInstallation.context(), children = installationVariables)
+            systemVariables.add(installationNode)
+        }
+        if (systemVariables.isNotEmpty()) {
+
+            val systemNode = Node(name = ctxSystem.context(), children = systemVariables)
+            node?.append(systemNode)
+        }
+    }
+
+    private fun checkAndGetVariable(path: Path): String {
+
+        var value = ""
+        try {
+
+            value = Variable.get(path)
+            log.v("Variable '${path.getPath()}' is defined")
+        } catch (e: IllegalStateException) {
+
+            log.v("Variable '${path.getPath()}' is not yet defined")
+        }
+        return value
     }
 
     private fun getHomeDirectory(): File {
@@ -245,6 +282,4 @@ object ConfigurationManager : Initialization {
         }
         return systemHome
     }
-
-    fun getConfigurationItems() = configurations
 }
