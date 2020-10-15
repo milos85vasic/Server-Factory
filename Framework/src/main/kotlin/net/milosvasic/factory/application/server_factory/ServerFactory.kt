@@ -82,6 +82,7 @@ abstract class ServerFactory(private val builder: ServerFactoryBuilder) : Applic
 
                 ConfigurationManager.setConfigurationRecipe(builder.getRecipe())
                 ConfigurationManager.setConfigurationFactory(getConfigurationFactory())
+                ConfigurationManager.setInstallationLocation(builder.getInstallationLocation())
                 ConfigurationManager.initialize()
 
                 configuration = ConfigurationManager.getConfiguration()

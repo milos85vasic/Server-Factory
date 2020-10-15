@@ -1,5 +1,6 @@
 package net.milosvasic.factory.configuration
 
+import net.milosvasic.factory.DIRECTORY_DEFAULT_INSTALLATION_LOCATION
 import net.milosvasic.factory.EMPTY
 import net.milosvasic.factory.common.busy.Busy
 import net.milosvasic.factory.common.busy.BusyWorker
@@ -20,10 +21,6 @@ import java.util.concurrent.atomic.AtomicBoolean
 
 object ConfigurationManager : Initialization {
 
-    // TODO: MSF-284 - Make sure that this is default value for the installation location that will be provided
-    //  by application execution arguments that will originally be provided through installation script.
-    private const val DIRECTORY_INSTALLATION_LOCATION = "/usr/local/bin"
-
     private val busy = Busy()
     private var loaded = AtomicBoolean()
     private val loading = AtomicBoolean()
@@ -32,6 +29,7 @@ object ConfigurationManager : Initialization {
     private lateinit var definitionProvider: DefinitionProvider
     private var configurationFactory: ConfigurationFactory<*>? = null
     private var configurations = mutableListOf<SoftwareConfiguration>()
+    private var installationLocation = DIRECTORY_DEFAULT_INSTALLATION_LOCATION
 
     @Throws(IllegalArgumentException::class, IllegalStateException::class)
     override fun initialize() {
@@ -163,6 +161,11 @@ object ConfigurationManager : Initialization {
 
     fun getConfigurationItems() = configurations
 
+    fun setInstallationLocation(location: String) {
+
+        installationLocation = location
+    }
+
     private fun printVariableNode(variableNode: Node?, prefix: String = String.EMPTY) {
 
         val prefixEnd = "-> "
@@ -246,7 +249,7 @@ object ConfigurationManager : Initialization {
         }
         if (systemInstallationHomeVariable.isEmpty()) {
 
-            val installationHomeNode = Node(name = keyHome.key(), value = DIRECTORY_INSTALLATION_LOCATION)
+            val installationHomeNode = Node(name = keyHome.key(), value = installationLocation)
             val installationVariables = mutableListOf(installationHomeNode)
             val installationNode = Node(name = ctxInstallation.context(), children = installationVariables)
             systemVariables.add(installationNode)
@@ -278,7 +281,7 @@ object ConfigurationManager : Initialization {
         val homePath = FilePathBuilder().addContext(home).getPath()
         var systemHome = File("")
         if (systemHome.absolutePath == homePath) {
-            systemHome = File(DIRECTORY_INSTALLATION_LOCATION)
+            systemHome = File(installationLocation)
         }
         return systemHome
     }
