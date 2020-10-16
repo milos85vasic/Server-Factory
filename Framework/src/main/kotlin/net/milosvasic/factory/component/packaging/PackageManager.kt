@@ -143,7 +143,13 @@ abstract class PackageManager(entryPoint: Connection) :
                 PackageManagerCommand(installCommand(), item.value)
             }
             is Group -> {
-                PackageManagerCommand(groupInstallCommand(), item.value)
+
+                val toInstall = if (item.value.contains(" ")) {
+                    "\"${item.value}\""
+                } else {
+                    item.value
+                }
+                PackageManagerCommand(groupInstallCommand(), toInstall)
             }
             else -> {
                 throw IllegalArgumentException("Unsupported installation type: ${item::class.simpleName}")
