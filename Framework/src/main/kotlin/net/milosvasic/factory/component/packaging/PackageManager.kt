@@ -98,7 +98,7 @@ abstract class PackageManager(entryPoint: Connection) :
         }
         val flow = CommandFlow().width(entryPoint)
         items.forEach {
-            val command = getCommand(it)
+            val command = getUninstallCommand(it)
             flow.perform(command)
         }
         flow.onFinish(flowCallback).run()
