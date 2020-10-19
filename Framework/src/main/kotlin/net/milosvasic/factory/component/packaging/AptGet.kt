@@ -12,7 +12,7 @@ class AptGet(entryPoint: Connection) : PackageManager(entryPoint) {
     }
 
     override fun uninstallCommand(): String {
-        return "export DEBIAN_FRONTEND=noninteractive; " + super.uninstallCommand()
+        return "export DEBIAN_FRONTEND=noninteractive; $applicationBinaryName remove -y"
     }
 
     override fun groupInstallCommand(): String {
