@@ -20,7 +20,7 @@ abstract class PackageManager(entryPoint: Connection) :
     abstract val applicationBinaryName: String
 
     open fun installCommand() = "$applicationBinaryName install -y"
-    open fun uninstallCommand() = "$applicationBinaryName remove -y"
+    open fun uninstallCommand() = "$applicationBinaryName erase -y"
     open fun groupInstallCommand() = "$applicationBinaryName groupinstall -y"
     open fun groupUninstallCommand() = "$applicationBinaryName groupremove -y"
 
@@ -40,6 +40,7 @@ abstract class PackageManager(entryPoint: Connection) :
     @Synchronized
     @Throws(IllegalStateException::class, IllegalArgumentException::class)
     override fun install(vararg items: InstallationItem) {
+
         var clazz: KClass<*>? = null
         items.forEach {
             if (clazz == null) {
@@ -67,6 +68,7 @@ abstract class PackageManager(entryPoint: Connection) :
     @Synchronized
     @Throws(IllegalStateException::class, IllegalArgumentException::class)
     override fun install(packages: List<Package>) {
+
         busy()
         operationType = PackageManagerOperationType.PACKAGE_INSTALL
         val flow = CommandFlow().width(entryPoint)
@@ -80,6 +82,7 @@ abstract class PackageManager(entryPoint: Connection) :
     @Synchronized
     @Throws(IllegalStateException::class, IllegalArgumentException::class)
     override fun install(packages: Packages) {
+
         busy()
         val list = listOf(Package(packages.value))
         operationType = PackageManagerOperationType.PACKAGE_INSTALL
@@ -94,14 +97,21 @@ abstract class PackageManager(entryPoint: Connection) :
     @Synchronized
     @Throws(IllegalStateException::class, IllegalArgumentException::class)
     override fun uninstall(packages: List<Package>) {
+
         busy()
         operationType = PackageManagerOperationType.PACKAGE_UNINSTALL
-        onFailedResult()
+        val flow = CommandFlow().width(entryPoint)
+        packages.forEach {
+            val command = getUninstallCommand(it)
+            flow.perform(command)
+        }
+        flow.onFinish(flowCallback).run()
     }
 
     @Synchronized
     @Throws(IllegalStateException::class, IllegalArgumentException::class)
     override fun groupInstall(groups: List<Group>) {
+
         busy()
         operationType = PackageManagerOperationType.GROUP_INSTALL
         val flow = CommandFlow().width(entryPoint)
@@ -115,9 +125,15 @@ abstract class PackageManager(entryPoint: Connection) :
     @Synchronized
     @Throws(IllegalStateException::class, IllegalArgumentException::class)
     override fun groupUninstall(groups: List<Group>) {
+
         busy()
         operationType = PackageManagerOperationType.GROUP_UNINSTALL
-        onFailedResult()
+        val flow = CommandFlow().width(entryPoint)
+        groups.forEach {
+            val command = getUninstallCommand(it)
+            flow.perform(command)
+        }
+        flow.onFinish(flowCallback).run()
     }
 
     @Throws(IllegalStateException::class, IllegalArgumentException::class)
@@ -153,6 +169,27 @@ abstract class PackageManager(entryPoint: Connection) :
             }
             else -> {
                 throw IllegalArgumentException("Unsupported installation type: ${item::class.simpleName}")
+            }
+        }
+    }
+
+    @Throws(IllegalArgumentException::class)
+    private fun getUninstallCommand(item: InstallationItem): TerminalCommand {
+        return when (item) {
+            is Package -> {
+                PackageManagerCommand(uninstallCommand(), item.value)
+            }
+            is Group -> {
+
+                val toInstall = if (item.value.contains(" ")) {
+                    "\"${item.value}\""
+                } else {
+                    item.value
+                }
+                PackageManagerCommand(groupUninstallCommand(), toInstall)
+            }
+            else -> {
+                throw IllegalArgumentException("Unsupported un-installation type: ${item::class.simpleName}")
             }
         }
     }

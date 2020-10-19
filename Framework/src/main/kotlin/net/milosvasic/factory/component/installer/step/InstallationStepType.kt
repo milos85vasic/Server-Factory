@@ -4,7 +4,9 @@ enum class InstallationStepType(val type: String) {
 
     UNKNOWN("unknown"),
     PACKAGE_GROUP("packageGroup"),
+    PACKAGE_GROUP_UNINSTALL("packageGroupErase"),
     PACKAGES("packages"),
+    PACKAGES_UNINSTALL("packagesErase"),
     COMMAND("command"),
     REBOOT("reboot"),
     DEPLOY("deploy"),

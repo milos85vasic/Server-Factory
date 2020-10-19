@@ -8,10 +8,7 @@ import net.milosvasic.factory.component.docker.step.network.NetworkValidator
 import net.milosvasic.factory.component.docker.step.stack.Check
 import net.milosvasic.factory.component.docker.step.stack.SkipConditionCheck
 import net.milosvasic.factory.component.docker.step.stack.Stack
-import net.milosvasic.factory.component.installer.step.CommandInstallationStep
-import net.milosvasic.factory.component.installer.step.InstallationStep
-import net.milosvasic.factory.component.installer.step.InstallationStepType
-import net.milosvasic.factory.component.installer.step.PackageManagerInstallationStep
+import net.milosvasic.factory.component.installer.step.*
 import net.milosvasic.factory.component.installer.step.certificate.Certificate
 import net.milosvasic.factory.component.installer.step.certificate.TlsCertificate
 import net.milosvasic.factory.component.installer.step.condition.Condition
@@ -42,6 +39,11 @@ class MainInstallationStepFactory : InstallationStepFactory {
                 val group = Group(definition.getValue())
                 return PackageManagerInstallationStep(listOf(group))
             }
+            InstallationStepType.PACKAGE_GROUP_UNINSTALL.type -> {
+
+                val group = Group(definition.getValue())
+                return PackageManagerUninstallationStep(listOf(group))
+            }
             InstallationStepType.PACKAGES.type -> {
 
                 val packages = mutableListOf<Package>()
@@ -50,6 +52,15 @@ class MainInstallationStepFactory : InstallationStepFactory {
                     packages.add(Package(it.trim()))
                 }
                 return PackageManagerInstallationStep(packages)
+            }
+            InstallationStepType.PACKAGES_UNINSTALL.type -> {
+
+                val packages = mutableListOf<Package>()
+                val split = definition.getValue().split(",")
+                split.forEach {
+                    packages.add(Package(it.trim()))
+                }
+                return PackageManagerUninstallationStep(packages)
             }
             InstallationStepType.COMMAND.type -> {
 

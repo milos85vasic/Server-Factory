@@ -112,6 +112,13 @@ class PackageInstaller(entryPoint: Connection) :
     }
 
     @Throws(IllegalStateException::class, IllegalArgumentException::class)
+    override fun uninstall(vararg items: InstallationItem) {
+
+        checkNotInitialized()
+        manager?.uninstall(*items.toList().toTypedArray())
+    }
+
+    @Throws(IllegalStateException::class, IllegalArgumentException::class)
     override fun install(packages: List<Package>) {
         checkNotInitialized()
         manager?.install(packages)

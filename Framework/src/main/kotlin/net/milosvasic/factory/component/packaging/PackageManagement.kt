@@ -19,5 +19,7 @@ interface PackageManagement<T> {
 
     fun install(vararg items: InstallationItem)
 
+    fun uninstall(vararg items: InstallationItem)
+
     fun notify(success: Boolean)
 }
