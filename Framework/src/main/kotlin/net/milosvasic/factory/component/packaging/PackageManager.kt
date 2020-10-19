@@ -41,16 +41,7 @@ abstract class PackageManager(entryPoint: Connection) :
     @Throws(IllegalStateException::class, IllegalArgumentException::class)
     override fun install(vararg items: InstallationItem) {
 
-        var clazz: KClass<*>? = null
-        items.forEach {
-            if (clazz == null) {
-                clazz = it::class
-            } else {
-                if (clazz != it::class) {
-                    throw IllegalArgumentException("All members must be of the same type")
-                }
-            }
-        }
+        val clazz: KClass<*>? = getType(items)
         busy()
         operationType = if (clazz == Group::class) {
             PackageManagerOperationType.GROUP_INSTALL
@@ -88,6 +79,25 @@ abstract class PackageManager(entryPoint: Connection) :
         operationType = PackageManagerOperationType.PACKAGE_INSTALL
         val flow = CommandFlow().width(entryPoint)
         list.forEach {
+            val command = getCommand(it)
+            flow.perform(command)
+        }
+        flow.onFinish(flowCallback).run()
+    }
+
+    @Synchronized
+    @Throws(IllegalStateException::class, IllegalArgumentException::class)
+    override fun uninstall(vararg items: InstallationItem) {
+
+        val clazz: KClass<*>? = getType(items)
+        busy()
+        operationType = if (clazz == Group::class) {
+            PackageManagerOperationType.GROUP_UNINSTALL
+        } else {
+            PackageManagerOperationType.PACKAGE_UNINSTALL
+        }
+        val flow = CommandFlow().width(entryPoint)
+        items.forEach {
             val command = getCommand(it)
             flow.perform(command)
         }
@@ -192,5 +202,20 @@ abstract class PackageManager(entryPoint: Connection) :
                 throw IllegalArgumentException("Unsupported un-installation type: ${item::class.simpleName}")
             }
         }
+    }
+
+    private fun getType(items: Array<out InstallationItem>): KClass<*>? {
+
+        var clazz: KClass<*>? = null
+        items.forEach {
+            if (clazz == null) {
+                clazz = it::class
+            } else {
+                if (clazz != it::class) {
+                    throw IllegalArgumentException("All members must be of the same type")
+                }
+            }
+        }
+        return clazz
     }
 }
