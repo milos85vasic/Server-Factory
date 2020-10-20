@@ -31,7 +31,12 @@ data class OperatingSystem(
             if (it.contains(osLineString)) {
                 name = it.replace(osLineString, "").trim()
                 if (name.toLowerCase().contains(OSType.CENTOS.osName.toLowerCase())) {
-                    type = OSType.CENTOS
+
+                    type = if (name.toLowerCase().contains("linux 8")) {
+                        OSType.CENTOS
+                    } else {
+                        OSType.CENTOS_7
+                    }
                 }
                 if (name.toLowerCase().contains(OSType.FEDORA.osName.toLowerCase())) {
                     type = OSType.FEDORA
