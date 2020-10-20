@@ -87,24 +87,27 @@ data class SoftwareConfiguration(
     override fun obtain(vararg param: String): Map<String, List<InstallationStep<*>>> {
 
         Validator.Arguments.validateSingle(param)
-        val os = param[0]
+        val osName = param[0]
         val factories = InstallationStepFactories
         val installationSteps = mutableMapOf<String, List<InstallationStep<*>>>()
         software?.forEach {
-            val steps = it.getInstallationSteps(os)
-            val items = mutableListOf<InstallationStep<*>>()
-            steps.forEach { definition ->
+            val steps = it.getInstallationSteps(osName)
+            if (steps.os != OSType.UNKNOWN) {
 
-                this.definition?.let { def ->
-                    definition.setDefinition(def)
+                val items = mutableListOf<InstallationStep<*>>()
+                steps.items.forEach { definition ->
+
+                    this.definition?.let { def ->
+                        definition.setDefinition(def)
+                    }
+                    val step = factories.obtain(definition)
+                    items.add(step)
                 }
-                val step = factories.obtain(definition)
-                items.add(step)
+                installationSteps[it.name] = items
             }
-            installationSteps[it.name] = items
         }
         if (installationSteps.isEmpty()) {
-            throw IllegalArgumentException("No installation steps for '$os' platform")
+            throw IllegalArgumentException("No installation steps for '$osName' platform")
         }
         return installationSteps
     }

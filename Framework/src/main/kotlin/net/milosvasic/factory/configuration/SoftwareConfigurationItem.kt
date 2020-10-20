@@ -10,20 +10,33 @@ data class SoftwareConfigurationItem(
 ) {
 
     @Throws(IllegalArgumentException::class)
-    fun getInstallationSteps(osName: String): List<InstallationStepDefinition> {
+    fun getInstallationSteps(osName: String): InstallationSteps {
 
         val os = OSType.getByValue(osName)
         installationSteps[os.osName]?.let {
-            return it
+            return InstallationSteps(os, it)
         }
         os.fallback.forEach {
 
             installationSteps[it.osName]?.let { items ->
-                return items
+                return InstallationSteps(it, items)
             }
         }
-        return listOf()
+        return InstallationSteps(OSType.UNKNOWN, listOf())
     }
 
-    fun hasInstallationSteps(forWhat: String) = installationSteps.containsKey(forWhat)
+    fun hasInstallationSteps(forWhat: String): Boolean {
+
+        val os = OSType.getByValue(forWhat)
+        installationSteps[os.osName]?.let {
+            return true
+        }
+        os.fallback.forEach {
+
+            installationSteps[it.osName]?.let {
+                return true
+            }
+        }
+        return false
+    }
 }
