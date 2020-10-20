@@ -91,19 +91,17 @@ data class SoftwareConfiguration(
         val factories = InstallationStepFactories
         val installationSteps = mutableMapOf<String, List<InstallationStep<*>>>()
         software?.forEach {
-            val steps = it.installationSteps[os]
-            steps?.let { recipe ->
-                val items = mutableListOf<InstallationStep<*>>()
-                recipe.forEach { definition ->
+            val steps = it.getInstallationSteps(os)
+            val items = mutableListOf<InstallationStep<*>>()
+            steps.forEach { definition ->
 
-                    this.definition?.let { def ->
-                        definition.setDefinition(def)
-                    }
-                    val step = factories.obtain(definition)
-                    items.add(step)
+                this.definition?.let { def ->
+                    definition.setDefinition(def)
                 }
-                installationSteps[it.name] = items
+                val step = factories.obtain(definition)
+                items.add(step)
             }
+            installationSteps[it.name] = items
         }
         if (installationSteps.isEmpty()) {
             throw IllegalArgumentException("No installation steps for '$os' platform")

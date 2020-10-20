@@ -16,5 +16,18 @@ enum class OSType(val osName: String, val fallback: List<OSType> = listOf()) {
     FEDORA("Fedora"),
     FEDORA_SERVER("Fedora_Server"),
     REDHAT("RedHat"),
-    UNKNOWN("Unknown")
+    UNKNOWN("Unknown");
+
+    companion object {
+
+        fun getByValue(value: String) : OSType {
+
+            values().forEach {
+                if (value == it.osName) {
+                    return it
+                }
+            }
+            return UNKNOWN
+        }
+    }
 }

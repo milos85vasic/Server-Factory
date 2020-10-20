@@ -448,14 +448,14 @@ abstract class ServerFactory(private val builder: ServerFactoryBuilder) : Applic
                 softwareItems.forEach { softwareItem ->
                     when (type) {
                         typeDocker -> {
-                            if (softwareItem.installationSteps.containsKey(type.label)) {
+                            if (softwareItem.hasInstallationSteps(type.label)) {
                                 if (!items.contains(item)) {
                                     items.add(item)
                                 }
                             }
                         }
                         else -> {
-                            if (!softwareItem.installationSteps.containsKey(typeDocker.label)) {
+                            if (!softwareItem.hasInstallationSteps(typeDocker.label)) {
                                 if (!items.contains(item)) {
                                     items.add(item)
                                 }
