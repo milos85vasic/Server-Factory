@@ -16,7 +16,7 @@ data class SoftwareConfigurationItem(
         installationSteps[os.osName]?.let {
             return InstallationSteps(os, it)
         }
-        os.fallback.forEach {
+        os.getFallback().forEach {
 
             installationSteps[it.osName]?.let { items ->
                 return InstallationSteps(it, items)
@@ -31,7 +31,7 @@ data class SoftwareConfigurationItem(
         installationSteps[os.osName]?.let {
             return true
         }
-        os.fallback.forEach {
+        os.getFallback().forEach {
 
             installationSteps[it.osName]?.let {
                 return true

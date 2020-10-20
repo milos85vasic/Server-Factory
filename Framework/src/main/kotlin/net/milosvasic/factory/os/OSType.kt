@@ -1,7 +1,8 @@
 package net.milosvasic.factory.os
 
-enum class OSType(val osName: String, val fallback: List<OSType> = listOf()) {
+enum class OSType(val osName: String, private val fallback: List<OSType> = listOf()) {
 
+    DOCKER("Docker"),
     CENTOS("CentOS"),
     CENTOS_7("CentOS_7", fallback = listOf(CENTOS)),
     CENTOS_8(CENTOS.osName),
@@ -29,5 +30,13 @@ enum class OSType(val osName: String, val fallback: List<OSType> = listOf()) {
             }
             return UNKNOWN
         }
+    }
+
+    fun getFallback(): List<OSType> {
+
+        val items = mutableListOf<OSType>()
+        items.addAll(fallback)
+        items.add(DOCKER)
+        return items
     }
 }
