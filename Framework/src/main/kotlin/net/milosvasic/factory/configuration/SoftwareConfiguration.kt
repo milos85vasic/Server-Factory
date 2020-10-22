@@ -143,12 +143,24 @@ data class SoftwareConfiguration(
         }
 
         configuration.overrides?.let {
-            operatingSystem?.let { os ->
+            operatingSystem?.let { osName ->
                 it[SoftwareConfigurationOverride.OS.type]?.let { osOverrides ->
 
-                    val cfg = osOverrides[os]
+                    val os = OSType.getByValue(osName)
+                    var cfg = osOverrides[os.osName]
                     cfg?.let {
+
                         merge(it)
+                        return
+                    }
+                    os.getFallback().forEach { fallback ->
+
+                        cfg = osOverrides[fallback.osName]
+                        cfg?.let {
+
+                            merge(it)
+                            return
+                        }
                     }
                 }
             }
