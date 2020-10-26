@@ -10,7 +10,7 @@ import net.milosvasic.factory.component.installer.step.factory.InstallationStepF
 import net.milosvasic.factory.configuration.definition.Definition
 import net.milosvasic.factory.configuration.variable.Node
 import net.milosvasic.factory.log
-import net.milosvasic.factory.os.OSType
+import net.milosvasic.factory.platform.Platform
 import net.milosvasic.factory.validation.Validator
 import java.io.File
 
@@ -27,7 +27,7 @@ data class SoftwareConfiguration(
 
 ) : ObtainParametrized<String, Map<String, List<InstallationStep<*>>>> {
 
-    private var operatingSystem: String? = null
+    private var platform: String? = null
 
     companion object : ObtainParametrized<String, SoftwareConfiguration> {
 
@@ -39,7 +39,7 @@ data class SoftwareConfiguration(
 
                 throw IllegalArgumentException("Expected two arguments")
             }
-            val operatingSystem = param[1]
+            val platform = param[1]
             val configurationName = param[0]
             val configurationFile = File(configurationName)
             log.d("Configuration file: ${configurationFile.absolutePath}")
@@ -53,7 +53,7 @@ data class SoftwareConfiguration(
 
                 val instance = gson.fromJson(json, SoftwareConfiguration::class.java)
                 instance.configuration = configurationName
-                instance.operatingSystem = operatingSystem
+                instance.platform = platform
                 val included = mutableListOf<SoftwareConfiguration>()
                 instance.includes?.forEach { include ->
 
@@ -65,11 +65,11 @@ data class SoftwareConfiguration(
                                 .addContext(include)
                                 .getPath()
                     }
-                    included.add(obtain(path, operatingSystem))
+                    included.add(obtain(path, platform))
                 }
                 included.forEach { config ->
 
-                    config.setOperatingSystem(operatingSystem)
+                    config.setPlatform(platform)
                     instance.merge(config)
                 }
                 // TODO: Handle vars.
@@ -87,12 +87,12 @@ data class SoftwareConfiguration(
     override fun obtain(vararg param: String): Map<String, List<InstallationStep<*>>> {
 
         Validator.Arguments.validateSingle(param)
-        val osName = param[0]
+        val platformName = param[0]
         val factories = InstallationStepFactories
         val installationSteps = mutableMapOf<String, List<InstallationStep<*>>>()
         software?.forEach {
-            val steps = it.getInstallationSteps(osName)
-            if (steps.os != OSType.UNKNOWN) {
+            val steps = it.getInstallationSteps(platformName)
+            if (steps.platform != Platform.UNKNOWN) {
 
                 val items = mutableListOf<InstallationStep<*>>()
                 steps.items.forEach { definition ->
@@ -107,7 +107,7 @@ data class SoftwareConfiguration(
             }
         }
         if (installationSteps.isEmpty()) {
-            throw IllegalArgumentException("No installation steps for '$osName' platform")
+            throw IllegalArgumentException("No installation steps for '$platformName' platform")
         }
         return installationSteps
     }
@@ -115,11 +115,11 @@ data class SoftwareConfiguration(
     @Throws(IllegalArgumentException::class)
     fun merge(configuration: SoftwareConfiguration) {
 
-        if (operatingSystem == null) {
+        if (platform == null) {
 
             throw IllegalArgumentException("No operating system information provided for remote host")
         }
-        if (operatingSystem == OSType.UNKNOWN.osName) {
+        if (platform == Platform.UNKNOWN.platformName) {
 
             throw IllegalArgumentException("Operating system information provided for remote host is unknown")
         }
@@ -143,19 +143,19 @@ data class SoftwareConfiguration(
         }
 
         configuration.overrides?.let {
-            operatingSystem?.let { osName ->
-                it[SoftwareConfigurationOverride.OS.type]?.let { osOverrides ->
+            platform?.let { platformName ->
+                it[SoftwareConfigurationOverride.PLATFORM.type]?.let { osOverrides ->
 
-                    val os = OSType.getByValue(osName)
-                    var cfg = osOverrides[os.osName]
+                    val platform = Platform.getByValue(platformName)
+                    var cfg = osOverrides[platform.platformName]
                     cfg?.let {
 
                         merge(it)
                         return
                     }
-                    os.getFallback().forEach { fallback ->
+                    platform.getFallback().forEach { fallback ->
 
-                        cfg = osOverrides[fallback.osName]
+                        cfg = osOverrides[fallback.platformName]
                         cfg?.let {
 
                             merge(it)
@@ -175,9 +175,9 @@ data class SoftwareConfiguration(
         return true
     }
 
-    fun setOperatingSystem(operatingSystem: String) {
+    fun setPlatform(operatingSystem: String) {
 
-        this.operatingSystem = operatingSystem
+        this.platform = operatingSystem
     }
 
     private fun merge(toMerge: Node?) {

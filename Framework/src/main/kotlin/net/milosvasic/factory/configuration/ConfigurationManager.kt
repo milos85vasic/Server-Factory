@@ -14,7 +14,7 @@ import net.milosvasic.factory.configuration.recipe.FileConfigurationRecipe
 import net.milosvasic.factory.configuration.recipe.RawJsonConfigurationRecipe
 import net.milosvasic.factory.configuration.variable.*
 import net.milosvasic.factory.log
-import net.milosvasic.factory.os.OperatingSystem
+import net.milosvasic.factory.platform.OperatingSystem
 import net.milosvasic.factory.validation.JsonValidator
 import java.io.File
 import java.util.concurrent.atomic.AtomicBoolean

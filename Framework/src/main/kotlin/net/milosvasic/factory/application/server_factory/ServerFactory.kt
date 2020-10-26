@@ -27,9 +27,9 @@ import net.milosvasic.factory.execution.flow.implementation.InstallationFlow
 import net.milosvasic.factory.execution.flow.implementation.initialization.InitializationFlow
 import net.milosvasic.factory.operation.OperationResult
 import net.milosvasic.factory.operation.OperationResultListener
-import net.milosvasic.factory.os.HostInfoDataHandler
-import net.milosvasic.factory.os.HostNameDataHandler
-import net.milosvasic.factory.os.OperatingSystem
+import net.milosvasic.factory.platform.HostInfoDataHandler
+import net.milosvasic.factory.platform.HostNameDataHandler
+import net.milosvasic.factory.platform.OperatingSystem
 import net.milosvasic.factory.remote.Connection
 import net.milosvasic.factory.remote.ConnectionProvider
 import net.milosvasic.factory.remote.ssh.SSH
@@ -348,8 +348,8 @@ abstract class ServerFactory(private val builder: ServerFactoryBuilder) : Applic
                         mutableListOf(software),
                         softwareConfiguration.includes
                 )
-                val osName = getConnection().getRemoteOS().getType().osName
-                configuration.setOperatingSystem(osName)
+                val platformName = getConnection().getRemoteOS().getPlatform().platformName
+                configuration.setPlatform(platformName)
                 dockerFlow.width(configuration)
             }
         }

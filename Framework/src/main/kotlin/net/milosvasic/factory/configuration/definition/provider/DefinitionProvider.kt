@@ -3,7 +3,7 @@ package net.milosvasic.factory.configuration.definition.provider
 import net.milosvasic.factory.configuration.Configuration
 import net.milosvasic.factory.configuration.SoftwareConfiguration
 import net.milosvasic.factory.configuration.definition.Definition
-import net.milosvasic.factory.os.OperatingSystem
+import net.milosvasic.factory.platform.OperatingSystem
 
 abstract class DefinitionProvider(
 

@@ -6,9 +6,9 @@ import net.milosvasic.factory.component.docker.Docker
 import net.milosvasic.factory.component.installer.Installer
 import net.milosvasic.factory.configuration.ConfigurationFactory
 import net.milosvasic.factory.operation.OperationResult
-import net.milosvasic.factory.os.HostInfoDataHandler
-import net.milosvasic.factory.os.OSType
-import net.milosvasic.factory.os.OperatingSystem
+import net.milosvasic.factory.platform.HostInfoDataHandler
+import net.milosvasic.factory.platform.Platform
+import net.milosvasic.factory.platform.OperatingSystem
 import net.milosvasic.factory.remote.Connection
 import net.milosvasic.factory.terminal.command.EchoCommand
 import net.milosvasic.factory.terminal.command.UnameCommand
@@ -49,6 +49,6 @@ class StubServerFactory(builder: ServerFactoryBuilder) : ServerFactory(builder) 
     override fun getHostInfoDataHandler(os: OperatingSystem) =
             object : HostInfoDataHandler(getConnection().getRemoteOS()) {
 
-        override fun onData(data: OperationResult?) = os.setType(OSType.CENTOS)
+        override fun onData(data: OperationResult?) = os.setPlatform(Platform.CENTOS)
     }
 }

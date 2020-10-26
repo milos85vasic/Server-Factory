@@ -1,5 +1,5 @@
 package net.milosvasic.factory.configuration
 
-import net.milosvasic.factory.os.OSType
+import net.milosvasic.factory.platform.Platform
 
-data class InstallationSteps(val os: OSType, val items: List<InstallationStepDefinition>)
+data class InstallationSteps(val platform: Platform, val items: List<InstallationStepDefinition>)

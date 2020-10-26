@@ -1,7 +1,7 @@
 package net.milosvasic.factory.remote
 
 import net.milosvasic.factory.common.execution.Executor
-import net.milosvasic.factory.os.OperatingSystem
+import net.milosvasic.factory.platform.OperatingSystem
 import net.milosvasic.factory.terminal.Terminal
 import net.milosvasic.factory.terminal.TerminalCommand
 

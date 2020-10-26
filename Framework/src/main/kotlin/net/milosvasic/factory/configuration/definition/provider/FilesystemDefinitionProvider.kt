@@ -4,7 +4,7 @@ import net.milosvasic.factory.configuration.Configuration
 import net.milosvasic.factory.configuration.SoftwareConfiguration
 import net.milosvasic.factory.configuration.definition.Definition
 import net.milosvasic.factory.log
-import net.milosvasic.factory.os.OperatingSystem
+import net.milosvasic.factory.platform.OperatingSystem
 import java.io.File
 
 class FilesystemDefinitionProvider(configuration: Configuration, operatingSystem: OperatingSystem) :
@@ -22,9 +22,9 @@ class FilesystemDefinitionProvider(configuration: Configuration, operatingSystem
             val items = mutableListOf<String>()
             findDefinitions(definitionHome, items)
             items.forEach { item ->
-                val os = operatingSystem.getType().osName
+                val platformName = operatingSystem.getPlatform().platformName
                 val configurationPath = Configuration.getConfigurationFilePath(item)
-                val obtainedConfiguration = SoftwareConfiguration.obtain(configurationPath, os)
+                val obtainedConfiguration = SoftwareConfiguration.obtain(configurationPath, platformName)
                 if (obtainedConfiguration.isEnabled()) {
 
                     val variables = obtainedConfiguration.variables

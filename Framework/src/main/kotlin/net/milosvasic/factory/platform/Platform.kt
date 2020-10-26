@@ -1,16 +1,16 @@
-package net.milosvasic.factory.os
+package net.milosvasic.factory.platform
 
-enum class OSType(val osName: String, private val fallback: List<OSType> = listOf()) {
+enum class Platform(val platformName: String, private val fallback: List<Platform> = listOf()) {
 
     DOCKER("Docker"),
     CENTOS("CentOS"),
     CENTOS_7("CentOS_7", fallback = listOf(CENTOS)),
-    CENTOS_8(CENTOS.osName),
+    CENTOS_8(CENTOS.platformName),
 
     UBUNTU("Ubuntu"),
     UBUNTU_18("Ubuntu_18", fallback = listOf(UBUNTU)),
     UBUNTU_19("Ubuntu_19", fallback = listOf(UBUNTU_18, UBUNTU)),
-    UBUNTU_20(UBUNTU.osName),
+    UBUNTU_20(UBUNTU.platformName),
 
     UBUNTU_SERVER("Ubuntu_Server", fallback = listOf(UBUNTU)),
     DEBIAN("Debian"),
@@ -21,10 +21,10 @@ enum class OSType(val osName: String, private val fallback: List<OSType> = listO
 
     companion object {
 
-        fun getByValue(value: String) : OSType {
+        fun getByValue(value: String) : Platform {
 
             values().forEach {
-                if (value == it.osName) {
+                if (value == it.platformName) {
                     return it
                 }
             }
@@ -32,9 +32,9 @@ enum class OSType(val osName: String, private val fallback: List<OSType> = listO
         }
     }
 
-    fun getFallback(): List<OSType> {
+    fun getFallback(): List<Platform> {
 
-        val items = mutableListOf<OSType>()
+        val items = mutableListOf<Platform>()
         items.addAll(fallback)
         items.add(DOCKER)
         return items

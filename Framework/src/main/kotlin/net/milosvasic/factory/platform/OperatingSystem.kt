@@ -1,10 +1,10 @@
-package net.milosvasic.factory.os
+package net.milosvasic.factory.platform
 
 import net.milosvasic.factory.EMPTY
 
 data class OperatingSystem(
         private var name: String = "System unknown",
-        private var type: OSType = OSType.UNKNOWN,
+        private var platform: Platform = Platform.UNKNOWN,
         private var architecture: Architecture = Architecture.UNKNOWN,
         private var hostname: String = String.EMPTY
 ) {
@@ -30,25 +30,25 @@ data class OperatingSystem(
         lines.forEach {
             if (it.contains(osLineString)) {
                 name = it.replace(osLineString, "").trim()
-                if (name.toLowerCase().contains(OSType.CENTOS.osName.toLowerCase())) {
+                if (name.toLowerCase().contains(Platform.CENTOS.platformName.toLowerCase())) {
 
-                    type = if (name.toLowerCase().contains("linux 8")) {
-                        OSType.CENTOS
+                    platform = if (name.toLowerCase().contains("linux 8")) {
+                        Platform.CENTOS
                     } else {
-                        OSType.CENTOS_7
+                        Platform.CENTOS_7
                     }
                 }
-                if (name.toLowerCase().contains(OSType.FEDORA.osName.toLowerCase())) {
-                    type = OSType.FEDORA
+                if (name.toLowerCase().contains(Platform.FEDORA.platformName.toLowerCase())) {
+                    platform = Platform.FEDORA
                 }
-                if (name.toLowerCase().contains(OSType.REDHAT.osName.toLowerCase())) {
-                    type = OSType.REDHAT
+                if (name.toLowerCase().contains(Platform.REDHAT.platformName.toLowerCase())) {
+                    platform = Platform.REDHAT
                 }
-                if (name.toLowerCase().contains(OSType.UBUNTU.osName.toLowerCase())) {
-                    type = OSType.UBUNTU
+                if (name.toLowerCase().contains(Platform.UBUNTU.platformName.toLowerCase())) {
+                    platform = Platform.UBUNTU
                 }
-                if (name.toLowerCase().contains(OSType.DEBIAN.osName.toLowerCase())) {
-                    type = OSType.DEBIAN
+                if (name.toLowerCase().contains(Platform.DEBIAN.platformName.toLowerCase())) {
+                    platform = Platform.DEBIAN
                 }
             }
             if (it.contains(archLineString)) {
@@ -84,11 +84,11 @@ data class OperatingSystem(
 
     fun getName() = name
 
-    fun getType() = type
+    fun getPlatform() = platform
 
-    fun setType(type: OSType) {
+    fun setPlatform(type: Platform) {
 
-        this.type = type
+        this.platform = type
     }
 
     fun getHostname() = hostname

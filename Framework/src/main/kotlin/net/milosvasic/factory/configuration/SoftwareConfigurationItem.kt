@@ -1,6 +1,6 @@
 package net.milosvasic.factory.configuration
 
-import net.milosvasic.factory.os.OSType
+import net.milosvasic.factory.platform.Platform
 
 data class SoftwareConfigurationItem(
 
@@ -10,30 +10,30 @@ data class SoftwareConfigurationItem(
 ) {
 
     @Throws(IllegalArgumentException::class)
-    fun getInstallationSteps(osName: String): InstallationSteps {
+    fun getInstallationSteps(platformName: String): InstallationSteps {
 
-        val os = OSType.getByValue(osName)
-        installationSteps[os.osName]?.let {
-            return InstallationSteps(os, it)
+        val platform = Platform.getByValue(platformName)
+        installationSteps[platform.platformName]?.let {
+            return InstallationSteps(platform, it)
         }
-        os.getFallback().forEach {
+        platform.getFallback().forEach {
 
-            installationSteps[it.osName]?.let { items ->
+            installationSteps[it.platformName]?.let { items ->
                 return InstallationSteps(it, items)
             }
         }
-        return InstallationSteps(OSType.UNKNOWN, listOf())
+        return InstallationSteps(Platform.UNKNOWN, listOf())
     }
 
     fun hasInstallationSteps(forWhat: String): Boolean {
 
-        val os = OSType.getByValue(forWhat)
-        installationSteps[os.osName]?.let {
+        val platform = Platform.getByValue(forWhat)
+        installationSteps[platform.platformName]?.let {
             return true
         }
-        os.getFallback().forEach {
+        platform.getFallback().forEach {
 
-            installationSteps[it.osName]?.let {
+            installationSteps[it.platformName]?.let {
                 return true
             }
         }

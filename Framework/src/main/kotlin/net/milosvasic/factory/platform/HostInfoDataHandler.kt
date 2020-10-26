@@ -1,4 +1,4 @@
-package net.milosvasic.factory.os
+package net.milosvasic.factory.platform
 
 import net.milosvasic.factory.common.DataHandler
 import net.milosvasic.factory.log
@@ -9,7 +9,7 @@ open class HostInfoDataHandler(private val os: OperatingSystem) : DataHandler<Op
     override fun onData(data: OperationResult?) {
         data?.let {
             os.parseAndSetSystemInfo(it.data)
-            if (os.getType() == OSType.UNKNOWN) {
+            if (os.getPlatform() == Platform.UNKNOWN) {
                 log.w("Host operating system is unknown")
             } else {
                 log.i("Host operating system: ${os.getName()}")

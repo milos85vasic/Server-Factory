@@ -1,4 +1,4 @@
-package net.milosvasic.factory.os
+package net.milosvasic.factory.platform
 
 import net.milosvasic.factory.EMPTY
 import net.milosvasic.factory.common.Validation
