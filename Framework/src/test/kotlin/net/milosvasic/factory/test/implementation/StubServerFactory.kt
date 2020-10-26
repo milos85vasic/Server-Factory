@@ -7,8 +7,8 @@ import net.milosvasic.factory.component.installer.Installer
 import net.milosvasic.factory.configuration.ConfigurationFactory
 import net.milosvasic.factory.operation.OperationResult
 import net.milosvasic.factory.platform.HostInfoDataHandler
-import net.milosvasic.factory.platform.Platform
 import net.milosvasic.factory.platform.OperatingSystem
+import net.milosvasic.factory.platform.Platform
 import net.milosvasic.factory.remote.Connection
 import net.milosvasic.factory.terminal.command.EchoCommand
 import net.milosvasic.factory.terminal.command.UnameCommand
