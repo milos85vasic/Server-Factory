@@ -29,8 +29,8 @@ open class Deploy(what: String, private val where: String) : RemoteOperationInst
     private val whatFile = File(what)
     private var remote: Remote? = null
     private var terminal: Terminal? = null
+    private val tmpPath = tmpDirectory().absolutePath
     private val excludes = listOf("$PROTOTYPE_PREFIX*")
-    private val localPath = localPath().absolutePath
 
     private val onDirectoryCreated = object : DataHandler<OperationResult> {
         override fun onData(data: OperationResult?) {
@@ -189,11 +189,15 @@ open class Deploy(what: String, private val where: String) : RemoteOperationInst
 
     private fun getName(file: File) = file.name.toLowerCase().replace(PROTOTYPE_PREFIX, "")
 
-    private fun localPath(): File {
-        whatFile.parentFile?.let {
-            return it
-        }
-        return whatFile
+    private fun tmpDirectory(): File {
+
+        val root = File(File.separator)
+        val path = FilePathBuilder()
+                .addContext(root)
+                .addContext("tmp")
+                .build()
+
+        return File(path)
     }
 
     @Throws(IllegalArgumentException::class)
@@ -232,7 +236,7 @@ open class Deploy(what: String, private val where: String) : RemoteOperationInst
     protected fun getLocalTar(): String {
 
         return FilePathBuilder()
-                .addContext(localPath)
+                .addContext(tmpPath)
                 .addContext("${whatFile.name}${Commands.TAR_EXTENSION}")
                 .build()
     }
