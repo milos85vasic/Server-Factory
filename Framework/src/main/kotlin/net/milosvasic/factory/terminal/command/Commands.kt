@@ -56,10 +56,8 @@ object Commands {
     fun grep(what: String, ignoreCase: Boolean = false): String {
 
         val ignoreCaseArgument = if (ignoreCase) {
-
             "-i"
         } else {
-
             ""
         }
         return "grep $ignoreCaseArgument \"$what\""
