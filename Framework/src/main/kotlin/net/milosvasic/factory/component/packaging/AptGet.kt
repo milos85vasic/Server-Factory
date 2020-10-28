@@ -8,7 +8,7 @@ class AptGet(entryPoint: Connection) : PackageManager(entryPoint) {
         get() = "apt-get"
 
     override fun installCommand(): String {
-        return "export DEBIAN_FRONTEND=noninteractive; " + super.installCommand()
+        return "export DEBIAN_FRONTEND=noninteractive; " + super.installCommand() + " --fix-missing"
     }
 
     override fun uninstallCommand(): String {
