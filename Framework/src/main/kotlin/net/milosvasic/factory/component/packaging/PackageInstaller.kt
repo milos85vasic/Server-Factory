@@ -33,7 +33,7 @@ class PackageInstaller(entryPoint: Connection) :
                 listOf(
                         Dnf(entryPoint),
                         Yum(entryPoint),
-                        AptGet(entryPoint)
+                        Apt(entryPoint)
                 )
         )
     }

@@ -2,7 +2,7 @@ package net.milosvasic.factory.component.packaging
 
 import net.milosvasic.factory.remote.Connection
 
-class AptGet(entryPoint: Connection) : PackageManager(entryPoint) {
+class Apt(entryPoint: Connection) : PackageManager(entryPoint) {
 
     override val applicationBinaryName: String
         get() = "apt"
