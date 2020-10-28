@@ -5,7 +5,7 @@ import net.milosvasic.factory.remote.Connection
 class AptGet(entryPoint: Connection) : PackageManager(entryPoint) {
 
     override val applicationBinaryName: String
-        get() = "apt-get"
+        get() = "apt"
 
     override fun installCommand(): String {
         return "export DEBIAN_FRONTEND=noninteractive; " + super.installCommand() + " --fix-missing"
