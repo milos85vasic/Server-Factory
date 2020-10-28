@@ -53,7 +53,17 @@ object Commands {
 
     fun reboot(rebootIn: Int = 2) = "( $SLEEP $rebootIn ; reboot ) & "
 
-    fun grep(what: String) = "grep \"$what\""
+    fun grep(what: String, ignoreCase: Boolean = false): String {
+
+        val ignoreCaseArgument = if (ignoreCase) {
+
+            "-i"
+        } else {
+
+            ""
+        }
+        return "grep $ignoreCaseArgument \"$what\""
+    }
 
     fun scp(what: String, where: String, remote: Remote): String {
 
