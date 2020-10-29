@@ -42,6 +42,7 @@ abstract class ServerFactory(private val builder: ServerFactoryBuilder) : Applic
     protected var configuration: Configuration? = null
 
     private val busy = Busy()
+    private var runStartedAt = 0L
     private val terminators = ConcurrentLinkedQueue<Termination>()
     private val connectionPool = mutableMapOf<String, Connection>()
     private var configurations = mutableListOf<SoftwareConfiguration>()
@@ -176,6 +177,7 @@ abstract class ServerFactory(private val builder: ServerFactoryBuilder) : Applic
             throw IllegalStateException("Configuration is null")
         }
         log.i("Server factory started")
+        runStartedAt = System.currentTimeMillis()
         try {
 
             val ssh = getConnection()
@@ -206,12 +208,9 @@ abstract class ServerFactory(private val builder: ServerFactoryBuilder) : Applic
     }
 
     override fun onStop() {
-        log.i("Server factory finished")
-        try {
-            terminate()
-        } catch (e: IllegalStateException) {
-            log.e(e)
-        }
+
+        val duration = getDuration()
+        log.i("Server factory finished in: $duration")
     }
 
     @Synchronized
@@ -292,23 +291,28 @@ abstract class ServerFactory(private val builder: ServerFactoryBuilder) : Applic
         notify(result)
     }
 
-    private fun notifyTerm() {
-        free()
-        val result = OperationResult(terminationOperation, true)
-        notify(result)
-    }
-
     @Synchronized
     private fun notifyInit(e: Exception) {
+
         free()
         log.e(e)
         val result = OperationResult(initializationOperation, false)
         notify(result)
     }
 
+    private fun notifyTerm() {
+
+        free()
+        onStop()
+        val result = OperationResult(terminationOperation, true)
+        notify(result)
+    }
+
     @Synchronized
     private fun notifyTerm(e: Exception) {
+
         free()
+        onStop()
         log.e(e)
         val result = OperationResult(terminationOperation, false)
         notify(result)
@@ -466,5 +470,35 @@ abstract class ServerFactory(private val builder: ServerFactoryBuilder) : Applic
             }
         }
         return items
+    }
+
+    private fun getDuration(): String {
+
+        val duration = System.currentTimeMillis() - runStartedAt
+        val seconds = (duration / 1000).toInt() % 60
+        val minutes = (duration / (1000 * 60)) % 60
+        val hours = (duration / (1000 * 60 * 60)) % 24
+
+        val minutesFormatted = if (minutes == 0L) {
+
+            if (hours == 0L) {
+                ""
+            } else {
+                String.format("%02d", minutes) + " min. : "
+            }
+        } else {
+
+            String.format("%02d", minutes) + " min. : "
+        }
+
+        val hoursFormatted = if (hours == 0L) {
+            ""
+        } else {
+            String.format("%02d", hours) + " hr. : "
+        }
+
+        val secondsFormatted = String.format("%02d", seconds) + " sec."
+
+        return "$hoursFormatted$minutesFormatted$secondsFormatted"
     }
 }
