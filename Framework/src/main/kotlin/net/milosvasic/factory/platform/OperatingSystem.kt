@@ -39,7 +39,12 @@ data class OperatingSystem(
                     }
                 }
                 if (name.toLowerCase().contains(Platform.FEDORA.platformName.toLowerCase())) {
-                    platform = Platform.FEDORA
+
+                    platform = if (name.toLowerCase().contains("server")) {
+                        Platform.FEDORA_SERVER
+                    } else {
+                        Platform.FEDORA
+                    }
                 }
                 if (name.toLowerCase().contains(Platform.REDHAT.platformName.toLowerCase())) {
                     platform = Platform.REDHAT
