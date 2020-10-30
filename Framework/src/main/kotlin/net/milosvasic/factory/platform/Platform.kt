@@ -5,16 +5,10 @@ enum class Platform(val platformName: String, private val fallback: List<Platfor
     DOCKER("Docker"),
     CENTOS("CentOS"),
     CENTOS_7("CentOS_7", fallback = listOf(CENTOS)),
-    CENTOS_8(CENTOS.platformName),
-
     UBUNTU("Ubuntu"),
-    UBUNTU_18("Ubuntu_18", fallback = listOf(UBUNTU)),
-    UBUNTU_19("Ubuntu_19", fallback = listOf(UBUNTU_18, UBUNTU)),
-    UBUNTU_20(UBUNTU.platformName),
-
     UBUNTU_SERVER("Ubuntu_Server", fallback = listOf(UBUNTU)),
     DEBIAN("Debian"),
-    FEDORA("Fedora"),
+    FEDORA("Fedora", fallback = listOf(CENTOS)),
     FEDORA_SERVER("Fedora_Server"),
     REDHAT("RedHat"),
     UNKNOWN("Unknown");
