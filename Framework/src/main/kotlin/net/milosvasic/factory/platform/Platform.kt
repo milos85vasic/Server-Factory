@@ -9,7 +9,7 @@ enum class Platform(val platformName: String, private val fallback: List<Platfor
     UBUNTU_SERVER("Ubuntu_Server", fallback = listOf(UBUNTU)),
     DEBIAN("Debian"),
     FEDORA("Fedora", fallback = listOf(CENTOS)),
-    FEDORA_SERVER("Fedora_Server"),
+    FEDORA_SERVER("Fedora_Server", fallback = listOf(FEDORA)),
     REDHAT("RedHat"),
     UNKNOWN("Unknown");
 
