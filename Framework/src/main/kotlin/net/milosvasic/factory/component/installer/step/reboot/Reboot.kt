@@ -16,7 +16,7 @@ import net.milosvasic.factory.terminal.command.EchoCommand
 import net.milosvasic.factory.terminal.command.PingCommand
 import net.milosvasic.factory.terminal.command.RebootCommand
 
-class Reboot(private val timeoutInSeconds: Int = 120) : RemoteOperationInstallationStep<SSH>() {
+class Reboot(private val timeoutInSeconds: Int = 240) : RemoteOperationInstallationStep<SSH>() {
 
     private var pingCount = 0
     private val maxHellos = 10
