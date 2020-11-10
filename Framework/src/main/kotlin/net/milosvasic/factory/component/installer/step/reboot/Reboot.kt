@@ -18,8 +18,8 @@ import net.milosvasic.factory.terminal.command.RebootCommand
 
 class Reboot(private val timeoutInSeconds: Int = 120) : RemoteOperationInstallationStep<SSH>() {
 
-    private val maxHellos = 3
     private var pingCount = 0
+    private val maxHellos = 10
     private var helloCount = 0
     private val hello = "Hello"
     private val numberOfPings = 3
