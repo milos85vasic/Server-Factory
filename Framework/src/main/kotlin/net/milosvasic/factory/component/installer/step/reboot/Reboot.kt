@@ -85,20 +85,8 @@ class Reboot(private val timeoutInSeconds: Int = 240) : RemoteOperationInstallat
 
     @Throws(IllegalStateException::class)
     override fun getFlow(): CommandFlow {
-        var rebootAllowed = false
-        try {
-            val path = PathBuilder()
-                    .addContext(Context.Server)
-                    .setKey(Key.RebootAllowed)
-                    .build()
 
-            rebootAllowed = Variable.get(path).toBoolean()
-        } catch (e: IllegalStateException) {
-
-            log.e(e)
-            finish(false)
-        }
-
+        val rebootAllowed = isRebootAllowed()
         connection?.let { conn ->
             terminal = conn.getTerminal()
             remote = conn.getRemote()
@@ -130,14 +118,25 @@ class Reboot(private val timeoutInSeconds: Int = 240) : RemoteOperationInstallat
     override fun getOperation() = RebootOperation()
 
     override fun finish(success: Boolean) {
+
         if (success && pingCount == 0) {
             try {
 
                 log.v("Waiting for remote host to restart")
-                ping()
+                if (isRebootAllowed()) {
+
+                    ping()
+                } else {
+
+                    terminal?.unsubscribe(pingCallback)
+                    connection?.unsubscribe(helloCallback)
+                    super.finish(success)
+                }
             } catch (e: InterruptedException) {
 
                 log.e(e)
+                terminal?.unsubscribe(pingCallback)
+                connection?.unsubscribe(helloCallback)
                 finish(false)
             }
         } else {
@@ -203,5 +202,23 @@ class Reboot(private val timeoutInSeconds: Int = 240) : RemoteOperationInstallat
                 }
             }
         }
+    }
+
+    private fun isRebootAllowed(): Boolean {
+
+        var rebootAllowed = false
+        try {
+            val path = PathBuilder()
+                    .addContext(Context.Server)
+                    .setKey(Key.RebootAllowed)
+                    .build()
+
+            rebootAllowed = Variable.get(path).toBoolean()
+        } catch (e: IllegalStateException) {
+
+            log.e(e)
+            finish(false)
+        }
+        return rebootAllowed
     }
 }
