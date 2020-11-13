@@ -37,6 +37,8 @@ object Commands {
 
     fun echo(what: String) = "echo '$what'"
 
+    fun sleep(duration: Int) = "$SLEEP $duration"
+
     fun printf(what: String) = "printf '$what'"
 
     fun ssh(user: String = "root", command: String, port: Int = 22, host: String = LOCALHOST): String {

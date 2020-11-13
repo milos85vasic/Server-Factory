@@ -15,6 +15,7 @@ import net.milosvasic.factory.terminal.Terminal
 import net.milosvasic.factory.terminal.command.EchoCommand
 import net.milosvasic.factory.terminal.command.PingCommand
 import net.milosvasic.factory.terminal.command.RebootCommand
+import net.milosvasic.factory.terminal.command.SleepCommand
 
 class Reboot(private val timeoutInSeconds: Int = 480) : RemoteOperationInstallationStep<SSH>() {
 
@@ -37,8 +38,10 @@ class Reboot(private val timeoutInSeconds: Int = 480) : RemoteOperationInstallat
                     if (result.success) {
 
                         if (hasRestarted) {
+
                             hello()
                         } else {
+
                             log.v("Remote host is not restarted yet")
                             ping()
                         }
@@ -65,6 +68,10 @@ class Reboot(private val timeoutInSeconds: Int = 480) : RemoteOperationInstallat
         override fun onOperationPerformed(result: OperationResult) {
 
             when (result.operation) {
+                is SleepCommand -> {
+
+                    hello()
+                }
                 is EchoCommand -> {
 
                     if (result.success) {
@@ -72,9 +79,10 @@ class Reboot(private val timeoutInSeconds: Int = 480) : RemoteOperationInstallat
                     } else {
 
                         if (helloCount <= maxHellos) {
-                            hello()
+                            hello(true)
                         } else {
-                            log.e("Reboot timeout exceeded")
+
+                            log.e("Hello retries exceeded")
                             finish(false)
                         }
                     }
@@ -174,7 +182,7 @@ class Reboot(private val timeoutInSeconds: Int = 480) : RemoteOperationInstallat
         }
     }
 
-    private fun hello() {
+    private fun hello(sleep: Boolean = false) {
 
         helloCount++
         log.v("Hello no. $helloCount")
@@ -190,7 +198,13 @@ class Reboot(private val timeoutInSeconds: Int = 480) : RemoteOperationInstallat
                     if (helloCount == 1) {
                         conn.subscribe(helloCallback)
                     }
-                    conn.execute(EchoCommand(hello))
+                    if (sleep) {
+
+                        conn.execute(SleepCommand(5))
+                    } else {
+
+                        conn.execute(EchoCommand(hello))
+                    }
                 } catch (e: IllegalStateException) {
 
                     log.e(e)
