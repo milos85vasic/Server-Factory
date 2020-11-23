@@ -18,6 +18,7 @@ import net.milosvasic.factory.configuration.variable.Context
 import net.milosvasic.factory.configuration.variable.Key
 import net.milosvasic.factory.configuration.variable.PathBuilder
 import net.milosvasic.factory.configuration.variable.Variable
+import net.milosvasic.factory.execution.TaskExecutor
 import net.milosvasic.factory.execution.flow.FlowBuilder
 import net.milosvasic.factory.execution.flow.callback.DieOnFailureCallback
 import net.milosvasic.factory.execution.flow.callback.FlowCallback
@@ -35,7 +36,11 @@ import net.milosvasic.factory.remote.ConnectionProvider
 import net.milosvasic.factory.remote.ssh.SSH
 import net.milosvasic.factory.terminal.TerminalCommand
 import net.milosvasic.factory.terminal.command.*
+import java.awt.HeadlessException
+import java.awt.MouseInfo
+import java.awt.Robot
 import java.util.concurrent.ConcurrentLinkedQueue
+
 
 abstract class ServerFactory(private val builder: ServerFactoryBuilder) : Application, BusyDelegation {
 
@@ -43,6 +48,7 @@ abstract class ServerFactory(private val builder: ServerFactoryBuilder) : Applic
 
     private val busy = Busy()
     private var runStartedAt = 0L
+    private val executor = TaskExecutor.instantiate(5)
     private val terminators = ConcurrentLinkedQueue<Termination>()
     private val connectionPool = mutableMapOf<String, Connection>()
     private var configurations = mutableListOf<SoftwareConfiguration>()
@@ -289,6 +295,7 @@ abstract class ServerFactory(private val builder: ServerFactoryBuilder) : Applic
         free()
         val result = OperationResult(initializationOperation, true)
         notify(result)
+        keepAlive()
     }
 
     @Synchronized
@@ -500,5 +507,40 @@ abstract class ServerFactory(private val builder: ServerFactoryBuilder) : Applic
         val secondsFormatted = String.format("%02d", seconds) + " sec."
 
         return "$hoursFormatted$minutesFormatted$secondsFormatted"
+    }
+
+    private fun keepAlive() {
+        executor.execute {
+
+            log.i("Keep alive: START")
+            var count = 0
+            var started = false
+            val robot = Robot()
+            while (isInitialized()) {
+
+                count++
+                try {
+
+                    val pointerInfo = MouseInfo.getPointerInfo()
+                    val location = pointerInfo.location
+                    val x = location.getX().toInt() + 1
+                    val y = location.getY().toInt() + 1
+                    started = true
+                    robot.delay(60 * 1000)
+                    if (isInitialized()) {
+
+                        robot.mouseMove(x, y)
+                        log.v("Keep alive, count: $count")
+                    }
+                } catch (e: HeadlessException) {
+
+                    log.e(e)
+                }
+            }
+            if (started) {
+
+                log.i("Keep alive: END")
+            }
+        }
     }
 }
