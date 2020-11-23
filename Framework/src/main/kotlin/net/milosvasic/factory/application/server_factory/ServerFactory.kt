@@ -513,7 +513,6 @@ abstract class ServerFactory(private val builder: ServerFactoryBuilder) : Applic
 
         log.i("Keep alive: START")
         var count = 0
-        var started = false
         val robot = Robot()
         while (isInitialized()) {
 
@@ -524,7 +523,6 @@ abstract class ServerFactory(private val builder: ServerFactoryBuilder) : Applic
                 val location = pointerInfo.location
                 val x = location.getX().toInt() + 1
                 val y = location.getY().toInt() + 1
-                started = true
                 robot.delay(60 * 1000)
                 if (isInitialized()) {
 
@@ -535,10 +533,6 @@ abstract class ServerFactory(private val builder: ServerFactoryBuilder) : Applic
 
                 log.e(e)
             }
-        }
-        if (started) {
-
-            log.i("Keep alive: END")
         }
     }
 }
