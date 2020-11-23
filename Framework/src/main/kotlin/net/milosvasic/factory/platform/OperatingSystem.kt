@@ -9,6 +9,43 @@ data class OperatingSystem(
         private var hostname: String = String.EMPTY
 ) {
 
+    companion object {
+
+        @Throws(IllegalArgumentException::class, NullPointerException::class, SecurityException::class)
+        fun getHostOperatingSystem(): OperatingSystem {
+
+            val platform = when {
+
+                isMacOS() -> Platform.MAC_OS
+                isLinux() -> Platform.LINUX
+                isWindows() -> Platform.WINDOWS
+                else -> Platform.UNKNOWN
+            }
+            return OperatingSystem(
+
+                    name = "Host",
+                    platform = platform,
+                    architecture = Architecture.UNKNOWN,
+                    hostname = "Unknown"
+            )
+        }
+
+        @Throws(IllegalArgumentException::class, NullPointerException::class, SecurityException::class)
+        private fun isMacOS() = getOS().contains("mac")
+
+        @Throws(IllegalArgumentException::class, NullPointerException::class, SecurityException::class)
+        private fun isLinux() = getOS().contains("mac")
+
+        @Throws(IllegalArgumentException::class, NullPointerException::class, SecurityException::class)
+        private fun isWindows() = getOS().contains("mac")
+
+        @Throws(IllegalArgumentException::class, NullPointerException::class, SecurityException::class)
+        private fun getOS(): String {
+
+            return System.getProperty("os.name").toLowerCase()
+        }
+    }
+
     @Throws(IllegalArgumentException::class)
     fun setHostname(data: String) {
 

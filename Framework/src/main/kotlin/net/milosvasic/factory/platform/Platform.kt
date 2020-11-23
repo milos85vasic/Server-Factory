@@ -13,6 +13,9 @@ enum class Platform(val platformName: String, private val fallback: List<Platfor
     FEDORA_SERVER("Fedora_Server", fallback = listOf(FEDORA, CENTOS)),
     FEDORA_SERVER_30("Fedora_Server_30", fallback = listOf(FEDORA_30, FEDORA_SERVER, FEDORA, CENTOS)),
     REDHAT("RedHat"),
+    LINUX("Linux"),
+    MAC_OS("macOS"),
+    WINDOWS("Windows"),
     UNKNOWN("Unknown");
 
     companion object {
