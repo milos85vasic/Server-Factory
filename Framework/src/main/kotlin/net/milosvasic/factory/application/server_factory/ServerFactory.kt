@@ -509,38 +509,36 @@ abstract class ServerFactory(private val builder: ServerFactoryBuilder) : Applic
         return "$hoursFormatted$minutesFormatted$secondsFormatted"
     }
 
-    private fun keepAlive() {
-        executor.execute {
+    private fun keepAlive() = executor.execute {
 
-            log.i("Keep alive: START")
-            var count = 0
-            var started = false
-            val robot = Robot()
-            while (isInitialized()) {
+        log.i("Keep alive: START")
+        var count = 0
+        var started = false
+        val robot = Robot()
+        while (isInitialized()) {
 
-                count++
-                try {
+            count++
+            try {
 
-                    val pointerInfo = MouseInfo.getPointerInfo()
-                    val location = pointerInfo.location
-                    val x = location.getX().toInt() + 1
-                    val y = location.getY().toInt() + 1
-                    started = true
-                    robot.delay(60 * 1000)
-                    if (isInitialized()) {
+                val pointerInfo = MouseInfo.getPointerInfo()
+                val location = pointerInfo.location
+                val x = location.getX().toInt() + 1
+                val y = location.getY().toInt() + 1
+                started = true
+                robot.delay(60 * 1000)
+                if (isInitialized()) {
 
-                        robot.mouseMove(x, y)
-                        log.v("Keep alive, count: $count")
-                    }
-                } catch (e: HeadlessException) {
-
-                    log.e(e)
+                    robot.mouseMove(x, y)
+                    log.v("Keep alive, count: $count")
                 }
-            }
-            if (started) {
+            } catch (e: HeadlessException) {
 
-                log.i("Keep alive: END")
+                log.e(e)
             }
+        }
+        if (started) {
+
+            log.i("Keep alive: END")
         }
     }
 }
