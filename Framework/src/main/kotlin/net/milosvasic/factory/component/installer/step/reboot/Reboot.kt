@@ -36,14 +36,30 @@ class Reboot(private val timeoutInSeconds: Int = 480) : RemoteOperationInstallat
 
                 is PingCommand -> {
                     if (result.success) {
-
                         if (hasRestarted) {
+                            try {
 
-                            hello()
+                                hello()
+                            } catch (e: IllegalArgumentException) {
+
+                                log.e(e)
+                                finish(false)
+                            } catch (e: IllegalStateException) {
+
+                                log.e(e)
+                                finish(false)
+                            }
                         } else {
 
                             log.v("Remote host is not restarted yet")
-                            ping()
+                            try {
+
+                                ping()
+                            } catch (e: IllegalStateException) {
+
+                                log.e(e)
+                                finish(false)
+                            }
                         }
                     } else {
 
@@ -53,7 +69,14 @@ class Reboot(private val timeoutInSeconds: Int = 480) : RemoteOperationInstallat
                             log.i("Remote host has been restarted")
                         }
                         if (pingCount <= (timeoutInSeconds / numberOfPings)) {
-                            ping()
+                            try {
+
+                                ping()
+                            } catch (e: IllegalStateException) {
+
+                                log.e(e)
+                                finish(false)
+                            }
                         } else {
                             log.e("Reboot timeout exceeded")
                             finish(false)
@@ -69,17 +92,38 @@ class Reboot(private val timeoutInSeconds: Int = 480) : RemoteOperationInstallat
 
             when (result.operation) {
                 is SleepCommand -> {
+                    try {
 
-                    hello()
+                        hello()
+                    } catch (e: IllegalArgumentException) {
+
+                        log.e(e)
+                        finish(false)
+                    } catch (e: IllegalStateException) {
+
+                        log.e(e)
+                        finish(false)
+                    }
                 }
                 is EchoCommand -> {
-
                     if (result.success) {
+
                         finish(true)
                     } else {
 
                         if (helloCount <= maxHellos) {
-                            hello(true)
+                            try {
+
+                                hello(true)
+                            } catch (e: IllegalArgumentException) {
+
+                                log.e(e)
+                                finish(false)
+                            } catch (e: IllegalStateException) {
+
+                                log.e(e)
+                                finish(false)
+                            }
                         } else {
 
                             log.e("Hello retries exceeded")
@@ -146,6 +190,12 @@ class Reboot(private val timeoutInSeconds: Int = 480) : RemoteOperationInstallat
                 terminal?.unsubscribe(pingCallback)
                 connection?.unsubscribe(helloCallback)
                 finish(false)
+            } catch (e: IllegalStateException) {
+
+                log.e(e)
+                terminal?.unsubscribe(pingCallback)
+                connection?.unsubscribe(helloCallback)
+                finish(false)
             }
         } else {
 
@@ -155,6 +205,7 @@ class Reboot(private val timeoutInSeconds: Int = 480) : RemoteOperationInstallat
         }
     }
 
+    @Throws(IllegalArgumentException::class, IllegalStateException::class)
     private fun ping() {
 
         pingCount++
@@ -168,6 +219,7 @@ class Reboot(private val timeoutInSeconds: Int = 480) : RemoteOperationInstallat
 
             terminal?.let { term ->
                 try {
+
                     term.execute(PingCommand(host, numberOfPings))
                 } catch (e: IllegalStateException) {
 
@@ -182,6 +234,7 @@ class Reboot(private val timeoutInSeconds: Int = 480) : RemoteOperationInstallat
         }
     }
 
+    @Throws(IllegalArgumentException::class, IllegalStateException::class)
     private fun hello(sleep: Boolean = false) {
 
         helloCount++

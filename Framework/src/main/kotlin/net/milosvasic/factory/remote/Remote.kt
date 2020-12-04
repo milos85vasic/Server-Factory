@@ -14,6 +14,7 @@ data class Remote(
         @SerializedName("user") val account: String
 ) {
 
+    @Throws(IllegalStateException::class)
     fun getHost(): String {
 
         host?.let { return it }

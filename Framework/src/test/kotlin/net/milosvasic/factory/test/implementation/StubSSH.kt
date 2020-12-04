@@ -12,15 +12,17 @@ class StubSSH : SSH(
 ) {
 
     @Synchronized
-    @Throws(BusyException::class, IllegalArgumentException::class)
+    @Throws(IllegalStateException::class, IllegalArgumentException::class)
     override fun execute(what: TerminalCommand) {
+
         val command = StubSSHCommand(getRemote(), what)
         getTerminal().execute(command)
     }
 
     @Synchronized
-    @Throws(BusyException::class, IllegalArgumentException::class)
+    @Throws(IllegalStateException::class, IllegalArgumentException::class)
     override fun execute(data: TerminalCommand, obtainOutput: Boolean) {
+
         val command = StubSSHCommand(getRemote(), data)
         command.configuration[CommandConfiguration.OBTAIN_RESULT] = obtainOutput
         getTerminal().execute(command)

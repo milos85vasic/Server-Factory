@@ -66,7 +66,7 @@ open class Deploy(what: String, private val where: String) : RemoteOperationInst
         }
     }
 
-    @Throws(IllegalArgumentException::class)
+    @Throws(IllegalArgumentException::class, IllegalStateException::class)
     override fun getFlow(): CommandFlow {
 
         connection?.let { conn ->
@@ -121,7 +121,7 @@ open class Deploy(what: String, private val where: String) : RemoteOperationInst
 
     protected open fun getScpCommand() = Commands.SCP
 
-    @Throws(InvalidPathException::class)
+    @Throws(InvalidPathException::class, IllegalStateException::class)
     protected open fun getScp(remote: Remote): TerminalCommand = ScpCommand(getLocalTar(), where, remote)
 
     @Throws(IllegalStateException::class)

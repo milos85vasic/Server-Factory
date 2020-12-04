@@ -5,7 +5,9 @@ import net.milosvasic.factory.remote.Remote
 import net.milosvasic.factory.terminal.TerminalCommand
 import net.milosvasic.factory.terminal.command.Commands
 
-open class SSHCommand(
+open class SSHCommand
+@Throws(IllegalStateException::class)
+constructor(
         remote: Remote,
         val remoteCommand: TerminalCommand,
         configuration: MutableMap<CommandConfiguration, Boolean> = CommandConfiguration.DEFAULT.toMutableMap(),

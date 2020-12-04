@@ -4,5 +4,8 @@ import net.milosvasic.factory.remote.Remote
 import net.milosvasic.factory.remote.ssh.SSHCommand
 import net.milosvasic.factory.terminal.TerminalCommand
 
-class StubSSHCommand(remote: Remote, command: TerminalCommand) :
+class StubSSHCommand
+@Throws(IllegalStateException::class)
+constructor(remote: Remote, command: TerminalCommand) :
+        @Throws(IllegalStateException::class)
         SSHCommand(remote, command, sshCommand = command.command)

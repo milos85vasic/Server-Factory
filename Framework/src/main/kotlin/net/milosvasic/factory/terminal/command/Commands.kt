@@ -23,6 +23,7 @@ object Commands {
     const val TAR_EXTENSION = ".tar.gz"
 
     private const val CD = "cd"
+    private const val BASH = "sh"
     private const val FIND = "find "
     private const val LINK = "ln -s"
     private const val NETSTAT = "ss"
@@ -34,7 +35,9 @@ object Commands {
     private const val OPENSSL = "openssl"
     private const val TAR_COMPRESS = "tar -cjf"
     private const val TAR_DECOMPRESS = "tar -xvf"
-    private const val HOSTNAME_CTL = "hostnamectl"
+
+    private const val DIRECTORY_UTILS = "Utils"
+    private const val SCRIPT_SET_HOSTNAME = "set_hostname.sh"
 
     fun echo(what: String) = "echo '$what'"
 
@@ -66,6 +69,7 @@ object Commands {
         return "grep $ignoreCaseArgument \"$what\""
     }
 
+    @Throws(IllegalStateException::class)
     fun scp(what: String, where: String, remote: Remote): String {
 
         return "$SCP ${remote.port} $what ${remote.account}@${remote.getHost()}:$where"
@@ -118,7 +122,21 @@ object Commands {
         } else {
             hostname
         }
-        return "$HOSTNAME_CTL set-hostname $toSet"
+
+        val path = PathBuilder()
+                .addContext(Context.Server)
+                .setKey(Key.ServerHome)
+                .build()
+
+        val serverHome = Variable.get(path)
+
+        val filePath = FilePathBuilder()
+                .addContext(serverHome)
+                .addContext(DIRECTORY_UTILS)
+                .addContext(SCRIPT_SET_HOSTNAME)
+                .build()
+
+        return "$BASH $filePath $toSet"
     }
 
     fun cat(what: String) = "cat $what"
