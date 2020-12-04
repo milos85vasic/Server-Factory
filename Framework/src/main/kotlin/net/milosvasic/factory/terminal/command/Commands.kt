@@ -34,6 +34,7 @@ object Commands {
     private const val OPENSSL = "openssl"
     private const val TAR_COMPRESS = "tar -cjf"
     private const val TAR_DECOMPRESS = "tar -xvf"
+    private const val HOSTNAME_CTL = "hostnamectl"
 
     fun echo(what: String) = "echo '$what'"
 
@@ -108,7 +109,17 @@ object Commands {
 
     fun test(what: String) = "test -e $what"
 
-    fun setHostName(hostname: String) = "hostnamectl set-hostname $hostname"
+    fun setHostName(hostname: String): String {
+
+        val local = ".local"
+        val toSet = if (hostname.endsWith(local)) {
+
+            hostname.replace(local, "")
+        } else {
+            hostname
+        }
+        return "$HOSTNAME_CTL set-hostname $toSet"
+    }
 
     fun cat(what: String) = "cat $what"
 
