@@ -67,7 +67,7 @@ object Commands {
 
     fun scp(what: String, where: String, remote: Remote): String {
 
-        return "$SCP ${remote.port} $what ${remote.account}@${remote.host}:$where"
+        return "$SCP ${remote.port} $what ${remote.account}@${remote.getHost()}:$where"
     }
 
     fun cp(what: String, where: String): String {

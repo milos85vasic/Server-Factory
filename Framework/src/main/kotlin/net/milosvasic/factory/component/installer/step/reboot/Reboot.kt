@@ -159,7 +159,7 @@ class Reboot(private val timeoutInSeconds: Int = 480) : RemoteOperationInstallat
 
         pingCount++
         log.v("Ping no. $pingCount")
-        val host = remote?.host
+        val host = remote?.getHost()
         if (host == null) {
 
             log.e("No host to ping provided")
@@ -186,7 +186,7 @@ class Reboot(private val timeoutInSeconds: Int = 480) : RemoteOperationInstallat
 
         helloCount++
         log.v("Hello no. $helloCount")
-        val host = remote?.host
+        val host = remote?.getHost()
         if (host == null) {
 
             log.e("No host to hello provided")

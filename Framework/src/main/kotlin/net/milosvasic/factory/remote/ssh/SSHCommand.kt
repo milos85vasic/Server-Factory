@@ -14,6 +14,6 @@ open class SSHCommand(
                 remote.account,
                 remoteCommand.command,
                 remote.port,
-                remote.host
+                remote.getHost()
         )
 ) : TerminalCommand(sshCommand, configuration)
