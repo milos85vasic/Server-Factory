@@ -48,6 +48,10 @@ object ConfigurationManager : Initialization {
 
             configuration = configurationFactory?.obtain(rcp)
             nullConfigurationCheck()
+            configuration?.let {
+
+                initializeSystemVariables(it)
+            }
             BusyWorker.free(busy)
         }
     }
@@ -72,8 +76,6 @@ object ConfigurationManager : Initialization {
                     throw IllegalStateException("Configuration is not enabled")
                 }
             }
-
-            initializeSystemVariables(config)
 
             config.uses?.forEach { use ->
 

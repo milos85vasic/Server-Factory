@@ -96,6 +96,7 @@ abstract class ServerFactory(private val builder: ServerFactoryBuilder) : Applic
 
                 configuration = ConfigurationManager.getConfiguration()
                 if (configuration == null) {
+
                     throw IllegalStateException("Configuration is null")
                 }
 
