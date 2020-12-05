@@ -427,11 +427,12 @@ abstract class ServerFactory(private val builder: ServerFactoryBuilder) : Applic
          *  "value": "{{SYSTEM.HOME}}/Core/Utils:{{SERVER.SERVER_HOME}}/Utils"
          * }
          */
-        val systemHome = PathBuilder()
+        val systemHomePath = PathBuilder()
                 .addContext(Context.System)
                 .setKey(Key.Home)
                 .build()
-                .getPath()
+
+        val systemHome = Variable.get(systemHomePath)
 
         val what = FilePathBuilder()
                 .addContext(systemHome)
@@ -439,11 +440,12 @@ abstract class ServerFactory(private val builder: ServerFactoryBuilder) : Applic
                 .addContext(Commands.DIRECTORY_UTILS)
                 .build()
 
-        val whereRoot = PathBuilder()
+        val whereRootPath = PathBuilder()
                 .addContext(Context.Server)
                 .setKey(Key.ServerHome)
                 .build()
-                .getPath()
+
+        val whereRoot = Variable.get(whereRootPath)
 
         val where = FilePathBuilder()
                 .addContext(whereRoot)
