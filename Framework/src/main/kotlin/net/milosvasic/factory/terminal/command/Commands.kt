@@ -36,7 +36,8 @@ object Commands {
     private const val TAR_COMPRESS = "tar -cjf"
     private const val TAR_DECOMPRESS = "tar -xvf"
 
-    private const val DIRECTORY_UTILS = "Utils"
+    const val DIRECTORY_CORE = "Core"
+    const val DIRECTORY_UTILS = "Utils"
     private const val SCRIPT_SET_HOSTNAME = "set_hostname.sh"
 
     fun echo(what: String) = "echo '$what'"

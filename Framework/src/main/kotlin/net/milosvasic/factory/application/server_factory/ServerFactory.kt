@@ -6,6 +6,7 @@ import net.milosvasic.factory.common.busy.Busy
 import net.milosvasic.factory.common.busy.BusyDelegation
 import net.milosvasic.factory.common.busy.BusyException
 import net.milosvasic.factory.common.busy.BusyWorker
+import net.milosvasic.factory.common.filesystem.FilePathBuilder
 import net.milosvasic.factory.common.initialization.Initializer
 import net.milosvasic.factory.common.initialization.Termination
 import net.milosvasic.factory.component.database.manager.DatabaseManager
@@ -426,7 +427,30 @@ abstract class ServerFactory(private val builder: ServerFactoryBuilder) : Applic
          *  "value": "{{SYSTEM.HOME}}/Core/Utils:{{SERVER.SERVER_HOME}}/Utils"
          * }
          */
-        val coreUtilsDeployment = Deploy("ssss", "ttt")
+        val systemHome = PathBuilder()
+                .addContext(Context.System)
+                .setKey(Key.Home)
+                .build()
+                .getPath()
+
+        val what = FilePathBuilder()
+                .addContext(systemHome)
+                .addContext(Commands.DIRECTORY_CORE)
+                .addContext(Commands.DIRECTORY_UTILS)
+                .build()
+
+        val whereRoot = PathBuilder()
+                .addContext(Context.Server)
+                .setKey(Key.ServerHome)
+                .build()
+                .getPath()
+
+        val where = FilePathBuilder()
+                .addContext(whereRoot)
+                .addContext(Commands.DIRECTORY_UTILS)
+                .build()
+
+        val coreUtilsDeployment = Deploy(what, where)
                 .setConnection(ssh)
                 .getFlow()
                 .perform(hostInfoCommand, getHostInfoDataHandler(os))
