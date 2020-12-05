@@ -13,6 +13,7 @@ import net.milosvasic.factory.component.docker.Docker
 import net.milosvasic.factory.component.docker.DockerInitializationFlowCallback
 import net.milosvasic.factory.component.installer.Installer
 import net.milosvasic.factory.component.installer.InstallerInitializationFlowCallback
+import net.milosvasic.factory.component.installer.step.deploy.Deploy
 import net.milosvasic.factory.configuration.*
 import net.milosvasic.factory.configuration.variable.Context
 import net.milosvasic.factory.configuration.variable.Key
@@ -419,18 +420,29 @@ abstract class ServerFactory(private val builder: ServerFactoryBuilder) : Applic
         val hostInfoCommand = getHostInfoCommand()
         val testCommand = EchoCommand("Hello")
 
-        val flow = CommandFlow()
-                .width(terminal)
-                .perform(pingCommand)
-                .width(ssh)
-                .perform(testCommand)
+        /*
+         * {
+         *  "type": "deploy",
+         *  "value": "{{SYSTEM.HOME}}/Core/Utils:{{SERVER.SERVER_HOME}}/Utils"
+         * }
+         */
+        val coreUtilsDeployment = Deploy("ssss", "ttt")
+                .setConnection(ssh)
+                .getFlow()
                 .perform(hostInfoCommand, getHostInfoDataHandler(os))
                 .perform(hostNameCommand, HostNameDataHandler(os))
 
         if (hostname != String.EMPTY) {
 
-            flow.perform(getHostNameSetCommand(hostname), HostNameDataHandler(os, hostname))
+            coreUtilsDeployment.perform(getHostNameSetCommand(hostname), HostNameDataHandler(os, hostname))
         }
+
+        val flow = CommandFlow()
+                .width(terminal)
+                .perform(pingCommand)
+                .width(ssh)
+                .perform(testCommand)
+                .connect(coreUtilsDeployment)
 
         return flow.onFinish(dieCallback)
     }

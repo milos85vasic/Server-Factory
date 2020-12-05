@@ -7,6 +7,7 @@ import net.milosvasic.factory.configuration.variable.Variable
 import net.milosvasic.factory.execution.flow.implementation.CommandFlow
 import net.milosvasic.factory.log
 import net.milosvasic.factory.operation.OperationResult
+import net.milosvasic.factory.remote.Connection
 import net.milosvasic.factory.remote.Remote
 import net.milosvasic.factory.remote.ssh.SSH
 import net.milosvasic.factory.security.Permission
@@ -119,10 +120,45 @@ open class Deploy(what: String, private val where: String) : RemoteOperationInst
 
     override fun getOperation() = DeployOperation()
 
+    @Throws(IllegalArgumentException::class)
+    fun setConnection(conn: Connection): Deploy {
+
+        if (conn is SSH) {
+
+            connection = conn
+            return this
+        }
+        val msg = "${conn::class.simpleName} is not supported, onlt ${SSH::class.simpleName}"
+        throw IllegalArgumentException(msg)
+    }
+
     protected open fun getScpCommand() = Commands.SCP
 
     @Throws(InvalidPathException::class, IllegalStateException::class)
     protected open fun getScp(remote: Remote): TerminalCommand = ScpCommand(getLocalTar(), where, remote)
+
+    @Throws(IllegalArgumentException::class)
+    protected open fun getProtoCleanup(): TerminalCommand {
+
+        if (excludes.isEmpty()) {
+            throw IllegalArgumentException("No excludes available")
+        }
+        val excluded = mutableListOf<String>()
+        excludes.forEach {
+            val exclude = FindAndRemoveCommand(it, Commands.HERE)
+            excluded.add(exclude.command)
+        }
+        return ConcatenateCommand(*excluded.toTypedArray())
+    }
+
+    protected open fun getSecurityChanges(remote: Remote): TerminalCommand {
+
+        val chown = Commands.chown(remote.account, where)
+        val chgrp = Commands.chgrp(remote.account, where)
+        val permissions = Permissions(Permission.ALL, Permission.NONE, Permission.NONE)
+        val chmod = Commands.chmod(where, permissions.obtain())
+        return ConcatenateCommand(chown, chgrp, chmod)
+    }
 
     @Throws(IllegalStateException::class)
     private fun processFiles(directory: File) {
@@ -198,29 +234,6 @@ open class Deploy(what: String, private val where: String) : RemoteOperationInst
                 .build()
 
         return File(path)
-    }
-
-    @Throws(IllegalArgumentException::class)
-    protected open fun getProtoCleanup(): TerminalCommand {
-
-        if (excludes.isEmpty()) {
-            throw IllegalArgumentException("No excludes available")
-        }
-        val excluded = mutableListOf<String>()
-        excludes.forEach {
-            val exclude = FindAndRemoveCommand(it, Commands.HERE)
-            excluded.add(exclude.command)
-        }
-        return ConcatenateCommand(*excluded.toTypedArray())
-    }
-
-    protected open fun getSecurityChanges(remote: Remote): TerminalCommand {
-
-        val chown = Commands.chown(remote.account, where)
-        val chgrp = Commands.chgrp(remote.account, where)
-        val permissions = Permissions(Permission.ALL, Permission.NONE, Permission.NONE)
-        val chmod = Commands.chmod(where, permissions.obtain())
-        return ConcatenateCommand(chown, chgrp, chmod)
     }
 
     @Throws(InvalidPathException::class)
