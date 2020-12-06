@@ -2,6 +2,7 @@ package net.milosvasic.factory.application.server_factory
 
 import net.milosvasic.factory.*
 import net.milosvasic.factory.common.Application
+import net.milosvasic.factory.common.DataHandler
 import net.milosvasic.factory.common.busy.Busy
 import net.milosvasic.factory.common.busy.BusyDelegation
 import net.milosvasic.factory.common.busy.BusyException
@@ -28,6 +29,7 @@ import net.milosvasic.factory.execution.flow.callback.FlowCallback
 import net.milosvasic.factory.execution.flow.callback.TerminationCallback
 import net.milosvasic.factory.execution.flow.implementation.CommandFlow
 import net.milosvasic.factory.execution.flow.implementation.InstallationFlow
+import net.milosvasic.factory.execution.flow.implementation.ObtainableTerminalCommand
 import net.milosvasic.factory.execution.flow.implementation.initialization.InitializationFlow
 import net.milosvasic.factory.operation.OperationResult
 import net.milosvasic.factory.operation.OperationResultListener
@@ -470,12 +472,21 @@ abstract class ServerFactory(private val builder: ServerFactoryBuilder) : Applic
                 .addContext(Commands.DIRECTORY_UTILS)
                 .build()
 
+        val tmpHandler = object : DataHandler<OperationResult> {
+
+            override fun onData(data: OperationResult?) {
+
+                log.e("> > > > > ${data?.data}")
+            }
+        }
+
         val getIpCommand = getIpAddressObtainCommand(os)
+        val getIpObtainableCommand = ObtainableTerminalCommand(getIpCommand, tmpHandler)
 
         val coreUtilsDeployment = getCoreUtilsDeploymentFlow(what, where, ssh)
                 .perform(hostInfoCommand, getHostInfoDataHandler(os))
                 .perform(hostNameCommand, HostNameDataHandler(os))
-                .perform(getIpCommand)
+                .perform(getIpObtainableCommand)
 
         if (hostname != String.EMPTY) {
 

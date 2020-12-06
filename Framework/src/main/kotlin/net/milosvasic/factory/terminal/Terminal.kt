@@ -7,6 +7,7 @@ import net.milosvasic.factory.common.busy.BusyException
 import net.milosvasic.factory.common.busy.BusyWorker
 import net.milosvasic.factory.common.execution.Executor
 import net.milosvasic.factory.execution.TaskExecutor
+import net.milosvasic.factory.execution.flow.implementation.ObtainableTerminalCommand
 import net.milosvasic.factory.log
 import net.milosvasic.factory.operation.OperationResult
 import net.milosvasic.factory.operation.OperationResultListener
@@ -39,7 +40,12 @@ class Terminal : Executor<TerminalCommand> {
                     log.d(">>> ${what.command}")
                 }
 
-                val process = runtime.exec(what.command)
+                val process = if (what is ObtainableTerminalCommand) {
+
+                    runtime.exec(what.obtainable.obtain().command)
+                } else {
+                    runtime.exec(what.command)
+                }
                 val stdIn = BufferedReader(InputStreamReader(process.inputStream))
                 val stdErr = BufferedReader(InputStreamReader(process.errorStream))
 
@@ -94,10 +100,10 @@ class Terminal : Executor<TerminalCommand> {
         val result = if (data.operation is WrappedTerminalCommand) {
 
             OperationResult(
-                    data.operation.wrappedCommand,
-                    data.success,
-                    data.data,
-                    data.exception
+                data.operation.wrappedCommand,
+                data.success,
+                data.data,
+                data.exception
             )
         } else {
             data
@@ -110,9 +116,9 @@ class Terminal : Executor<TerminalCommand> {
     }
 
     private fun readToLog(
-            reader: BufferedReader,
-            obtainOutput: Boolean = false,
-            logCommandResult: Boolean = false
+        reader: BufferedReader,
+        obtainOutput: Boolean = false,
+        logCommandResult: Boolean = false
 
     ): String {
         val builder = StringBuilder()

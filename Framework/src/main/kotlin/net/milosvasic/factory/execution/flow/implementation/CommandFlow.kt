@@ -38,7 +38,15 @@ class CommandFlow : FlowPerformBuilder<Executor<TerminalCommand>, TerminalComman
     }
 
     @Throws(BusyException::class)
+    fun perform(what: Obtain<TerminalCommand>, dataHandler: DataHandler<OperationResult>): CommandFlow {
+
+        val cmd = ObtainableTerminalCommand(what, dataHandler)
+        return perform(cmd)
+    }
+
+    @Throws(BusyException::class)
     fun perform(what: TerminalCommand, dataHandler: DataHandler<OperationResult>): CommandFlow {
+
         what.configuration[CommandConfiguration.OBTAIN_RESULT] = true
         super.perform(what)
         dataHandlers[what] = dataHandler
@@ -70,7 +78,12 @@ class CommandFlow : FlowPerformBuilder<Executor<TerminalCommand>, TerminalComman
                 override fun onOperationPerformed(result: OperationResult) {
 
                     subject.unsubscribe(this)
-                    val dataHandler = dataHandlers[operation]
+                    val dataHandler = if (operation is ObtainableTerminalCommand) {
+
+                        operation.dataHandler
+                    } else {
+                        dataHandlers[operation]
+                    }
                     dataHandler?.onData(result)
                     callback?.onFinish(result.success)
                     callback = null
