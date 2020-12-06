@@ -380,6 +380,16 @@ abstract class ServerFactory(private val builder: ServerFactoryBuilder) : Applic
                 .onFinish(TerminationCallback(this))
     }
 
+    protected open fun getCoreUtilsDeploymentFlow(
+
+        what: String,
+        where: String,
+        ssh: Connection
+
+    ) = Deploy(what, where)
+        .setConnection(ssh)
+        .getFlow()
+
     private fun getDockerInitFlow(docker: Docker, dockerFlow: InstallationFlow): InitializationFlow {
 
         val initCallback = DockerInitializationFlowCallback()
@@ -572,14 +582,4 @@ abstract class ServerFactory(private val builder: ServerFactoryBuilder) : Applic
             }
         }
     }
-
-    protected open fun getCoreUtilsDeploymentFlow(
-
-        what: String,
-        where: String,
-        ssh: Connection
-
-    ) = Deploy(what, where)
-        .setConnection(ssh)
-        .getFlow()
 }
