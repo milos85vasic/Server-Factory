@@ -84,9 +84,17 @@ class CommandFlow : FlowPerformBuilder<Executor<TerminalCommand>, TerminalComman
                     } else {
                         dataHandlers[operation]
                     }
-                    dataHandler?.onData(result)
-                    callback?.onFinish(result.success)
-                    callback = null
+                    callback = try {
+
+                        dataHandler?.onData(result)
+                        callback?.onFinish(result.success)
+                        null
+                    } catch (e: IllegalArgumentException) {
+
+                        log.e(e)
+                        callback?.onFinish(false)
+                        null
+                    }
                 }
             }
 

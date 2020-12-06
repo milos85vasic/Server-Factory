@@ -9,7 +9,7 @@ import net.milosvasic.factory.configuration.variable.PathBuilder
 import net.milosvasic.factory.configuration.variable.Variable
 
 data class Remote(
-        private val host: String?,
+        private var host: String?,
         val port: Int,
         @SerializedName("user") val account: String
 ) {
@@ -30,5 +30,15 @@ data class Remote(
             return hostname
         }
         return LOCALHOST
+    }
+
+    @Throws(IllegalArgumentException::class)
+    fun setHost(host: String) {
+
+        if (host.isEmpty() || host.isBlank()) {
+
+            throw IllegalArgumentException("Empty host parameter")
+        }
+        this.host = host
     }
 }

@@ -34,6 +34,7 @@ import net.milosvasic.factory.execution.flow.implementation.initialization.Initi
 import net.milosvasic.factory.operation.OperationResult
 import net.milosvasic.factory.operation.OperationResultListener
 import net.milosvasic.factory.platform.HostInfoDataHandler
+import net.milosvasic.factory.platform.HostIpAddressDataHandler
 import net.milosvasic.factory.platform.HostNameDataHandler
 import net.milosvasic.factory.platform.OperatingSystem
 import net.milosvasic.factory.remote.Connection
@@ -472,16 +473,9 @@ abstract class ServerFactory(private val builder: ServerFactoryBuilder) : Applic
                 .addContext(Commands.DIRECTORY_UTILS)
                 .build()
 
-        val tmpHandler = object : DataHandler<OperationResult> {
-
-            override fun onData(data: OperationResult?) {
-
-                log.e("> > > > > ${data?.data}")
-            }
-        }
-
         val getIpCommand = getIpAddressObtainCommand(os)
-        val getIpObtainableCommand = ObtainableTerminalCommand(getIpCommand, tmpHandler)
+        val ipAddressHandler = HostIpAddressDataHandler(ssh.getRemote())
+        val getIpObtainableCommand = ObtainableTerminalCommand(getIpCommand, ipAddressHandler)
 
         val coreUtilsDeployment = getCoreUtilsDeploymentFlow(what, where, ssh)
                 .perform(hostInfoCommand, getHostInfoDataHandler(os))
