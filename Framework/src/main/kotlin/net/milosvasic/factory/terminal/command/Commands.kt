@@ -26,7 +26,6 @@ object Commands {
     private const val BASH = "sh"
     private const val FIND = "find "
     private const val LINK = "ln -s"
-    private const val NETSTAT = "ss"
     private const val SLEEP = "sleep"
     private const val MKDIR = "mkdir -p"
     private const val CHMOD = "chmod -R"
@@ -38,6 +37,8 @@ object Commands {
 
     const val DIRECTORY_CORE = "Core"
     const val DIRECTORY_UTILS = "Utils"
+
+    private const val SCRIPT_GET_IP = "getip.sh"
     private const val SCRIPT_SET_HOSTNAME = "set_hostname.sh"
 
     fun echo(what: String) = "echo '$what'"
@@ -56,19 +57,27 @@ object Commands {
 
     fun getHostInfo(): String = "hostnamectl"
 
+    fun getIpAddress(host: String): String {
+
+        val path = PathBuilder()
+            .addContext(Context.Server)
+            .setKey(Key.ServerHome)
+            .build()
+
+        val serverHome = Variable.get(path)
+
+        val filePath = FilePathBuilder()
+            .addContext(serverHome)
+            .addContext(DIRECTORY_UTILS)
+            .addContext(SCRIPT_GET_IP)
+            .build()
+
+        return "$BASH $filePath $host"
+    }
+
     fun getApplicationInfo(application: String): String = "which $application"
 
     fun reboot(rebootIn: Int = 2) = "( $SLEEP $rebootIn ; reboot ) & "
-
-    fun grep(what: String, ignoreCase: Boolean = false): String {
-
-        val ignoreCaseArgument = if (ignoreCase) {
-            "-i"
-        } else {
-            ""
-        }
-        return "grep $ignoreCaseArgument \"$what\""
-    }
 
     @Throws(IllegalStateException::class)
     fun scp(what: String, where: String, remote: Remote): String {
@@ -102,9 +111,10 @@ object Commands {
     fun mkdir(path: String) = "$MKDIR $path"
 
     fun concatenate(vararg commands: String): String {
+
         var result = String.EMPTY
         commands.forEach {
-            if (result.isNotEmpty() && !result.isBlank()) {
+            if (result.isNotEmpty() && result.isNotBlank()) {
                 result += "; "
             }
             result += it

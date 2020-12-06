@@ -9,6 +9,7 @@ import net.milosvasic.factory.common.busy.BusyWorker
 import net.milosvasic.factory.common.filesystem.FilePathBuilder
 import net.milosvasic.factory.common.initialization.Initializer
 import net.milosvasic.factory.common.initialization.Termination
+import net.milosvasic.factory.common.obtain.Obtain
 import net.milosvasic.factory.component.database.manager.DatabaseManager
 import net.milosvasic.factory.component.docker.Docker
 import net.milosvasic.factory.component.docker.DockerInitializationFlowCallback
@@ -463,9 +464,15 @@ abstract class ServerFactory(private val builder: ServerFactoryBuilder) : Applic
                 .addContext(Commands.DIRECTORY_UTILS)
                 .build()
 
+        val getIpCommand = object : Obtain<TerminalCommand> {
+
+            override fun obtain() = IpAddressObtainCommand(os.getHostname())
+        }
+
         val coreUtilsDeployment = getCoreUtilsDeploymentFlow(what, where, ssh)
                 .perform(hostInfoCommand, getHostInfoDataHandler(os))
                 .perform(hostNameCommand, HostNameDataHandler(os))
+                .perform(getIpCommand)
 
         if (hostname != String.EMPTY) {
 
