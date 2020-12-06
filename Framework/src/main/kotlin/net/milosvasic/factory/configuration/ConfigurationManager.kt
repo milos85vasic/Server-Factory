@@ -265,7 +265,7 @@ object ConfigurationManager : Initialization {
 
     private fun checkAndGetVariable(path: Path): String {
 
-        var value = ""
+        var value = String.EMPTY
         try {
 
             value = Variable.get(path)

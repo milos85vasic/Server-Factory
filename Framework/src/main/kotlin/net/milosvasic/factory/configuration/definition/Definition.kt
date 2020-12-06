@@ -1,5 +1,6 @@
 package net.milosvasic.factory.configuration.definition
 
+import net.milosvasic.factory.EMPTY
 import net.milosvasic.factory.common.filesystem.FilePathBuilder
 import net.milosvasic.factory.configuration.variable.Context
 import net.milosvasic.factory.configuration.variable.Key
@@ -10,7 +11,7 @@ import java.io.File
 data class Definition(
 
         val name: String,
-        val group: String = "",
+        val group: String = String.EMPTY,
         val type: String = DefinitionType.Unknown.type,
         val version: String = DefinitionType.Unknown.type,
 ) {

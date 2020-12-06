@@ -1,5 +1,6 @@
 package net.milosvasic.factory.test.implementation
 
+import net.milosvasic.factory.EMPTY
 import net.milosvasic.factory.component.installer.step.deploy.Deploy
 import net.milosvasic.factory.remote.Remote
 import net.milosvasic.factory.security.Permission
@@ -28,7 +29,7 @@ class StubDeploy(
         if (protoStubs.isEmpty()) {
             throw IllegalArgumentException("No proto stubs available")
         }
-        var command = ""
+        var command = String.EMPTY
         protoStubs.forEachIndexed { index, it ->
             if (index > 0) {
                 command += " && "
