@@ -391,6 +391,12 @@ abstract class ServerFactory(private val builder: ServerFactoryBuilder) : Applic
         .setConnection(ssh)
         .getFlow()
 
+    protected open fun getIpAddressObtainCommand(os: OperatingSystem) =
+        object : Obtain<TerminalCommand> {
+
+            override fun obtain() = IpAddressObtainCommand(os.getHostname())
+        }
+
     private fun getDockerInitFlow(docker: Docker, dockerFlow: InstallationFlow): InitializationFlow {
 
         val initCallback = DockerInitializationFlowCallback()
@@ -464,10 +470,7 @@ abstract class ServerFactory(private val builder: ServerFactoryBuilder) : Applic
                 .addContext(Commands.DIRECTORY_UTILS)
                 .build()
 
-        val getIpCommand = object : Obtain<TerminalCommand> {
-
-            override fun obtain() = IpAddressObtainCommand(os.getHostname())
-        }
+        val getIpCommand = getIpAddressObtainCommand(os)
 
         val coreUtilsDeployment = getCoreUtilsDeploymentFlow(what, where, ssh)
                 .perform(hostInfoCommand, getHostInfoDataHandler(os))
