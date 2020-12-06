@@ -453,9 +453,7 @@ abstract class ServerFactory(private val builder: ServerFactoryBuilder) : Applic
                 .addContext(Commands.DIRECTORY_UTILS)
                 .build()
 
-        val coreUtilsDeployment = Deploy(what, where)
-                .setConnection(ssh)
-                .getFlow()
+        val coreUtilsDeployment = getCoreUtilsDeploymentFlow(what, where, ssh)
                 .perform(hostInfoCommand, getHostInfoDataHandler(os))
                 .perform(hostNameCommand, HostNameDataHandler(os))
 
@@ -574,4 +572,14 @@ abstract class ServerFactory(private val builder: ServerFactoryBuilder) : Applic
             }
         }
     }
+
+    protected open fun getCoreUtilsDeploymentFlow(
+
+        what: String,
+        where: String,
+        ssh: Connection
+
+    ) = Deploy(what, where)
+        .setConnection(ssh)
+        .getFlow()
 }

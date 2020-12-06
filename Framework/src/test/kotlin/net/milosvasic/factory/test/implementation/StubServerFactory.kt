@@ -4,7 +4,9 @@ import net.milosvasic.factory.application.server_factory.ServerFactory
 import net.milosvasic.factory.application.server_factory.ServerFactoryBuilder
 import net.milosvasic.factory.component.docker.Docker
 import net.milosvasic.factory.component.installer.Installer
+import net.milosvasic.factory.component.installer.step.deploy.Deploy
 import net.milosvasic.factory.configuration.ConfigurationFactory
+import net.milosvasic.factory.execution.flow.implementation.CommandFlow
 import net.milosvasic.factory.operation.OperationResult
 import net.milosvasic.factory.platform.HostInfoDataHandler
 import net.milosvasic.factory.platform.OperatingSystem
@@ -47,8 +49,18 @@ class StubServerFactory(builder: ServerFactoryBuilder) : ServerFactory(builder) 
     override fun getHostNameSetCommand(hostname: String) = EchoCommand(hostname)
 
     override fun getHostInfoDataHandler(os: OperatingSystem) =
-            object : HostInfoDataHandler(getConnection().getRemoteOS()) {
+        object : HostInfoDataHandler(getConnection().getRemoteOS()) {
 
-        override fun onData(data: OperationResult?) = os.setPlatform(Platform.CENTOS)
-    }
+            override fun onData(data: OperationResult?) = os.setPlatform(Platform.CENTOS)
+        }
+
+    override fun getCoreUtilsDeploymentFlow(
+
+        what: String,
+        where: String,
+        ssh: Connection
+
+    ) = CommandFlow()
+        .width(ssh)
+        .perform(EchoCommand("Core utils stub deployment: $what -> $where"))
 }
