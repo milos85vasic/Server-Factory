@@ -6,7 +6,6 @@ import net.milosvasic.factory.application.server_factory.ServerFactoryBuilder
 import net.milosvasic.factory.common.obtain.Obtain
 import net.milosvasic.factory.component.docker.Docker
 import net.milosvasic.factory.component.installer.Installer
-import net.milosvasic.factory.component.installer.step.deploy.Deploy
 import net.milosvasic.factory.configuration.ConfigurationFactory
 import net.milosvasic.factory.execution.flow.implementation.CommandFlow
 import net.milosvasic.factory.operation.OperationResult
@@ -16,7 +15,6 @@ import net.milosvasic.factory.platform.Platform
 import net.milosvasic.factory.remote.Connection
 import net.milosvasic.factory.terminal.TerminalCommand
 import net.milosvasic.factory.terminal.command.EchoCommand
-import net.milosvasic.factory.terminal.command.IpAddressObtainCommand
 import net.milosvasic.factory.terminal.command.UnameCommand
 
 class StubServerFactory(builder: ServerFactoryBuilder) : ServerFactory(builder) {

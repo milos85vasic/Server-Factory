@@ -1,7 +1,6 @@
 package net.milosvasic.factory.test.implementation
 
 import net.milosvasic.factory.LOCALHOST
-import net.milosvasic.factory.common.busy.BusyException
 import net.milosvasic.factory.operation.command.CommandConfiguration
 import net.milosvasic.factory.remote.Remote
 import net.milosvasic.factory.remote.ssh.SSH
