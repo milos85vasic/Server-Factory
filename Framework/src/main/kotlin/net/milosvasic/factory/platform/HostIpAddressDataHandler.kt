@@ -12,7 +12,7 @@ class HostIpAddressDataHandler (private val remote: Remote) : DataHandler<Operat
         data?.let {
             if (it.data.isNotEmpty() && it.data.isNotBlank()) {
 
-                remote.setHost(it.data)
+                remote.setHostIp(it.data)
             }
         }
     }
