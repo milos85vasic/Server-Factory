@@ -49,7 +49,8 @@ abstract class InstallerAbstract(entryPoint: Connection) :
 
             config?.let { softwareConfiguration ->
                 try {
-                    steps = softwareConfiguration.obtain(getEnvironmentName())
+                    val env = getEnvironmentName()
+                    steps = softwareConfiguration.obtain(env)
                     busy()
                     val flow = InstallationStepFlow(getToolkit())
                     steps.keys.forEach { key ->

@@ -499,6 +499,7 @@ abstract class ServerFactory(private val builder: ServerFactoryBuilder) : Applic
 
     @Throws(IllegalArgumentException::class, IllegalStateException::class)
     private fun getHostname(): String {
+
         val path = PathBuilder()
                 .addContext(Context.Server)
                 .setKey(Key.Hostname)

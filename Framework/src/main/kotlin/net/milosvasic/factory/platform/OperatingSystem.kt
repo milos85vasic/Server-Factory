@@ -3,10 +3,10 @@ package net.milosvasic.factory.platform
 import net.milosvasic.factory.EMPTY
 
 data class OperatingSystem(
-        private var name: String = "System unknown",
-        private var platform: Platform = Platform.UNKNOWN,
-        private var architecture: Architecture = Architecture.UNKNOWN,
-        private var hostname: String = String.EMPTY
+    private var name: String = "System unknown",
+    private var platform: Platform = Platform.UNKNOWN,
+    private var architecture: Architecture = Architecture.UNKNOWN,
+    private var hostname: String = String.EMPTY
 ) {
 
     companion object {
@@ -23,10 +23,10 @@ data class OperatingSystem(
             }
             return OperatingSystem(
 
-                    name = "Host",
-                    platform = platform,
-                    architecture = Architecture.UNKNOWN,
-                    hostname = "Unknown"
+                name = "Host",
+                platform = platform,
+                architecture = Architecture.UNKNOWN,
+                hostname = "Unknown"
             )
         }
 
@@ -78,18 +78,41 @@ data class OperatingSystem(
                 if (name.toLowerCase().contains(Platform.FEDORA.platformName.toLowerCase())) {
 
                     platform = if (name.toLowerCase().contains("server")) {
-
-                        if (name.toLowerCase().contains("30")) {
-                            Platform.FEDORA_SERVER_30
-                        } else {
-                            Platform.FEDORA_SERVER
+                        when {
+                            name.toLowerCase().contains("30") -> {
+                                Platform.FEDORA_SERVER_30
+                            }
+                            name.toLowerCase().contains("31") -> {
+                                Platform.FEDORA_SERVER_31
+                            }
+                            name.toLowerCase().contains("32") -> {
+                                Platform.FEDORA_SERVER_32
+                            }
+                            name.toLowerCase().contains("33") -> {
+                                Platform.FEDORA_SERVER_33
+                            }
+                            else -> {
+                                Platform.FEDORA_SERVER
+                            }
                         }
                     } else {
 
-                        if (name.toLowerCase().contains("30")) {
-                            Platform.FEDORA_30
-                        } else {
-                            Platform.FEDORA
+                        when {
+                            name.toLowerCase().contains("30") -> {
+                                Platform.FEDORA_30
+                            }
+                            name.toLowerCase().contains("31") -> {
+                                Platform.FEDORA_31
+                            }
+                            name.toLowerCase().contains("32") -> {
+                                Platform.FEDORA_32
+                            }
+                            name.toLowerCase().contains("33") -> {
+                                Platform.FEDORA_33
+                            }
+                            else -> {
+                                Platform.FEDORA
+                            }
                         }
                     }
                 }
@@ -105,10 +128,10 @@ data class OperatingSystem(
             }
             if (it.contains(archLineString)) {
                 val arch = it.replace(archLineString, "")
-                        .replace("-", "")
-                        .replace("_", "")
-                        .trim()
-                        .toLowerCase()
+                    .replace("-", "")
+                    .replace("_", "")
+                    .trim()
+                    .toLowerCase()
 
                 when {
                     arch.startsWith("x8664") -> {
