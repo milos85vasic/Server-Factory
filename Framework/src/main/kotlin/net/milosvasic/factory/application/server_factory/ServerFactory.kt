@@ -279,9 +279,7 @@ abstract class ServerFactory(private val builder: ServerFactoryBuilder) : Applic
     protected abstract fun getConfigurationFactory(): ConfigurationFactory<*>
 
     @Throws(IllegalArgumentException::class)
-    protected fun getConnection(): Connection {
-        return connectionProvider.obtain()
-    }
+    protected fun getConnection() = connectionProvider.obtain()
 
     protected open fun getLogTag() = tag
 
