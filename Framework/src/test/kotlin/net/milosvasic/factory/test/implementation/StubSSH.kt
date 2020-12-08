@@ -7,7 +7,7 @@ import net.milosvasic.factory.remote.ssh.SSH
 import net.milosvasic.factory.terminal.TerminalCommand
 
 class StubSSH : SSH(
-        Remote(host = LOCALHOST, port = 0, account = System.getProperty("user.name"))
+        Remote(host = LOCALHOST, port = 0, account = System.getProperty("user.name"), hostIp = LOCALHOST)
 ) {
 
     @Synchronized

@@ -26,7 +26,9 @@ class Terminal : Executor<TerminalCommand> {
     @Synchronized
     @Throws(BusyException::class, IllegalArgumentException::class)
     override fun execute(what: TerminalCommand) {
+
         if (what.command == String.EMPTY) {
+
             throw IllegalArgumentException("Empty terminal command")
         }
         BusyWorker.busy(busy)
