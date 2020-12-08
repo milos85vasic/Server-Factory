@@ -107,6 +107,7 @@ data class SoftwareConfiguration(
             }
         }
         if (installationSteps.isEmpty()) {
+
             throw IllegalArgumentException("No installation steps for '$platformName' platform")
         }
         return installationSteps

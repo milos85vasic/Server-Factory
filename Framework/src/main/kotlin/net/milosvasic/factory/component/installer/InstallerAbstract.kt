@@ -92,6 +92,7 @@ abstract class InstallerAbstract(entryPoint: Connection) :
     @Synchronized
     @Throws(IllegalStateException::class)
     final override fun initialize() {
+
         checkInitialized()
         busy()
         initialization()
@@ -109,6 +110,7 @@ abstract class InstallerAbstract(entryPoint: Connection) :
     @Synchronized
     @Throws(IllegalStateException::class)
     override fun checkInitialized() {
+
         if (isInitialized()) {
             throw IllegalStateException("Installer has been already initialized")
         }

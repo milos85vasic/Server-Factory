@@ -14,7 +14,7 @@ import net.milosvasic.factory.component.database.manager.DatabaseManager
 import net.milosvasic.factory.component.docker.Docker
 import net.milosvasic.factory.component.docker.DockerInitializationFlowCallback
 import net.milosvasic.factory.component.installer.Installer
-import net.milosvasic.factory.component.installer.InstallerInitializationFlowCallback
+import net.milosvasic.factory.component.installer.step.InstallationStepType
 import net.milosvasic.factory.component.installer.step.deploy.Deploy
 import net.milosvasic.factory.configuration.*
 import net.milosvasic.factory.configuration.variable.Context
@@ -32,10 +32,7 @@ import net.milosvasic.factory.execution.flow.implementation.ObtainableTerminalCo
 import net.milosvasic.factory.execution.flow.implementation.initialization.InitializationFlow
 import net.milosvasic.factory.operation.OperationResult
 import net.milosvasic.factory.operation.OperationResultListener
-import net.milosvasic.factory.platform.HostInfoDataHandler
-import net.milosvasic.factory.platform.HostIpAddressDataHandler
-import net.milosvasic.factory.platform.HostNameDataHandler
-import net.milosvasic.factory.platform.OperatingSystem
+import net.milosvasic.factory.platform.*
 import net.milosvasic.factory.remote.Connection
 import net.milosvasic.factory.remote.ConnectionProvider
 import net.milosvasic.factory.remote.ssh.SSH
@@ -53,6 +50,7 @@ abstract class ServerFactory(private val builder: ServerFactoryBuilder) : Applic
 
     private val busy = Busy()
     private var runStartedAt = 0L
+    private lateinit var installer: Installer
     private val executor = TaskExecutor.instantiate(5)
     private val terminators = ConcurrentLinkedQueue<Termination>()
     private val connectionPool = mutableMapOf<String, Connection>()
@@ -81,6 +79,7 @@ abstract class ServerFactory(private val builder: ServerFactoryBuilder) : Applic
 
     @Throws(IllegalStateException::class, IllegalArgumentException::class)
     override fun initialize() {
+
         checkInitialized()
         busy()
         try {
@@ -104,6 +103,8 @@ abstract class ServerFactory(private val builder: ServerFactoryBuilder) : Applic
                 }
 
                 val ssh = getConnection()
+                installer = instantiateInstaller(ssh)
+                terminators.add(installer)
 
                 val callback = object : FlowCallback {
                     override fun onFinish(success: Boolean) {
@@ -134,8 +135,8 @@ abstract class ServerFactory(private val builder: ServerFactoryBuilder) : Applic
                 }
 
                 getCommandFlow(ssh, DieOnFailureCallback())
-                        .onFinish(callback)
-                        .run()
+                    .onFinish(callback)
+                    .run()
             } catch (e: IllegalArgumentException) {
 
                 notifyInit(e)
@@ -194,11 +195,9 @@ abstract class ServerFactory(private val builder: ServerFactoryBuilder) : Applic
 
             val ssh = getConnection()
             val docker = instantiateDocker(ssh)
-            val installer = instantiateInstaller(ssh)
             val databaseManager = getDatabaseManager(ssh)
 
             terminators.add(docker)
-            terminators.add(installer)
             terminators.add(databaseManager)
 
             val terminationFlow = getTerminationFlow(ssh)
@@ -206,7 +205,7 @@ abstract class ServerFactory(private val builder: ServerFactoryBuilder) : Applic
             val dockerFlow = getDockerFlow(docker, loadDbsFlow)
             val dockerInitFlow = getDockerInitFlow(docker, dockerFlow)
             val installationFlow = getInstallationFlow(installer, dockerInitFlow) ?: dockerInitFlow
-            val initializers = listOf<Initializer>(installer, databaseManager)
+            val initializers = listOf<Initializer>(databaseManager)
             val initFlow = getInitializationFlow(initializers, installationFlow)
 
             initFlow.run()
@@ -342,8 +341,8 @@ abstract class ServerFactory(private val builder: ServerFactoryBuilder) : Applic
             installFlow.width(it)
         }
         return installFlow
-                .connect(dockerInitFlow)
-                .onFinish(dieCallback)
+            .connect(dockerInitFlow)
+            .onFinish(dieCallback)
     }
 
     private fun getDockerFlow(docker: Docker, terminationFlow: FlowBuilder<*, *, *>): InstallationFlow {
@@ -355,13 +354,13 @@ abstract class ServerFactory(private val builder: ServerFactoryBuilder) : Applic
 
                 val configuration = SoftwareConfiguration(
 
-                        softwareConfiguration.definition,
-                        softwareConfiguration.uses,
-                        softwareConfiguration.overrides,
-                        softwareConfiguration.configuration,
-                        softwareConfiguration.variables,
-                        mutableListOf(software),
-                        softwareConfiguration.includes
+                    softwareConfiguration.definition,
+                    softwareConfiguration.uses,
+                    softwareConfiguration.overrides,
+                    softwareConfiguration.configuration,
+                    softwareConfiguration.variables,
+                    mutableListOf(software),
+                    softwareConfiguration.includes
                 )
                 val platformName = getConnection().getRemoteOS().getPlatform().platformName
                 configuration.setPlatform(platformName)
@@ -376,9 +375,9 @@ abstract class ServerFactory(private val builder: ServerFactoryBuilder) : Applic
     protected open fun getTerminationFlow(connection: Connection): FlowBuilder<*, *, *> {
 
         return CommandFlow()
-                .width(connection.getTerminal())
-                .perform(EchoCommand("Finishing"))
-                .onFinish(TerminationCallback(this))
+            .width(connection.getTerminal())
+            .perform(EchoCommand("Finishing"))
+            .onFinish(TerminationCallback(this))
     }
 
     protected open fun getCoreUtilsDeploymentFlow(
@@ -401,15 +400,15 @@ abstract class ServerFactory(private val builder: ServerFactoryBuilder) : Applic
 
         val initCallback = DockerInitializationFlowCallback()
         return InitializationFlow()
-                .width(docker)
-                .connect(dockerFlow)
-                .onFinish(initCallback)
+            .width(docker)
+            .connect(dockerFlow)
+            .onFinish(initCallback)
     }
 
     @Throws(IllegalArgumentException::class)
     private fun getInitializationFlow(
-            initializers: List<Initializer>,
-            nextFlow: FlowBuilder<*, *, *>
+        initializers: List<Initializer>,
+        nextFlow: FlowBuilder<*, *, *>
 
     ): InitializationFlow {
 
@@ -418,13 +417,12 @@ abstract class ServerFactory(private val builder: ServerFactoryBuilder) : Applic
             throw IllegalArgumentException("Initializers are not provided")
         }
 
-        val initCallback = InstallerInitializationFlowCallback()
         val flow = InitializationFlow()
         initializers.forEach {
             flow.width(it)
         }
-        flow.connect(nextFlow).onFinish(initCallback)
-        return flow
+        val dieCallback = DieOnFailureCallback()
+        return flow.connect(nextFlow).onFinish(dieCallback)
     }
 
     @Throws(IllegalArgumentException::class, IllegalStateException::class)
@@ -432,8 +430,8 @@ abstract class ServerFactory(private val builder: ServerFactoryBuilder) : Applic
 
         val os = ssh.getRemoteOS()
         val hostname = getHostname()
-        val host = ssh.getRemote().getHost()
         val terminal = ssh.getTerminal()
+        val host = ssh.getRemote().getHost()
         val pingCommand = PingCommand(host)
         val hostNameCommand = HostNameCommand()
         val hostInfoCommand = getHostInfoCommand()
@@ -446,50 +444,82 @@ abstract class ServerFactory(private val builder: ServerFactoryBuilder) : Applic
          * }
          */
         val systemHomePath = PathBuilder()
-                .addContext(Context.System)
-                .setKey(Key.Home)
-                .build()
+            .addContext(Context.System)
+            .setKey(Key.Home)
+            .build()
 
         val systemHome = Variable.get(systemHomePath)
 
         val what = FilePathBuilder()
-                .addContext(systemHome)
-                .addContext(Commands.DIRECTORY_CORE)
-                .addContext(Commands.DIRECTORY_UTILS)
-                .build()
+            .addContext(systemHome)
+            .addContext(Commands.DIRECTORY_CORE)
+            .addContext(Commands.DIRECTORY_UTILS)
+            .build()
 
         val whereRootPath = PathBuilder()
-                .addContext(Context.Server)
-                .setKey(Key.ServerHome)
-                .build()
+            .addContext(Context.Server)
+            .setKey(Key.ServerHome)
+            .build()
 
         val whereRoot = Variable.get(whereRootPath)
 
         val where = FilePathBuilder()
-                .addContext(whereRoot)
-                .addContext(Commands.DIRECTORY_UTILS)
-                .build()
+            .addContext(whereRoot)
+            .addContext(Commands.DIRECTORY_UTILS)
+            .build()
 
         val getIpCommand = getIpAddressObtainCommand(os)
         val ipAddressHandler = HostIpAddressDataHandler(ssh.getRemote())
         val getIpObtainableCommand = ObtainableTerminalCommand(getIpCommand, ipAddressHandler)
 
         val coreUtilsDeployment = getCoreUtilsDeploymentFlow(what, where, ssh)
-                .perform(hostInfoCommand, getHostInfoDataHandler(os))
-                .perform(hostNameCommand, HostNameDataHandler(os))
-                .perform(getIpObtainableCommand)
+            .perform(getIpObtainableCommand)
 
         if (hostname != String.EMPTY) {
 
             coreUtilsDeployment.perform(getHostNameSetCommand(hostname), HostNameDataHandler(os, hostname))
         }
 
+        val installerInitFlow = InitializationFlow().width(installer)
+        val installationItems = mutableListOf<SoftwareConfiguration>()
+        val coreUtilsDeploymentDependencies = SoftwareConfiguration()
+        val coreUtilsDeploymentSoftware = mutableListOf<SoftwareConfigurationItem>()
+        val deploymentDependenciesInstallationSteps = mutableMapOf(
+
+            Platform.CENTOS.platformName to listOf(
+
+                InstallationStepDefinition(InstallationStepType.PACKAGES.type, value = "bzip2")
+            )
+        )
+        val deploymentDependencies = SoftwareConfigurationItem(
+
+            name = "Deployment dependencies",
+            version = BuildInfo.version,
+            installationSteps = deploymentDependenciesInstallationSteps
+        )
+        coreUtilsDeploymentSoftware.add(deploymentDependencies)
+        coreUtilsDeploymentDependencies.enabled = true
+        coreUtilsDeploymentDependencies.configuration = "Deployment dependencies"
+        coreUtilsDeploymentDependencies.software = coreUtilsDeploymentSoftware
+        coreUtilsDeploymentDependencies.setPlatform(Platform.CENTOS.platformName)
+        installationItems.add(coreUtilsDeploymentDependencies)
+        val installationFlow = InstallationFlow(installer)
+        installationItems.forEach {
+
+            installationFlow.width(it)
+        }
+        installationFlow.onFinish(dieCallback)
+
         val flow = CommandFlow()
-                .width(terminal)
-                .perform(pingCommand)
-                .width(ssh)
-                .perform(testCommand)
-                .connect(coreUtilsDeployment)
+            .width(terminal)
+            .perform(pingCommand)
+            .width(ssh)
+            .perform(testCommand)
+            .perform(hostInfoCommand, getHostInfoDataHandler(os))
+            .perform(hostNameCommand, HostNameDataHandler(os))
+            .connect(installerInitFlow)
+            .connect(installationFlow)
+            .connect(coreUtilsDeployment)
 
         return flow.onFinish(dieCallback)
     }
@@ -498,9 +528,9 @@ abstract class ServerFactory(private val builder: ServerFactoryBuilder) : Applic
     private fun getHostname(): String {
 
         val path = PathBuilder()
-                .addContext(Context.Server)
-                .setKey(Key.Hostname)
-                .build()
+            .addContext(Context.Server)
+            .setKey(Key.Hostname)
+            .build()
 
         val hostname = Variable.get(path)
         if (hostname == String.EMPTY) {

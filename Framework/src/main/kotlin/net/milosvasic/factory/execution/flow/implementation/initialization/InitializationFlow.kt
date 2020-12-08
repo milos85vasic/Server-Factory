@@ -19,12 +19,14 @@ class InitializationFlow : FlowSimpleBuilder<Initializer, String>() {
 
     @Throws(BusyException::class)
     override fun width(subject: Initializer): InitializationFlow {
+
         super.width(subject)
         return this
     }
 
     @Throws(BusyException::class)
     fun width(subject: Initializer, handler: InitializationHandler): InitializationFlow {
+
         super.width(subject)
         initializationHandlers[subject] = handler
         return this
@@ -32,6 +34,7 @@ class InitializationFlow : FlowSimpleBuilder<Initializer, String>() {
 
     @Throws(BusyException::class)
     fun handler(handler: InitializationHandler): InitializationFlow {
+
         val subject = subjects.get().last()
         initializationHandlers[subject.content] = handler
         return this
@@ -39,12 +42,14 @@ class InitializationFlow : FlowSimpleBuilder<Initializer, String>() {
 
     @Throws(BusyException::class)
     override fun onFinish(callback: FlowCallback): InitializationFlow {
+
         super.onFinish(callback)
         return this
     }
 
     @Throws(BusyException::class)
     override fun connect(flow: FlowBuilder<*, *, *>): InitializationFlow {
+
         super.connect(flow)
         return this
     }
@@ -84,16 +89,17 @@ class InitializationFlow : FlowSimpleBuilder<Initializer, String>() {
             }
 
             override fun process(callback: FlowProcessingCallback) {
+
                 this.callback = callback
                 subject.subscribe(operationCallback)
                 try {
+
                     subject.initialize()
                 } catch (e: Exception) {
 
-                    subject.unsubscribe(operationCallback)
-                    log.e(e)
-                    callback.onFinish(false)
+                    finish(e)
                     this.callback = null
+                    subject.unsubscribe(operationCallback)
                 }
             }
         }
