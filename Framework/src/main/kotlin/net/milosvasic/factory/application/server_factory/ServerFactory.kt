@@ -477,11 +477,35 @@ abstract class ServerFactory(private val builder: ServerFactoryBuilder) : Applic
 
         if (hostname != String.EMPTY) {
 
-            coreUtilsDeployment.perform(getHostNameSetCommand(hostname), HostNameDataHandler(os, hostname))
+            coreUtilsDeployment.perform(
+                getHostNameSetCommand(hostname),
+                HostNameDataHandler(os, hostname)
+            )
         }
 
+        val installationFlow = InstallationFlow(installer)
         val installerInitFlow = InitializationFlow().width(installer)
-        val installationItems = mutableListOf<SoftwareConfiguration>()
+        val coreUtilsDeploymentDependencies = getCoreUtilsInstallationDependencies()
+
+        installationFlow.width(coreUtilsDeploymentDependencies)
+        installationFlow.onFinish(dieCallback)
+
+        val flow = CommandFlow()
+            .width(terminal)
+            .perform(pingCommand)
+            .width(ssh)
+            .perform(testCommand)
+            .perform(hostInfoCommand, getHostInfoDataHandler(os))
+            .perform(hostNameCommand, HostNameDataHandler(os))
+            .connect(installerInitFlow)
+            .connect(installationFlow)
+            .connect(coreUtilsDeployment)
+
+        return flow.onFinish(dieCallback)
+    }
+
+    private fun getCoreUtilsInstallationDependencies(): SoftwareConfiguration {
+
         val coreUtilsDeploymentDependencies = SoftwareConfiguration()
         val coreUtilsDeploymentSoftware = mutableListOf<SoftwareConfigurationItem>()
         val deploymentDependenciesInstallationSteps = mutableMapOf(
@@ -502,26 +526,7 @@ abstract class ServerFactory(private val builder: ServerFactoryBuilder) : Applic
         coreUtilsDeploymentDependencies.configuration = "Deployment dependencies"
         coreUtilsDeploymentDependencies.software = coreUtilsDeploymentSoftware
         coreUtilsDeploymentDependencies.setPlatform(Platform.CENTOS.platformName)
-        installationItems.add(coreUtilsDeploymentDependencies)
-        val installationFlow = InstallationFlow(installer)
-        installationItems.forEach {
-
-            installationFlow.width(it)
-        }
-        installationFlow.onFinish(dieCallback)
-
-        val flow = CommandFlow()
-            .width(terminal)
-            .perform(pingCommand)
-            .width(ssh)
-            .perform(testCommand)
-            .perform(hostInfoCommand, getHostInfoDataHandler(os))
-            .perform(hostNameCommand, HostNameDataHandler(os))
-            .connect(installerInitFlow)
-            .connect(installationFlow)
-            .connect(coreUtilsDeployment)
-
-        return flow.onFinish(dieCallback)
+        return coreUtilsDeploymentDependencies
     }
 
     @Throws(IllegalArgumentException::class, IllegalStateException::class)
