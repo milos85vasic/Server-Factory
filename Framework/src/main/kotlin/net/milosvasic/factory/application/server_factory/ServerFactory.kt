@@ -523,9 +523,9 @@ abstract class ServerFactory(private val builder: ServerFactoryBuilder) : Applic
 
         val builder = SoftwareConfigurationBuilder()
             .setEnabled(true)
-            .setConfiguration(Deploy.SOFTWARE_CONFIGURATION_NAME) // TODO: Validate
-            .setPlatform(Platform.CENTOS) // TODO: Validate, obtain dynamically
-            .setSoftware(softwareBuilder) // TODO: Validate
+            .setConfiguration(Deploy.SOFTWARE_CONFIGURATION_NAME)
+            .setPlatform(Platform.CENTOS)
+            .setSoftware(softwareBuilder)
 
         return builder.build()
     }
