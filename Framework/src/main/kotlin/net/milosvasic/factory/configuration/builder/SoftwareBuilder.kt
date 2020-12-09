@@ -14,10 +14,5 @@ class SoftwareBuilder : Build<MutableList<SoftwareConfigurationItem>> {
         return this
     }
 
-    @Throws(IllegalArgumentException::class)
-    override fun build(): MutableList<SoftwareConfigurationItem> {
-
-        // TODO: Validate
-        return items
-    }
+    override fun build() = items
 }

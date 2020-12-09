@@ -26,5 +26,11 @@ object Validator {
             val validation = ParametersAvailableValidation<Any>()
             validation.validate(*params)
         }
+
+        fun validateNotEmpty(param: String): Boolean {
+
+            val validation = StringArgumentValidation()
+            return validation.validate(param)
+        }
     }
 }

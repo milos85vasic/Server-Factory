@@ -5,6 +5,8 @@ import net.milosvasic.factory.common.Build
 import net.milosvasic.factory.configuration.SoftwareConfiguration
 import net.milosvasic.factory.configuration.SoftwareConfigurationItem
 import net.milosvasic.factory.platform.Platform
+import net.milosvasic.factory.validation.Validator
+import net.milosvasic.factory.validation.parameters.EmptyArgumentException
 
 class SoftwareConfigurationBuilder : Build<SoftwareConfiguration> {
 
@@ -22,9 +24,12 @@ class SoftwareConfigurationBuilder : Build<SoftwareConfiguration> {
     @Throws(IllegalArgumentException::class)
     fun setConfiguration(configuration: String): SoftwareConfigurationBuilder {
 
-        // TODO: Validate
-        this.configuration = configuration
-        return this
+        if (Validator.Arguments.validateNotEmpty(configuration)) {
+
+            this.configuration = configuration
+            return this
+        }
+        throw EmptyArgumentException()
     }
 
     fun setPlatform(platform: Platform): SoftwareConfigurationBuilder {
