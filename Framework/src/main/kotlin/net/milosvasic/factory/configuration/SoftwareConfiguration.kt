@@ -176,6 +176,8 @@ data class SoftwareConfiguration(
         return true
     }
 
+    fun getPlatform() = platform
+
     fun setPlatform(platform: String) {
 
         this.platform = platform
