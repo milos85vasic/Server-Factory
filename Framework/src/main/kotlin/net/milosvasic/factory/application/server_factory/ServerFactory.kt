@@ -17,6 +17,9 @@ import net.milosvasic.factory.component.installer.Installer
 import net.milosvasic.factory.component.installer.step.InstallationStepType
 import net.milosvasic.factory.component.installer.step.deploy.Deploy
 import net.milosvasic.factory.configuration.*
+import net.milosvasic.factory.configuration.builder.SoftwareBuilder
+import net.milosvasic.factory.configuration.builder.SoftwareConfigurationBuilder
+import net.milosvasic.factory.configuration.builder.SoftwareConfigurationItemBuilder
 import net.milosvasic.factory.configuration.variable.Context
 import net.milosvasic.factory.configuration.variable.Key
 import net.milosvasic.factory.configuration.variable.PathBuilder
@@ -504,29 +507,27 @@ abstract class ServerFactory(private val builder: ServerFactoryBuilder) : Applic
         return flow.onFinish(dieCallback)
     }
 
+    @Throws(IllegalArgumentException::class)
     private fun getCoreUtilsInstallationDependencies(): SoftwareConfiguration {
 
-        val coreUtilsDeploymentDependencies = SoftwareConfiguration()
-        val coreUtilsDeploymentSoftware = mutableListOf<SoftwareConfigurationItem>()
-        val deploymentDependenciesInstallationSteps = mutableMapOf(
+        val bzip2 = InstallationStepDefinition(InstallationStepType.PACKAGES, value = "bzip2")
 
-            Platform.CENTOS.platformName to listOf(
+        val softwareConfigurationItemBuilder = SoftwareConfigurationItemBuilder()
+            .setName(Deploy.SOFTWARE_CONFIGURATION_NAME)
+            .setVersion(BuildInfo.version)
+            .addInstallationStep(Platform.CENTOS, bzip2)
+            .addInstallationStep(Platform.UBUNTU, bzip2)
 
-                InstallationStepDefinition(InstallationStepType.PACKAGES.type, value = "bzip2")
-            )
-        )
-        val deploymentDependencies = SoftwareConfigurationItem(
+        val softwareBuilder = SoftwareBuilder()
+            .addItem(softwareConfigurationItemBuilder)
 
-            name = "Deployment dependencies",
-            version = BuildInfo.version,
-            installationSteps = deploymentDependenciesInstallationSteps
-        )
-        coreUtilsDeploymentSoftware.add(deploymentDependencies)
-        coreUtilsDeploymentDependencies.enabled = true
-        coreUtilsDeploymentDependencies.configuration = "Deployment dependencies"
-        coreUtilsDeploymentDependencies.software = coreUtilsDeploymentSoftware
-        coreUtilsDeploymentDependencies.setPlatform(Platform.CENTOS.platformName)
-        return coreUtilsDeploymentDependencies
+        val builder = SoftwareConfigurationBuilder()
+            .setEnabled(true)
+            .setConfiguration(Deploy.SOFTWARE_CONFIGURATION_NAME) // TODO: Validate
+            .setPlatform(Platform.CENTOS) // TODO: Validate, obtain dynamically
+            .setSoftware(softwareBuilder) // TODO: Validate
+
+        return builder.build()
     }
 
     @Throws(IllegalArgumentException::class, IllegalStateException::class)

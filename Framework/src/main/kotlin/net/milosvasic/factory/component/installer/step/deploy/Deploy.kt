@@ -25,6 +25,7 @@ open class Deploy(what: String, private val where: String) : RemoteOperationInst
         const val SEPARATOR_FROM_TO = ":"
         const val SEPARATOR_DEFINITION = "@"
         const val PROTOTYPE_PREFIX = "proto."
+        const val SOFTWARE_CONFIGURATION_NAME = "Deployment dependencies"
     }
 
     private val whatFile = File(what)
