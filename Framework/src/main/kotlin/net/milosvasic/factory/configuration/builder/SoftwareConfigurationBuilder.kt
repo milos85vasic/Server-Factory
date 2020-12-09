@@ -4,7 +4,9 @@ import net.milosvasic.factory.EMPTY
 import net.milosvasic.factory.common.Build
 import net.milosvasic.factory.configuration.SoftwareConfiguration
 import net.milosvasic.factory.configuration.SoftwareConfigurationItem
+import net.milosvasic.factory.configuration.SoftwareConfigurationValidator
 import net.milosvasic.factory.platform.Platform
+import net.milosvasic.factory.platform.PlatformValidator
 import net.milosvasic.factory.validation.Validator
 import net.milosvasic.factory.validation.parameters.EmptyArgumentException
 
@@ -32,11 +34,16 @@ class SoftwareConfigurationBuilder : Build<SoftwareConfiguration> {
         throw EmptyArgumentException()
     }
 
+    @Throws(IllegalArgumentException::class)
     fun setPlatform(platform: Platform): SoftwareConfigurationBuilder {
 
-        // TODO: Validate
-        this.platform = platform
-        return this
+        val platformValidator = PlatformValidator()
+        if (platformValidator.validate(platform)) {
+
+            this.platform = platform
+            return this
+        }
+        throw IllegalArgumentException("Invalid platform: ${platform.platformName}")
     }
 
     @Throws(IllegalArgumentException::class)
@@ -56,13 +63,16 @@ class SoftwareConfigurationBuilder : Build<SoftwareConfiguration> {
     @Throws(IllegalArgumentException::class)
     override fun build(): SoftwareConfiguration {
 
-        // TODO: Validate
-        val configuration = SoftwareConfiguration()
-        configuration.enabled = true
-        configuration.configuration = "Deployment dependencies"
-        configuration.setPlatform(platform.platformName)
-        configuration.software = software
-        configuration.setPlatform(Platform.CENTOS.platformName)
-        return configuration
+        val softwareConfiguration = SoftwareConfiguration()
+        softwareConfiguration.enabled = true
+        softwareConfiguration.software = software
+        softwareConfiguration.configuration = configuration
+        softwareConfiguration.setPlatform(platform.platformName)
+        val validator = SoftwareConfigurationValidator()
+        if (validator.validate(softwareConfiguration)) {
+
+            return softwareConfiguration
+        }
+        throw IllegalArgumentException("Invalid software configuration: $softwareConfiguration")
     }
 }

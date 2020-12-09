@@ -176,9 +176,9 @@ data class SoftwareConfiguration(
         return true
     }
 
-    fun setPlatform(operatingSystem: String) {
+    fun setPlatform(platform: String) {
 
-        this.platform = operatingSystem
+        this.platform = platform
     }
 
     private fun merge(toMerge: Node?) {

@@ -27,6 +27,7 @@ object Validator {
             validation.validate(*params)
         }
 
+        @Throws(ArgumentsExpectedException::class)
         fun validateNotEmpty(param: String): Boolean {
 
             val validation = StringArgumentValidation()
