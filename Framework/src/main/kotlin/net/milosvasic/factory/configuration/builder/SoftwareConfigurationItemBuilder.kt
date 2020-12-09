@@ -5,6 +5,7 @@ import net.milosvasic.factory.common.Build
 import net.milosvasic.factory.configuration.InstallationStepDefinition
 import net.milosvasic.factory.configuration.SoftwareConfigurationItem
 import net.milosvasic.factory.platform.Platform
+import net.milosvasic.factory.validation.parameters.StringArgumentValidation
 
 class SoftwareConfigurationItemBuilder : Build<SoftwareConfigurationItem> {
 
@@ -34,7 +35,15 @@ class SoftwareConfigurationItemBuilder : Build<SoftwareConfigurationItem> {
     @Throws(IllegalArgumentException::class)
     override fun build(): SoftwareConfigurationItem {
 
-        // TODO: Validate
+        val validator = StringArgumentValidation()
+        if (!validator.validate(name)) {
+
+            throw IllegalArgumentException("Empty name provided")
+        }
+        if (!validator.validate(version)) {
+
+            throw IllegalArgumentException("Empty version provided")
+        }
         return SoftwareConfigurationItem(name, version, installationSteps)
     }
 }
