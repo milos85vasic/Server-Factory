@@ -11,7 +11,7 @@ class SoftwareConfigurationItemBuilder : Build<SoftwareConfigurationItem> {
 
     private var name = String.EMPTY
     private var version = String.EMPTY
-    private val installationSteps = mutableMapOf<String, List<InstallationStepDefinition>>()
+    private val installationSteps = mutableMapOf<String, MutableList<InstallationStepDefinition>>()
 
     fun setName(name: String): SoftwareConfigurationItemBuilder {
 
@@ -28,7 +28,13 @@ class SoftwareConfigurationItemBuilder : Build<SoftwareConfigurationItem> {
     fun addInstallationStep(platform: Platform, definition: InstallationStepDefinition)
             : SoftwareConfigurationItemBuilder {
 
-        // TODO:
+        var definitions = installationSteps[platform.platformName]
+        if (definitions == null) {
+
+            definitions = mutableListOf()
+            installationSteps[platform.platformName] = definitions
+        }
+        definitions.add(definition)
         return this
     }
 
