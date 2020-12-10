@@ -472,6 +472,7 @@ abstract class ServerFactory(private val builder: ServerFactoryBuilder) : Applic
             .addContext(Commands.DIRECTORY_UTILS)
             .build()
 
+        behaviorGetIp = false
         val coreUtilsDeployment = getCoreUtilsDeploymentFlow(what, where, ssh)
         if (behaviorGetIp) {
 
