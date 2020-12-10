@@ -42,6 +42,10 @@ interface Key {
             override fun key() = "USER"
         }
 
+        val GetIp = object : Key {
+            override fun key() = "GET_IP"
+        }
+
         val Hostname = object : Key {
             override fun key() = "HOSTNAME"
         }

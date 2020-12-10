@@ -472,7 +472,20 @@ abstract class ServerFactory(private val builder: ServerFactoryBuilder) : Applic
             .addContext(Commands.DIRECTORY_UTILS)
             .build()
 
-        behaviorGetIp = false
+        val behaviorPath = PathBuilder()
+            .addContext(Context.Behavior)
+            .setKey(Key.GetIp)
+            .build()
+
+        val msg = "Get IP behavior setting"
+        try {
+
+            behaviorGetIp = Variable.get(behaviorPath).toBoolean()
+            log.v("$msg (1): $behaviorGetIp")
+        } catch (e: IllegalStateException) {
+
+            log.v("$msg (2): $behaviorGetIp")
+        }
         val coreUtilsDeployment = getCoreUtilsDeploymentFlow(what, where, ssh)
         if (behaviorGetIp) {
 

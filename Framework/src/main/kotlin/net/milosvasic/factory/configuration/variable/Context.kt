@@ -20,6 +20,10 @@ interface Context {
             override fun context() = "SERVER"
         }
 
+        val Behavior = object : Context {
+            override fun context() = "BEHAVIOR"
+        }
+
         val Ports = object : Context {
             override fun context() = "PORTS"
         }
