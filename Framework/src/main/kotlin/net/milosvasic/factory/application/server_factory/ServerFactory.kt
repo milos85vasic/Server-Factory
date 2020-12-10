@@ -53,6 +53,7 @@ abstract class ServerFactory(private val builder: ServerFactoryBuilder) : Applic
 
     private val busy = Busy()
     private var runStartedAt = 0L
+    private var behaviorGetIp = true
     private lateinit var installer: Installer
     private val executor = TaskExecutor.instantiate(5)
     private val terminators = ConcurrentLinkedQueue<Termination>()
@@ -471,12 +472,15 @@ abstract class ServerFactory(private val builder: ServerFactoryBuilder) : Applic
             .addContext(Commands.DIRECTORY_UTILS)
             .build()
 
-        val getIpCommand = getIpAddressObtainCommand(os)
-        val ipAddressHandler = HostIpAddressDataHandler(ssh.getRemote())
-        val getIpObtainableCommand = ObtainableTerminalCommand(getIpCommand, ipAddressHandler)
-
         val coreUtilsDeployment = getCoreUtilsDeploymentFlow(what, where, ssh)
-            .perform(getIpObtainableCommand)
+        if (behaviorGetIp) {
+
+            val getIpCommand = getIpAddressObtainCommand(os)
+            val ipAddressHandler = HostIpAddressDataHandler(ssh.getRemote())
+            val getIpObtainableCommand = ObtainableTerminalCommand(getIpCommand, ipAddressHandler)
+
+            coreUtilsDeployment.perform(getIpObtainableCommand)
+        }
 
         if (hostname != String.EMPTY) {
 
