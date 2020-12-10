@@ -53,7 +53,7 @@ abstract class ServerFactory(private val builder: ServerFactoryBuilder) : Applic
 
     private val busy = Busy()
     private var runStartedAt = 0L
-    private var behaviorGetIp = true
+    private var behaviorGetIp = false
     private lateinit var installer: Installer
     private val executor = TaskExecutor.instantiate(5)
     private val terminators = ConcurrentLinkedQueue<Termination>()
