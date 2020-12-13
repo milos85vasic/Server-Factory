@@ -38,8 +38,15 @@ class Terminal : Executor<TerminalCommand> {
                 what.configuration[CommandConfiguration.LOG_COMMAND]?.let {
                     logCommand = it
                 }
+
                 if (logCommand) {
-                    log.d(">>> ${what.command}")
+                    if (what is ObtainableTerminalCommand) {
+
+                        log.d(">>> ${what.obtainable.obtain().command}")
+
+                    } else {
+                        log.d(">>> ${what.command}")
+                    }
                 }
 
                 val process = if (what is ObtainableTerminalCommand) {

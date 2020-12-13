@@ -397,7 +397,8 @@ abstract class ServerFactory(private val builder: ServerFactoryBuilder) : Applic
     protected open fun getIpAddressObtainCommand(os: OperatingSystem) =
         object : Obtain<TerminalCommand> {
 
-            override fun obtain() = IpAddressObtainCommand(os.getHostname())
+            val hostname = getHostname()
+            override fun obtain() = IpAddressObtainCommand(hostname)
         }
 
     private fun getDockerInitFlow(docker: Docker, dockerFlow: InstallationFlow): InitializationFlow {
@@ -477,28 +478,7 @@ abstract class ServerFactory(private val builder: ServerFactoryBuilder) : Applic
             .setKey(Key.GetIp)
             .build()
 
-        val msg = "Get IP behavior setting"
-        try {
-
-            behaviorGetIp = Variable.get(behaviorPath).toBoolean()
-            log.v("$msg (1): $behaviorGetIp")
-        } catch (e: IllegalStateException) {
-
-            log.v("$msg (2): $behaviorGetIp")
-        }
         val coreUtilsDeployment = getCoreUtilsDeploymentFlow(what, where, ssh)
-        if (behaviorGetIp) {
-
-            val getIpCommand = getIpAddressObtainCommand(os)
-            val ipAddressHandler = HostIpAddressDataHandler(ssh.getRemote())
-            val getIpObtainableCommand = ObtainableTerminalCommand(getIpCommand, ipAddressHandler)
-
-            coreUtilsDeployment
-                .width(ssh.getTerminal())
-                .perform(getIpObtainableCommand)
-                .width(ssh)
-        }
-
         if (hostname != String.EMPTY) {
 
             coreUtilsDeployment.perform(
@@ -518,14 +498,35 @@ abstract class ServerFactory(private val builder: ServerFactoryBuilder) : Applic
             .width(terminal)
             .perform(pingCommand)
             .width(ssh)
-            .perform(testCommand)
             .perform(hostInfoCommand, getHostInfoDataHandler(os))
             .perform(hostNameCommand, HostNameDataHandler(os))
+            .width(terminal)
+
+        val msg = "Get IP behavior setting"
+        try {
+
+            behaviorGetIp = Variable.get(behaviorPath).toBoolean()
+            log.v("$msg (1): $behaviorGetIp")
+        } catch (e: IllegalStateException) {
+
+            log.v("$msg (2): $behaviorGetIp")
+        }
+        if (behaviorGetIp) {
+
+            val getIpCommand = getIpAddressObtainCommand(os)
+            val ipAddressHandler = HostIpAddressDataHandler(ssh.getRemote())
+            val getIpObtainableCommand = ObtainableTerminalCommand(getIpCommand, ipAddressHandler)
+
+            flow.perform(getIpObtainableCommand)
+        }
+
+        return flow
+            .width(ssh)
+            .perform(testCommand)
             .connect(installerInitFlow)
             .connect(installationFlow)
             .connect(coreUtilsDeployment)
-
-        return flow.onFinish(dieCallback)
+            .onFinish(dieCallback)
     }
 
     @Throws(IllegalArgumentException::class)
