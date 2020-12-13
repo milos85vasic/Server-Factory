@@ -33,7 +33,7 @@ class IPV4Validator : Validation<String> {
     @Throws(PatternSyntaxException::class)
     private fun performValidation(what: String): Boolean {
 
-        /*
+       /*
         * Explanation:
         *   (
         *     [0-9]         # 0-9
@@ -48,7 +48,8 @@ class IPV4Validator : Validation<String> {
         *   )
         *   (\.(?!$)|$))    # ensure IPv4 doesn't end with a dot
         *   {4}             # 4 times.
-        * */
+        *
+        */
         val ipv4Pattern =
             "^(([0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5])(\\.(?!\$)|\$)){4}\$"
 
