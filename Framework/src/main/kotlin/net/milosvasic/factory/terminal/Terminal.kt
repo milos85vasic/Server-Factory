@@ -27,7 +27,7 @@ class Terminal : Executor<TerminalCommand> {
     @Throws(BusyException::class, IllegalArgumentException::class)
     override fun execute(what: TerminalCommand) {
 
-        if (what.command == String.EMPTY) {
+        if (what !is ObtainableTerminalCommand && what.command == String.EMPTY) {
 
             throw IllegalArgumentException("Empty terminal command")
         }

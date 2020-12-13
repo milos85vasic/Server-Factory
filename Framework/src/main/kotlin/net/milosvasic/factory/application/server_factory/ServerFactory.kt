@@ -493,7 +493,10 @@ abstract class ServerFactory(private val builder: ServerFactoryBuilder) : Applic
             val ipAddressHandler = HostIpAddressDataHandler(ssh.getRemote())
             val getIpObtainableCommand = ObtainableTerminalCommand(getIpCommand, ipAddressHandler)
 
-            coreUtilsDeployment.perform(getIpObtainableCommand)
+            coreUtilsDeployment
+                .width(ssh.getTerminal())
+                .perform(getIpObtainableCommand)
+                .width(ssh)
         }
 
         if (hostname != String.EMPTY) {

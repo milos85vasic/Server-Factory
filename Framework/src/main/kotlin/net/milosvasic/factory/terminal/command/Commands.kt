@@ -60,14 +60,15 @@ object Commands {
     fun getIpAddress(host: String): String {
 
         val path = PathBuilder()
-            .addContext(Context.Server)
-            .setKey(Key.ServerHome)
+            .addContext(Context.System)
+            .setKey(Key.Home)
             .build()
 
-        val serverHome = Variable.get(path)
+        val systemHome = Variable.get(path)
 
         val filePath = FilePathBuilder()
-            .addContext(serverHome)
+            .addContext(systemHome)
+            .addContext(DIRECTORY_CORE)
             .addContext(DIRECTORY_UTILS)
             .addContext(SCRIPT_GET_IP)
             .build()
