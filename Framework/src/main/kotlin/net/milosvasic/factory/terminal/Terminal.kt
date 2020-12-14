@@ -49,6 +49,7 @@ class Terminal : Executor<TerminalCommand> {
                     }
                 }
 
+                val startTime = System.currentTimeMillis()
                 val process = if (what is ObtainableTerminalCommand) {
 
                     runtime.exec(what.obtainable.obtain().command)
@@ -81,6 +82,8 @@ class Terminal : Executor<TerminalCommand> {
                         }
                     }
                 }
+                val time = System.currentTimeMillis() - startTime
+                log.v("    Executed in: $time millis")
                 val success = exitValue == 0
                 val result = OperationResult(what, success, inData, errorData = errData)
                 BusyWorker.free(busy)
