@@ -10,10 +10,10 @@ import net.milosvasic.factory.configuration.variable.Variable
 
 class Remote(
 
-        private var host: String?,
-        private var hostIp: String?,
-        val port: Int,
-        @SerializedName("user") val account: String
+    private var host: String?,
+    private var hostIp: String?,
+    val port: Int,
+    @SerializedName("user") val account: String
 ) {
 
     @Throws(IllegalStateException::class)
@@ -50,4 +50,6 @@ class Remote(
         }
         return null
     }
+
+    fun print() = "Remote(host=$host, hostIp=$hostIp, port=$port, account='$account')"
 }
