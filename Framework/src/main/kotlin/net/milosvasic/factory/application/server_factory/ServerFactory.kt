@@ -120,7 +120,10 @@ abstract class ServerFactory(private val builder: ServerFactoryBuilder) : Applic
 
                                     val configurationItems = ConfigurationManager.getConfigurationItems()
                                     configurations.addAll(configurationItems)
-                                    log.v(config.name)
+                                    config.name?.let { name ->
+
+                                        log.v(name)
+                                    }
                                 }
                                 notifyInit()
                             } catch (e: IllegalStateException) {
