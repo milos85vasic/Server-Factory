@@ -16,6 +16,12 @@ class CommonServerFactoryServerConfigurationFactory : ConfigurationFactory<Commo
 
     override fun onInstantiated(configuration: CommonServerFactoryConfiguration) {
 
-        log.v("Configuration: ${configuration.name}")
+        val name = configuration.name
+        name?.let {
+            if (it.isNotEmpty() && it.isNotBlank()) {
+
+                log.v("Configuration: $name")
+            }
+        }
     }
 }
