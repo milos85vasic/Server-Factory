@@ -1,4 +1,4 @@
-package net.milosvasic.factory
+package net.milosvasic.factory.application
 
 enum class Argument(private val arg: String) {
 
