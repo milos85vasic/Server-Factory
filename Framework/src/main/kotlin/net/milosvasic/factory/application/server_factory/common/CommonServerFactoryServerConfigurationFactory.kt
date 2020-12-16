@@ -16,6 +16,7 @@ class CommonServerFactoryServerConfigurationFactory : ConfigurationFactory<Commo
 
     override fun onInstantiated(configuration: CommonServerFactoryConfiguration) {
 
-        log.v("Instantiated, configuration: ${configuration.name} :: ${configuration.remote}")
+        log.v("Configuration name: ${configuration.name}")
+        log.v("Configuration remote: ${configuration.remote.print()}")
     }
 }
