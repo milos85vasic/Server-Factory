@@ -503,7 +503,6 @@ abstract class ServerFactory(private val builder: ServerFactoryBuilder) : Applic
             .width(ssh)
             .perform(hostInfoCommand, getHostInfoDataHandler(os))
             .perform(hostNameCommand, HostNameDataHandler(os))
-            .width(terminal)
 
         val msg = "Get IP behavior setting"
         try {
@@ -520,7 +519,9 @@ abstract class ServerFactory(private val builder: ServerFactoryBuilder) : Applic
             val ipAddressHandler = HostIpAddressDataHandler(ssh.getRemote())
             val getIpObtainableCommand = ObtainableTerminalCommand(getIpCommand, ipAddressHandler)
 
-            flow.perform(getIpObtainableCommand)
+            flow
+                .width(terminal)
+                .perform(getIpObtainableCommand)
         }
 
         return flow
