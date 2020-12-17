@@ -49,12 +49,12 @@ import java.util.concurrent.ConcurrentLinkedQueue
 
 abstract class ServerFactory(private val builder: ServerFactoryBuilder) : Application, BusyDelegation {
 
+    protected lateinit var installer: Installer
     protected var configuration: Configuration? = null
 
     private val busy = Busy()
     private var runStartedAt = 0L
     private var behaviorGetIp = false
-    private lateinit var installer: Installer
     private val executor = TaskExecutor.instantiate(5)
     private val terminators = ConcurrentLinkedQueue<Termination>()
     private val connectionPool = mutableMapOf<String, Connection>()
@@ -300,6 +300,34 @@ abstract class ServerFactory(private val builder: ServerFactoryBuilder) : Applic
 
     protected open fun getHostNameSetCommand(hostname: String): TerminalCommand = HostNameSetCommand(hostname)
 
+    @Throws(IllegalArgumentException::class)
+    protected open fun getCoreUtilsInstallationDependencies(): SoftwareConfiguration {
+
+        val bzip2 = InstallationStepDefinition(InstallationStepType.PACKAGES, value = "bzip2")
+
+        val softwareConfigurationItemBuilder = SoftwareConfigurationItemBuilder()
+            .setName(Deploy.SOFTWARE_CONFIGURATION_NAME)
+            .setVersion(BuildInfo.version)
+            .addInstallationStep(Platform.CENTOS, bzip2)
+            .addInstallationStep(Platform.UBUNTU, bzip2)
+
+        val softwareBuilder = SoftwareBuilder()
+            .addItem(softwareConfigurationItemBuilder)
+
+        val builder = SoftwareConfigurationBuilder()
+            .setEnabled(true)
+            .setConfiguration(Deploy.SOFTWARE_CONFIGURATION_NAME)
+            .setPlatform(Platform.CENTOS)
+            .setSoftware(softwareBuilder)
+
+        return builder.build()
+    }
+
+    protected open fun getCoreUtilsInstallerInitializationFlow() : FlowBuilder<*, *, *> {
+
+        return InitializationFlow().width(installer)
+    }
+
     private fun notifyInit() {
 
         free()
@@ -490,12 +518,8 @@ abstract class ServerFactory(private val builder: ServerFactoryBuilder) : Applic
             )
         }
 
-        val installationFlow = InstallationFlow(installer)
-        val installerInitFlow = InitializationFlow().width(installer)
-        val coreUtilsDeploymentDependencies = getCoreUtilsInstallationDependencies()
-
-        installationFlow.width(coreUtilsDeploymentDependencies)
-        installationFlow.onFinish(dieCallback)
+        val installationFlow = getCoreUtilsInstallationFlow()
+        val installerInitFlow = getCoreUtilsInstallerInitializationFlow()
 
         val flow = CommandFlow()
             .width(terminal)
@@ -533,27 +557,15 @@ abstract class ServerFactory(private val builder: ServerFactoryBuilder) : Applic
             .onFinish(dieCallback)
     }
 
-    @Throws(IllegalArgumentException::class)
-    private fun getCoreUtilsInstallationDependencies(): SoftwareConfiguration {
+    private fun getCoreUtilsInstallationFlow() : FlowBuilder<*, *, *> {
 
-        val bzip2 = InstallationStepDefinition(InstallationStepType.PACKAGES, value = "bzip2")
+        val installationFlow = InstallationFlow(installer)
+        val coreUtilsDeploymentDependencies = getCoreUtilsInstallationDependencies()
 
-        val softwareConfigurationItemBuilder = SoftwareConfigurationItemBuilder()
-            .setName(Deploy.SOFTWARE_CONFIGURATION_NAME)
-            .setVersion(BuildInfo.version)
-            .addInstallationStep(Platform.CENTOS, bzip2)
-            .addInstallationStep(Platform.UBUNTU, bzip2)
+        installationFlow.width(coreUtilsDeploymentDependencies)
+        installationFlow.onFinish(DieOnFailureCallback())
 
-        val softwareBuilder = SoftwareBuilder()
-            .addItem(softwareConfigurationItemBuilder)
-
-        val builder = SoftwareConfigurationBuilder()
-            .setEnabled(true)
-            .setConfiguration(Deploy.SOFTWARE_CONFIGURATION_NAME)
-            .setPlatform(Platform.CENTOS)
-            .setSoftware(softwareBuilder)
-
-        return builder.build()
+        return installationFlow
     }
 
     @Throws(IllegalArgumentException::class, IllegalStateException::class)
