@@ -7,6 +7,7 @@ import net.milosvasic.logger.Logger
 class ServerFactoryBuilder {
 
     private var logger: Logger? = null
+    private var featureDatabase = true
     private var recipe: ConfigurationRecipe<*>? = null
     private var installationLocation = DIRECTORY_DEFAULT_INSTALLATION_LOCATION
 
@@ -31,6 +32,14 @@ class ServerFactoryBuilder {
     fun setLogger(logger: Logger): ServerFactoryBuilder {
 
         this.logger = logger
+        return this
+    }
+
+    fun getFeatureDatabase() = featureDatabase
+
+    fun setFeatureDatabase(featureDatabase: Boolean): ServerFactoryBuilder {
+
+        this.featureDatabase = featureDatabase
         return this
     }
 

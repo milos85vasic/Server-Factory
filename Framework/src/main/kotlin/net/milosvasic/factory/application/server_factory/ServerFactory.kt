@@ -49,7 +49,7 @@ import java.util.concurrent.ConcurrentLinkedQueue
 
 abstract class ServerFactory(private val builder: ServerFactoryBuilder) : Application, BusyDelegation {
 
-    protected open val featureDatabase = true
+    private var featureDatabase = true
     protected lateinit var installer: Installer
     protected var configuration: Configuration? = null
 
@@ -94,6 +94,7 @@ abstract class ServerFactory(private val builder: ServerFactoryBuilder) : Applic
 
                 compositeLogger.addLogger(it)
             }
+            featureDatabase = builder.getFeatureDatabase()
             try {
 
                 ConfigurationManager.setConfigurationRecipe(builder.getRecipe())
