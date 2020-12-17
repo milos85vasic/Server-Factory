@@ -49,6 +49,7 @@ import java.util.concurrent.ConcurrentLinkedQueue
 
 abstract class ServerFactory(private val builder: ServerFactoryBuilder) : Application, BusyDelegation {
 
+    protected open val featureDatabase = true
     protected lateinit var installer: Installer
     protected var configuration: Configuration? = null
 
@@ -208,8 +209,14 @@ abstract class ServerFactory(private val builder: ServerFactoryBuilder) : Applic
             terminators.add(databaseManager)
 
             val terminationFlow = getTerminationFlow(ssh)
-            val loadDbsFlow = databaseManager.loadDatabasesFlow().connect(terminationFlow)
-            val dockerFlow = getDockerFlow(docker, loadDbsFlow)
+            val dockerFlow = if (featureDatabase) {
+
+                val loadDbsFlow = databaseManager.loadDatabasesFlow().connect(terminationFlow)
+                getDockerFlow(docker, loadDbsFlow)
+            } else {
+
+                getDockerFlow(docker, terminationFlow)
+            }
             val dockerInitFlow = getDockerInitFlow(docker, dockerFlow)
             val installationFlow = getInstallationFlow(installer, dockerInitFlow) ?: dockerInitFlow
             val initializers = listOf<Initializer>(databaseManager)
@@ -323,7 +330,7 @@ abstract class ServerFactory(private val builder: ServerFactoryBuilder) : Applic
         return builder.build()
     }
 
-    protected open fun getCoreUtilsInstallerInitializationFlow() : FlowBuilder<*, *, *> {
+    protected open fun getCoreUtilsInstallerInitializationFlow(): FlowBuilder<*, *, *> {
 
         return InitializationFlow().width(installer)
     }
@@ -557,7 +564,7 @@ abstract class ServerFactory(private val builder: ServerFactoryBuilder) : Applic
             .onFinish(dieCallback)
     }
 
-    private fun getCoreUtilsInstallationFlow() : FlowBuilder<*, *, *> {
+    private fun getCoreUtilsInstallationFlow(): FlowBuilder<*, *, *> {
 
         val installationFlow = InstallationFlow(installer)
         val coreUtilsDeploymentDependencies = getCoreUtilsInstallationDependencies()
