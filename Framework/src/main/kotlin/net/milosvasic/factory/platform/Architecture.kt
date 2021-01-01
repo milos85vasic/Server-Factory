@@ -1,4 +1,4 @@
-package net.milosvasic.factory.os
+package net.milosvasic.factory.platform
 
 enum class Architecture(val arch: String) {
 

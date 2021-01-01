@@ -33,7 +33,7 @@ class PackageInstaller(entryPoint: Connection) :
                 listOf(
                         Dnf(entryPoint),
                         Yum(entryPoint),
-                        AptGet(entryPoint)
+                        Apt(entryPoint)
                 )
         )
     }
@@ -109,6 +109,13 @@ class PackageInstaller(entryPoint: Connection) :
 
         checkNotInitialized()
         manager?.install(*items.toList().toTypedArray())
+    }
+
+    @Throws(IllegalStateException::class, IllegalArgumentException::class)
+    override fun uninstall(vararg items: InstallationItem) {
+
+        checkNotInitialized()
+        manager?.uninstall(*items.toList().toTypedArray())
     }
 
     @Throws(IllegalStateException::class, IllegalArgumentException::class)

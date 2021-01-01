@@ -1,112 +1,161 @@
 package net.milosvasic.factory.application.server_factory
 
-import net.milosvasic.factory.EMPTY
-import net.milosvasic.factory.application.ArgumentsValidator
+import net.milosvasic.factory.*
 import net.milosvasic.factory.common.Application
 import net.milosvasic.factory.common.busy.Busy
 import net.milosvasic.factory.common.busy.BusyDelegation
 import net.milosvasic.factory.common.busy.BusyException
 import net.milosvasic.factory.common.busy.BusyWorker
-import net.milosvasic.factory.common.exception.EmptyDataException
+import net.milosvasic.factory.common.filesystem.FilePathBuilder
 import net.milosvasic.factory.common.initialization.Initializer
 import net.milosvasic.factory.common.initialization.Termination
+import net.milosvasic.factory.common.obtain.Obtain
 import net.milosvasic.factory.component.database.manager.DatabaseManager
 import net.milosvasic.factory.component.docker.Docker
 import net.milosvasic.factory.component.docker.DockerInitializationFlowCallback
 import net.milosvasic.factory.component.installer.Installer
-import net.milosvasic.factory.component.installer.InstallerInitializationFlowCallback
+import net.milosvasic.factory.component.installer.step.InstallationStepType
+import net.milosvasic.factory.component.installer.step.deploy.Deploy
 import net.milosvasic.factory.configuration.*
+import net.milosvasic.factory.configuration.builder.SoftwareBuilder
+import net.milosvasic.factory.configuration.builder.SoftwareConfigurationBuilder
+import net.milosvasic.factory.configuration.builder.SoftwareConfigurationItemBuilder
 import net.milosvasic.factory.configuration.variable.Context
 import net.milosvasic.factory.configuration.variable.Key
 import net.milosvasic.factory.configuration.variable.PathBuilder
 import net.milosvasic.factory.configuration.variable.Variable
+import net.milosvasic.factory.execution.TaskExecutor
 import net.milosvasic.factory.execution.flow.FlowBuilder
 import net.milosvasic.factory.execution.flow.callback.DieOnFailureCallback
+import net.milosvasic.factory.execution.flow.callback.FlowCallback
 import net.milosvasic.factory.execution.flow.callback.TerminationCallback
 import net.milosvasic.factory.execution.flow.implementation.CommandFlow
 import net.milosvasic.factory.execution.flow.implementation.InstallationFlow
+import net.milosvasic.factory.execution.flow.implementation.ObtainableTerminalCommand
 import net.milosvasic.factory.execution.flow.implementation.initialization.InitializationFlow
-import net.milosvasic.factory.fail
-import net.milosvasic.factory.log
 import net.milosvasic.factory.operation.OperationResult
 import net.milosvasic.factory.operation.OperationResultListener
-import net.milosvasic.factory.os.HostInfoDataHandler
-import net.milosvasic.factory.os.HostNameDataHandler
+import net.milosvasic.factory.platform.*
 import net.milosvasic.factory.remote.Connection
 import net.milosvasic.factory.remote.ConnectionProvider
 import net.milosvasic.factory.remote.ssh.SSH
-import net.milosvasic.factory.tag
 import net.milosvasic.factory.terminal.TerminalCommand
 import net.milosvasic.factory.terminal.command.*
+import java.awt.HeadlessException
+import java.awt.MouseInfo
+import java.awt.Robot
 import java.util.concurrent.ConcurrentLinkedQueue
 
-abstract class ServerFactory(val arguments: List<String> = listOf()) : Application, BusyDelegation {
 
+abstract class ServerFactory(private val builder: ServerFactoryBuilder) : Application, BusyDelegation {
+
+    private var featureDatabase = true
+    protected lateinit var installer: Installer
     protected var configuration: Configuration? = null
 
     private val busy = Busy()
+    private var runStartedAt = 0L
+    private var behaviorGetIp = false
+    private val executor = TaskExecutor.instantiate(5)
     private val terminators = ConcurrentLinkedQueue<Termination>()
+    private val connectionPool = mutableMapOf<String, Connection>()
+    private var configurations = mutableListOf<SoftwareConfiguration>()
     private val terminationOperation = ServerFactoryTerminationOperation()
     private val subscribers = ConcurrentLinkedQueue<OperationResultListener>()
     private val initializationOperation = ServerFactoryInitializationOperation()
-    private var configurations = mutableMapOf<SoftwareConfigurationType, MutableList<SoftwareConfiguration>>()
 
     private var connectionProvider: ConnectionProvider = object : ConnectionProvider {
 
         @Throws(IllegalArgumentException::class)
         override fun obtain(): Connection {
             configuration?.let { config ->
-                return SSH(config.remote)
+
+                val key = config.remote.toString()
+                connectionPool[key]?.let {
+                    return it
+                }
+                val connection = SSH(config.remote)
+                connectionPool[key] = connection
+                return connection
             }
             throw IllegalArgumentException("No valid configuration available for creating a connection")
         }
     }
 
-    @Throws(IllegalStateException::class)
+    @Throws(IllegalStateException::class, IllegalArgumentException::class)
     override fun initialize() {
+
         checkInitialized()
         busy()
-        val argumentsValidator = ArgumentsValidator()
         try {
-            if (argumentsValidator.validate(arguments.toTypedArray())) {
-                tag = getLogTag()
-                val configurationFile = arguments[0]
-                try {
-                    ConfigurationManager.setConfigurationPath(configurationFile)
-                    ConfigurationManager.setConfigurationFactory(getConfigurationFactory())
-                    ConfigurationManager.initialize()
 
-                    configuration = ConfigurationManager.getConfiguration()
-                    if (configuration == null) {
-                        throw IllegalStateException("Configuration is null")
-                    }
-                    configuration?.let { config ->
-                        SoftwareConfigurationType.values().forEach { type ->
+            tag = getLogTag()
+            builder.getLogger()?.let {
 
-                            val configurationItems = ConfigurationManager.getConfigurationItems(type)
-                            getConfigurationItems(type).addAll(configurationItems)
-                        }
-                        log.v(config.name)
-                        notifyInit(true)
-                    }
-                } catch (e: IllegalArgumentException) {
-
-                    notifyInit(e)
-                } catch (e: IllegalStateException) {
-
-                    notifyInit(e)
-                } catch (e: RuntimeException) {
-
-                    notifyInit(e)
-                }
-            } else {
-
-                log.e("Invalid configuration")
-                notifyInit(false)
+                compositeLogger.addLogger(it)
             }
-        } catch (e: EmptyDataException) {
+            featureDatabase = builder.getFeatureDatabase()
+            try {
 
-            notifyInit(e)
+                ConfigurationManager.setConfigurationRecipe(builder.getRecipe())
+                ConfigurationManager.setConfigurationFactory(getConfigurationFactory())
+                ConfigurationManager.setInstallationLocation(builder.getInstallationLocation())
+                ConfigurationManager.initialize()
+
+                configuration = ConfigurationManager.getConfiguration()
+                if (configuration == null) {
+
+                    throw IllegalStateException("Configuration is null")
+                }
+
+                val ssh = getConnection()
+                installer = instantiateInstaller(ssh)
+                terminators.add(installer)
+
+                val callback = object : FlowCallback {
+                    override fun onFinish(success: Boolean) {
+                        if (success) {
+                            try {
+
+                                ConfigurationManager.load(ssh.getRemoteOS())
+                                configuration?.let { config ->
+
+                                    val configurationItems = ConfigurationManager.getConfigurationItems()
+                                    configurations.addAll(configurationItems)
+                                    config.name?.let { name ->
+
+                                        log.v(name)
+                                    }
+                                }
+                                notifyInit()
+                            } catch (e: IllegalStateException) {
+
+                                notifyInit(e)
+                            } catch (e: IllegalArgumentException) {
+
+                                notifyInit(e)
+                            }
+                        } else {
+
+                            val e = IllegalStateException("Initialization failure")
+                            notifyInit(e)
+                        }
+                    }
+                }
+
+                getCommandFlow(ssh, DieOnFailureCallback())
+                    .onFinish(callback)
+                    .run()
+            } catch (e: IllegalArgumentException) {
+
+                notifyInit(e)
+            } catch (e: IllegalStateException) {
+
+                notifyInit(e)
+            } catch (e: RuntimeException) {
+
+                notifyInit(e)
+            }
         } catch (e: IllegalArgumentException) {
 
             notifyInit(e)
@@ -124,11 +173,7 @@ abstract class ServerFactory(val arguments: List<String> = listOf()) : Applicati
                 it.terminate()
             }
             configuration = null
-            SoftwareConfigurationType.values().forEach { type ->
-
-                val items = getConfigurationItems(type)
-                items.clear()
-            }
+            configurations.clear()
             notifyTerm()
         } catch (e: IllegalStateException) {
             notifyTerm(e)
@@ -154,27 +199,31 @@ abstract class ServerFactory(val arguments: List<String> = listOf()) : Applicati
             throw IllegalStateException("Configuration is null")
         }
         log.i("Server factory started")
+        runStartedAt = System.currentTimeMillis()
         try {
 
             val ssh = getConnection()
             val docker = instantiateDocker(ssh)
-            val installer = instantiateInstaller(ssh)
             val databaseManager = getDatabaseManager(ssh)
 
             terminators.add(docker)
-            terminators.add(installer)
             terminators.add(databaseManager)
 
             val terminationFlow = getTerminationFlow(ssh)
-            val loadDbsFlow = databaseManager.loadDatabasesFlow().connect(terminationFlow)
-            val dockerFlow = getDockerFlow(docker, loadDbsFlow)
+            val dockerFlow = if (featureDatabase) {
+
+                val loadDbsFlow = databaseManager.loadDatabasesFlow().connect(terminationFlow)
+                getDockerFlow(docker, loadDbsFlow)
+            } else {
+
+                getDockerFlow(docker, terminationFlow)
+            }
             val dockerInitFlow = getDockerInitFlow(docker, dockerFlow)
             val installationFlow = getInstallationFlow(installer, dockerInitFlow) ?: dockerInitFlow
-            val initializers = listOf<Initializer>(installer, databaseManager)
+            val initializers = listOf<Initializer>(databaseManager)
             val initFlow = getInitializationFlow(initializers, installationFlow)
-            val commandFlow = getCommandFlow(ssh, initFlow)
 
-            commandFlow.run()
+            initFlow.run()
         } catch (e: IllegalArgumentException) {
 
             fail(e)
@@ -185,12 +234,9 @@ abstract class ServerFactory(val arguments: List<String> = listOf()) : Applicati
     }
 
     override fun onStop() {
-        log.i("Server factory finished")
-        try {
-            terminate()
-        } catch (e: IllegalStateException) {
-            log.e(e)
-        }
+
+        val duration = getDuration()
+        log.i("Server factory finished in: $duration")
     }
 
     @Synchronized
@@ -246,9 +292,7 @@ abstract class ServerFactory(val arguments: List<String> = listOf()) : Applicati
     protected abstract fun getConfigurationFactory(): ConfigurationFactory<*>
 
     @Throws(IllegalArgumentException::class)
-    protected fun getConnection(): Connection {
-        return connectionProvider.obtain()
-    }
+    protected fun getConnection() = connectionProvider.obtain()
 
     protected open fun getLogTag() = tag
 
@@ -260,31 +304,68 @@ abstract class ServerFactory(val arguments: List<String> = listOf()) : Applicati
 
     protected open fun getDatabaseManager(ssh: Connection) = DatabaseManager(ssh)
 
+    protected open fun getHostInfoDataHandler(os: OperatingSystem) = HostInfoDataHandler(os)
+
     protected open fun getHostNameSetCommand(hostname: String): TerminalCommand = HostNameSetCommand(hostname)
 
-    private fun notifyInit(success: Boolean) {
-        free()
-        val result = OperationResult(initializationOperation, success)
-        notify(result)
+    @Throws(IllegalArgumentException::class)
+    protected open fun getCoreUtilsInstallationDependencies(): SoftwareConfiguration {
+
+        val bzip2 = InstallationStepDefinition(InstallationStepType.PACKAGES, value = "bzip2")
+
+        val softwareConfigurationItemBuilder = SoftwareConfigurationItemBuilder()
+            .setName(Deploy.SOFTWARE_CONFIGURATION_NAME)
+            .setVersion(BuildInfo.version)
+            .addInstallationStep(Platform.CENTOS, bzip2)
+            .addInstallationStep(Platform.UBUNTU, bzip2)
+
+        val softwareBuilder = SoftwareBuilder()
+            .addItem(softwareConfigurationItemBuilder)
+
+        val builder = SoftwareConfigurationBuilder()
+            .setEnabled(true)
+            .setConfiguration(Deploy.SOFTWARE_CONFIGURATION_NAME)
+            .setPlatform(Platform.CENTOS)
+            .setSoftware(softwareBuilder)
+
+        return builder.build()
     }
 
-    private fun notifyTerm() {
+    protected open fun getCoreUtilsInstallerInitializationFlow(): FlowBuilder<*, *, *> {
+
+        return InitializationFlow().width(installer)
+    }
+
+    private fun notifyInit() {
+
         free()
-        val result = OperationResult(terminationOperation, true)
+        val result = OperationResult(initializationOperation, true)
         notify(result)
+        keepAlive()
     }
 
     @Synchronized
     private fun notifyInit(e: Exception) {
+
         free()
         log.e(e)
         val result = OperationResult(initializationOperation, false)
         notify(result)
     }
 
+    private fun notifyTerm() {
+
+        free()
+        onStop()
+        val result = OperationResult(terminationOperation, true)
+        notify(result)
+    }
+
     @Synchronized
     private fun notifyTerm(e: Exception) {
+
         free()
+        onStop()
         log.e(e)
         val result = OperationResult(terminationOperation, false)
         notify(result)
@@ -303,24 +384,30 @@ abstract class ServerFactory(val arguments: List<String> = listOf()) : Applicati
             installFlow.width(it)
         }
         return installFlow
-                .connect(dockerInitFlow)
-                .onFinish(dieCallback)
+            .connect(dockerInitFlow)
+            .onFinish(dieCallback)
     }
 
     private fun getDockerFlow(docker: Docker, terminationFlow: FlowBuilder<*, *, *>): InstallationFlow {
 
         val dockerFlow = InstallationFlow(docker)
-        val items = getConfigurationItems(SoftwareConfigurationType.CONTAINERS)
+        val items = getConfigurationItems(SoftwareConfigurationType.DOCKER)
         items.forEach { softwareConfiguration ->
-            softwareConfiguration.software.forEach { software ->
-                dockerFlow.width(
-                        SoftwareConfiguration(
-                                softwareConfiguration.configuration,
-                                softwareConfiguration.variables,
-                                mutableListOf(software),
-                                softwareConfiguration.includes
-                        )
+            softwareConfiguration.software?.forEach { software ->
+
+                val configuration = SoftwareConfiguration(
+
+                    softwareConfiguration.definition,
+                    softwareConfiguration.uses,
+                    softwareConfiguration.overrides,
+                    softwareConfiguration.configuration,
+                    softwareConfiguration.variables,
+                    mutableListOf(software),
+                    softwareConfiguration.includes
                 )
+                val platformName = getConnection().getRemoteOS().getPlatform().platformName
+                configuration.setPlatform(platformName)
+                dockerFlow.width(configuration)
             }
         }
 
@@ -331,24 +418,41 @@ abstract class ServerFactory(val arguments: List<String> = listOf()) : Applicati
     protected open fun getTerminationFlow(connection: Connection): FlowBuilder<*, *, *> {
 
         return CommandFlow()
-                .width(connection.getTerminal())
-                .perform(EchoCommand("Finishing"))
-                .onFinish(TerminationCallback(this))
+            .width(connection.getTerminal())
+            .perform(EchoCommand("Finishing"))
+            .onFinish(TerminationCallback(this))
     }
+
+    protected open fun getCoreUtilsDeploymentFlow(
+
+        what: String,
+        where: String,
+        ssh: Connection
+
+    ) = Deploy(what, where)
+        .setConnection(ssh)
+        .getFlow()
+
+    protected open fun getIpAddressObtainCommand(os: OperatingSystem) =
+        object : Obtain<TerminalCommand> {
+
+            val hostname = getHostname()
+            override fun obtain() = IpAddressObtainCommand(hostname)
+        }
 
     private fun getDockerInitFlow(docker: Docker, dockerFlow: InstallationFlow): InitializationFlow {
 
         val initCallback = DockerInitializationFlowCallback()
         return InitializationFlow()
-                .width(docker)
-                .connect(dockerFlow)
-                .onFinish(initCallback)
+            .width(docker)
+            .connect(dockerFlow)
+            .onFinish(initCallback)
     }
 
     @Throws(IllegalArgumentException::class)
     private fun getInitializationFlow(
-            initializers: List<Initializer>,
-            nextFlow: FlowBuilder<*, *, *>
+        initializers: List<Initializer>,
+        nextFlow: FlowBuilder<*, *, *>
 
     ): InitializationFlow {
 
@@ -357,52 +461,128 @@ abstract class ServerFactory(val arguments: List<String> = listOf()) : Applicati
             throw IllegalArgumentException("Initializers are not provided")
         }
 
-        val initCallback = InstallerInitializationFlowCallback()
         val flow = InitializationFlow()
         initializers.forEach {
             flow.width(it)
         }
-        flow.connect(nextFlow).onFinish(initCallback)
-        return flow
+        val dieCallback = DieOnFailureCallback()
+        return flow.connect(nextFlow).onFinish(dieCallback)
     }
 
     @Throws(IllegalArgumentException::class, IllegalStateException::class)
-    private fun getCommandFlow(ssh: Connection, initFlow: InitializationFlow): CommandFlow {
+    private fun getCommandFlow(ssh: Connection, dieCallback: DieOnFailureCallback): CommandFlow {
 
         val os = ssh.getRemoteOS()
         val hostname = getHostname()
-        val host = ssh.getRemote().host
         val terminal = ssh.getTerminal()
+        val host = ssh.getRemote().getHost()
         val pingCommand = PingCommand(host)
         val hostNameCommand = HostNameCommand()
         val hostInfoCommand = getHostInfoCommand()
         val testCommand = EchoCommand("Hello")
-        val dieCallback = DieOnFailureCallback()
 
-        val flow = CommandFlow()
-                .width(terminal)
-                .perform(pingCommand)
-                .width(ssh)
-                .perform(testCommand)
-                .perform(hostInfoCommand, HostInfoDataHandler(os))
-                .perform(hostNameCommand, HostNameDataHandler(os))
+        /*
+         * {
+         *  "type": "deploy",
+         *  "value": "{{SYSTEM.HOME}}/Core/Utils:{{SERVER.SERVER_HOME}}/Utils"
+         * }
+         */
+        val systemHomePath = PathBuilder()
+            .addContext(Context.System)
+            .setKey(Key.Home)
+            .build()
 
+        val systemHome = Variable.get(systemHomePath)
+
+        val what = FilePathBuilder()
+            .addContext(systemHome)
+            .addContext(Commands.DIRECTORY_CORE)
+            .addContext(Commands.DIRECTORY_UTILS)
+            .build()
+
+        val whereRootPath = PathBuilder()
+            .addContext(Context.Server)
+            .setKey(Key.ServerHome)
+            .build()
+
+        val whereRoot = Variable.get(whereRootPath)
+
+        val where = FilePathBuilder()
+            .addContext(whereRoot)
+            .addContext(Commands.DIRECTORY_UTILS)
+            .build()
+
+        val behaviorPath = PathBuilder()
+            .addContext(Context.Behavior)
+            .setKey(Key.GetIp)
+            .build()
+
+        val coreUtilsDeployment = getCoreUtilsDeploymentFlow(what, where, ssh)
         if (hostname != String.EMPTY) {
 
-            flow.perform(getHostNameSetCommand(hostname), HostNameDataHandler(os, hostname))
+            coreUtilsDeployment.perform(
+                getHostNameSetCommand(hostname),
+                HostNameDataHandler(os, hostname)
+            )
+        }
+
+        val installationFlow = getCoreUtilsInstallationFlow()
+        val installerInitFlow = getCoreUtilsInstallerInitializationFlow()
+
+        val flow = CommandFlow()
+            .width(terminal)
+            .perform(pingCommand)
+            .width(ssh)
+            .perform(hostInfoCommand, getHostInfoDataHandler(os))
+            .perform(hostNameCommand, HostNameDataHandler(os))
+
+        val msg = "Get IP behavior setting"
+        try {
+
+            behaviorGetIp = Variable.get(behaviorPath).toBoolean()
+            log.v("$msg (1): $behaviorGetIp")
+        } catch (e: IllegalStateException) {
+
+            log.v("$msg (2): $behaviorGetIp")
+        }
+        if (behaviorGetIp) {
+
+            val getIpCommand = getIpAddressObtainCommand(os)
+            val ipAddressHandler = HostIpAddressDataHandler(ssh.getRemote())
+            val getIpObtainableCommand = ObtainableTerminalCommand(getIpCommand, ipAddressHandler)
+
+            flow
+                .width(terminal)
+                .perform(getIpObtainableCommand)
         }
 
         return flow
-                .onFinish(dieCallback)
-                .connect(initFlow)
+            .width(ssh)
+            .perform(testCommand)
+            .connect(installerInitFlow)
+            .connect(installationFlow)
+            .connect(coreUtilsDeployment)
+            .onFinish(dieCallback)
+    }
+
+    private fun getCoreUtilsInstallationFlow(): FlowBuilder<*, *, *> {
+
+        val installationFlow = InstallationFlow(installer)
+        val coreUtilsDeploymentDependencies = getCoreUtilsInstallationDependencies()
+
+        installationFlow.width(coreUtilsDeploymentDependencies)
+        installationFlow.onFinish(DieOnFailureCallback())
+
+        return installationFlow
     }
 
     @Throws(IllegalArgumentException::class, IllegalStateException::class)
     private fun getHostname(): String {
+
         val path = PathBuilder()
-                .addContext(Context.Server)
-                .setKey(Key.Hostname)
-                .build()
+            .addContext(Context.Server)
+            .setKey(Key.Hostname)
+            .build()
 
         val hostname = Variable.get(path)
         if (hostname == String.EMPTY) {
@@ -414,11 +594,87 @@ abstract class ServerFactory(val arguments: List<String> = listOf()) : Applicati
 
     private fun getConfigurationItems(type: SoftwareConfigurationType): MutableList<SoftwareConfiguration> {
 
-        var configurationItems = configurations[type]
-        if (configurationItems == null) {
-            configurationItems = mutableListOf()
-            configurations[type] = configurationItems
+        val typeDocker = SoftwareConfigurationType.DOCKER
+        val items = mutableListOf<SoftwareConfiguration>()
+        configurations.forEach { item ->
+            item.software?.let { softwareItems ->
+                softwareItems.forEach { softwareItem ->
+                    when (type) {
+                        typeDocker -> {
+                            if (softwareItem.hasInstallationSteps(type.label)) {
+                                if (!items.contains(item)) {
+                                    items.add(item)
+                                }
+                            }
+                        }
+                        else -> {
+                            if (!softwareItem.hasInstallationSteps(typeDocker.label)) {
+                                if (!items.contains(item)) {
+                                    items.add(item)
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         }
-        return configurationItems
+        return items
+    }
+
+    private fun getDuration(): String {
+
+        val duration = System.currentTimeMillis() - runStartedAt
+        val seconds = (duration / 1000).toInt() % 60
+        val minutes = (duration / (1000 * 60)) % 60
+        val hours = (duration / (1000 * 60 * 60)) % 24
+
+        val minutesFormatted = if (minutes == 0L) {
+
+            if (hours == 0L) {
+                ""
+            } else {
+                String.format("%02d", minutes) + " min. : "
+            }
+        } else {
+
+            String.format("%02d", minutes) + " min. : "
+        }
+
+        val hoursFormatted = if (hours == 0L) {
+            ""
+        } else {
+            String.format("%02d", hours) + " hr. : "
+        }
+
+        val secondsFormatted = String.format("%02d", seconds) + " sec."
+
+        return "$hoursFormatted$minutesFormatted$secondsFormatted"
+    }
+
+    private fun keepAlive() = executor.execute {
+
+        log.i("Keep alive: START")
+        var count = 0
+        val robot = Robot()
+        while (isInitialized()) {
+
+            count++
+            try {
+
+                val pointerInfo = MouseInfo.getPointerInfo()
+                val location = pointerInfo.location
+                val x = location.getX().toInt() + 1
+                val y = location.getY().toInt() + 1
+                robot.delay(60 * 1000)
+                if (isInitialized()) {
+
+                    robot.mouseMove(x, y)
+                    log.v("Keep alive, count: $count")
+                }
+            } catch (e: HeadlessException) {
+
+                log.e(e)
+            }
+        }
     }
 }

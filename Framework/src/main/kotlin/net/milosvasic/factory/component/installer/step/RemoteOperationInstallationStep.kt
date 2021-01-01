@@ -60,6 +60,7 @@ abstract class RemoteOperationInstallationStep<T : Connection> :
     abstract fun getOperation(): Operation
 
     protected open fun finish(success: Boolean) {
+
         connection = null
         val operationResult = OperationResult(getOperation(), success)
         notify(operationResult)

@@ -60,5 +60,5 @@ class Installer(entryPoint: Connection) : InstallerAbstract(entryPoint), Package
 
     override fun getToolkit() = Toolkit(entryPoint, installer)
 
-    override fun getEnvironmentName() = entryPoint.getRemoteOS().getType().osName
+    override fun getEnvironmentName() = entryPoint.getRemoteOS().getPlatform().platformName
 }

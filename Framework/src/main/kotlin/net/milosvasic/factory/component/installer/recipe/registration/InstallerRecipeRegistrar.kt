@@ -1,8 +1,10 @@
 package net.milosvasic.factory.component.installer.recipe.registration
 
 import net.milosvasic.factory.component.installer.recipe.PackageManagerInstallationStepRecipe
+import net.milosvasic.factory.component.installer.recipe.PackageManagerUninstallationStepRecipe
 import net.milosvasic.factory.component.installer.step.InstallationStep
 import net.milosvasic.factory.component.installer.step.PackageManagerInstallationStep
+import net.milosvasic.factory.component.installer.step.PackageManagerUninstallationStep
 import net.milosvasic.factory.execution.flow.implementation.InstallationStepFlow
 import net.milosvasic.factory.execution.flow.processing.ProcessingRecipesRegistration
 
@@ -14,6 +16,13 @@ class InstallerRecipeRegistrar : ProcessingRecipesRegistration {
                 flow.registerRecipe(
                         PackageManagerInstallationStep::class,
                         PackageManagerInstallationStepRecipe::class
+                )
+                return true
+            }
+            PackageManagerUninstallationStep::class -> {
+                flow.registerRecipe(
+                        PackageManagerUninstallationStep::class,
+                        PackageManagerUninstallationStepRecipe::class
                 )
                 return true
             }

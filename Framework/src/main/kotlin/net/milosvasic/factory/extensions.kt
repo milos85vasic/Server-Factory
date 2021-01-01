@@ -1,6 +1,7 @@
 package net.milosvasic.factory
 
 import net.milosvasic.factory.common.Logger
+import net.milosvasic.factory.configuration.SoftwareConfiguration
 import net.milosvasic.factory.error.ERROR
 import net.milosvasic.logger.CompositeLogger
 import net.milosvasic.logger.ConsoleLogger
@@ -9,8 +10,9 @@ import kotlin.system.exitProcess
 
 const val LOCALHOST = "127.0.0.1"
 const val FILE_LOCATION_HERE = "."
+const val DIRECTORY_DEFAULT_INSTALLATION_LOCATION = "/usr/local/bin"
 
-var tag = BuildInfo.NAME
+var tag = BuildInfo.versionName
 val compositeLogger = CompositeLogger()
 
 val log = object : Logger {
@@ -44,6 +46,7 @@ val log = object : Logger {
     }
 
     private fun getMessage(exception: Exception): String {
+
         var message = "Error: $exception"
         exception.message?.let {
             message = it
@@ -79,6 +82,34 @@ fun fail(e: Exception) {
     val error = ERROR.FATAL_EXCEPTION
     System.err.println(error.message)
     exitProcess(error.code)
+}
+
+@Throws(IllegalArgumentException::class)
+fun MutableMap<String, MutableMap<String, SoftwareConfiguration>>.merge(
+        overrides: MutableMap<String, MutableMap<String, SoftwareConfiguration>>
+) {
+    if (overrides.isEmpty()) {
+        return
+    }
+    overrides.forEach { (key, value) ->
+
+        if (this[key] == null) {
+            this[key] = value
+        } else {
+
+            this[key]?.let { item ->
+                value.forEach { (subKey, subValue) ->
+
+                    if (item[subKey] == null) {
+                        item[subKey] = subValue
+                    } else {
+
+                        item[subKey]?.merge(subValue)
+                    }
+                }
+            }
+        }
+    }
 }
 
 val String.Companion.EMPTY: String

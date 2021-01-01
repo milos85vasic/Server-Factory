@@ -1,6 +1,7 @@
 package net.milosvasic.factory.component.installer.step.deploy
 
 import net.milosvasic.factory.common.Validation
+import net.milosvasic.factory.configuration.definition.Definition
 import net.milosvasic.factory.validation.Validator
 
 class DeployValidator : Validation<String> {
@@ -10,12 +11,30 @@ class DeployValidator : Validation<String> {
 
         Validator.Arguments.validateSingle(what)
         val arg = what[0]
-        val split = arg.split(Deploy.DELIMITER)
+        val split = arg.split(Deploy.SEPARATOR_FROM_TO)
+        val fromToError = IllegalArgumentException("No valid parameters available: $arg")
         if (split.isEmpty()) {
-            throw IllegalArgumentException("No delimited parameters available in form: 'from:to'")
+
+            throw fromToError
         }
-        if (split.size != 2) {
-            throw IllegalArgumentException("No valid delimited parameters available in form: 'from:to'")
+        if (arg.contains(Deploy.SEPARATOR_DEFINITION)) {
+
+            if (arg.startsWith("${Definition.CURRENT_DEFINITION}${Deploy.SEPARATOR_DEFINITION}")) {
+
+                if (split.size != 2) {
+
+                    throw fromToError
+                }
+            } else {
+
+                if (split.size != 3) {
+
+                    throw fromToError
+                }
+            }
+        } else if (split.size != 2) {
+
+            throw fromToError
         }
         return true
     }

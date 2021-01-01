@@ -95,28 +95,18 @@ abstract class FlowBuilder<T, D, C> : Flow<T, D>, BusyDelegation {
     }
 
     protected fun finish(success: Boolean) {
+
         cleanupStates()
-
-        fun finish(success: Boolean) {
-            val iterator = callbacks.iterator()
-            while (iterator.hasNext()) {
-                val callback = iterator.next()
-                callback.onFinish(success)
-            }
-            free()
-        }
-
         if (success) {
             if (nextFlow == null) {
-                finish(success)
+                finishAndNotify(success)
             } else {
 
                 try {
                     nextFlow?.let {
                         val callback = object : FlowCallback {
-                            override fun onFinish(success: Boolean) {
-                                finish(success)
-                            }
+
+                            override fun onFinish(success: Boolean) = finishAndNotify(success)
                         }
                         it.onFinish(callback).run()
                     }
@@ -125,7 +115,8 @@ abstract class FlowBuilder<T, D, C> : Flow<T, D>, BusyDelegation {
                 }
             }
         } else {
-            finish(success)
+
+            finishAndNotify(success)
         }
     }
 
@@ -136,6 +127,7 @@ abstract class FlowBuilder<T, D, C> : Flow<T, D>, BusyDelegation {
     }
 
     protected open fun cleanupStates() {
+
         currentSubject = null
         subjectsIterator = null
     }
@@ -145,6 +137,17 @@ abstract class FlowBuilder<T, D, C> : Flow<T, D>, BusyDelegation {
     protected abstract fun process()
 
     protected abstract fun insertSubject()
+
+    private fun finishAndNotify(success: Boolean) {
+
+        val iterator = callbacks.iterator()
+        while (iterator.hasNext()) {
+
+            val callback = iterator.next()
+            callback.onFinish(success)
+        }
+        free()
+    }
 }
 
 

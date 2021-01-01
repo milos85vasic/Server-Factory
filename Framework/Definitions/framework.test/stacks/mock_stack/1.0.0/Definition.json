@@ -1,0 +1,11 @@
+{
+  "definition": {
+    "group": "framework.test",
+    "type": "stacks",
+    "version": "1.0.0",
+    "name": "mock_stack"
+  },
+  "includes": [
+    "Hello.json"
+  ]
+}

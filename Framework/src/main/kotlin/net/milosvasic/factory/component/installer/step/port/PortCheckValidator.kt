@@ -14,9 +14,9 @@ class PortCheckValidator : Validation<String> {
         if (arg == String.EMPTY) {
             throw IllegalArgumentException("Empty port check parameter")
         }
-        val delimiter = PortCheck.DELIMITER
-        if (arg.contains(delimiter)) {
-            val split = arg.split(PortCheck.DELIMITER)
+        val separator = PortCheck.SEPARATOR
+        if (arg.contains(separator)) {
+            val split = arg.split(PortCheck.SEPARATOR)
             split.forEach {
                 it.trim().toInt()
             }

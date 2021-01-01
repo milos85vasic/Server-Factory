@@ -1,5 +1,6 @@
 package net.milosvasic.factory.component.installer.step.factory
 
+import net.milosvasic.factory.common.filesystem.FilePathBuilder
 import net.milosvasic.factory.component.docker.step.DockerInstallationStepType
 import net.milosvasic.factory.component.docker.step.dockerfile.Build
 import net.milosvasic.factory.component.docker.step.network.Network
@@ -7,10 +8,7 @@ import net.milosvasic.factory.component.docker.step.network.NetworkValidator
 import net.milosvasic.factory.component.docker.step.stack.Check
 import net.milosvasic.factory.component.docker.step.stack.SkipConditionCheck
 import net.milosvasic.factory.component.docker.step.stack.Stack
-import net.milosvasic.factory.component.installer.step.CommandInstallationStep
-import net.milosvasic.factory.component.installer.step.InstallationStep
-import net.milosvasic.factory.component.installer.step.InstallationStepType
-import net.milosvasic.factory.component.installer.step.PackageManagerInstallationStep
+import net.milosvasic.factory.component.installer.step.*
 import net.milosvasic.factory.component.installer.step.certificate.Certificate
 import net.milosvasic.factory.component.installer.step.certificate.TlsCertificate
 import net.milosvasic.factory.component.installer.step.condition.Condition
@@ -24,6 +22,7 @@ import net.milosvasic.factory.component.installer.step.reboot.Reboot
 import net.milosvasic.factory.component.packaging.item.Group
 import net.milosvasic.factory.component.packaging.item.Package
 import net.milosvasic.factory.configuration.InstallationStepDefinition
+import net.milosvasic.factory.configuration.definition.Definition
 import net.milosvasic.factory.terminal.command.RawTerminalCommand
 import net.milosvasic.factory.validation.Validator
 
@@ -40,6 +39,11 @@ class MainInstallationStepFactory : InstallationStepFactory {
                 val group = Group(definition.getValue())
                 return PackageManagerInstallationStep(listOf(group))
             }
+            InstallationStepType.PACKAGE_GROUP_UNINSTALL.type -> {
+
+                val group = Group(definition.getValue())
+                return PackageManagerUninstallationStep(listOf(group))
+            }
             InstallationStepType.PACKAGES.type -> {
 
                 val packages = mutableListOf<Package>()
@@ -48,6 +52,15 @@ class MainInstallationStepFactory : InstallationStepFactory {
                     packages.add(Package(it.trim()))
                 }
                 return PackageManagerInstallationStep(packages)
+            }
+            InstallationStepType.PACKAGES_UNINSTALL.type -> {
+
+                val packages = mutableListOf<Package>()
+                val split = definition.getValue().split(",")
+                split.forEach {
+                    packages.add(Package(it.trim()))
+                }
+                return PackageManagerUninstallationStep(packages)
             }
             InstallationStepType.COMMAND.type -> {
 
@@ -86,10 +99,32 @@ class MainInstallationStepFactory : InstallationStepFactory {
                 val validator = DeployValidator()
                 if (validator.validate(definition.getValue())) {
 
-                    val fromTo = definition.getValue().split(Deploy.DELIMITER)
-                    val from = fromTo[0].trim()
-                    val to = fromTo[1].trim()
-                    return Deploy(from, to)
+                    val defFromTo = definition.getValue().split(Deploy.SEPARATOR_DEFINITION)
+                    if (defFromTo.size == 1) {
+
+                        val fromTo = definition.getValue().split(Deploy.SEPARATOR_FROM_TO)
+                        val from = fromTo[0].trim()
+                        val to = fromTo[1].trim()
+                        return Deploy(from, to)
+                    } else {
+
+                        val defPath = defFromTo[0]
+                        val def = if (defPath == Definition.CURRENT_DEFINITION) {
+                            definition.getDefinition()
+                        } else {
+                            Definition.fromString(defPath)
+                        }
+                        val defHome = def.getHome()
+                        val rest = defFromTo[1]
+                        val restSplit = rest.split(Deploy.SEPARATOR_FROM_TO)
+
+                        val from = FilePathBuilder()
+                                .addContext(defHome)
+                                .addContext(restSplit[0].trim())
+                                .getPath()
+                        val to = restSplit[1].trim()
+                        return Deploy(from, to)
+                    }
                 } else {
 
                     throw IllegalArgumentException("Invalid deploy parameters")
@@ -143,7 +178,7 @@ class MainInstallationStepFactory : InstallationStepFactory {
         val validator = PortCheckValidator()
         if (validator.validate(arg)) {
 
-            val split = arg.split(PortCheck.DELIMITER)
+            val split = arg.split(PortCheck.SEPARATOR)
             val ports = mutableListOf<Int>()
             split.forEach {
                 val port = it.trim().toInt()

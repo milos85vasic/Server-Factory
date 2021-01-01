@@ -15,11 +15,12 @@ import net.milosvasic.factory.terminal.Terminal
 import net.milosvasic.factory.terminal.command.EchoCommand
 import net.milosvasic.factory.terminal.command.PingCommand
 import net.milosvasic.factory.terminal.command.RebootCommand
+import net.milosvasic.factory.terminal.command.SleepCommand
 
-class Reboot(private val timeoutInSeconds: Int = 120) : RemoteOperationInstallationStep<SSH>() {
+class Reboot(private val timeoutInSeconds: Int = 480) : RemoteOperationInstallationStep<SSH>() {
 
-    private val maxHellos = 3
     private var pingCount = 0
+    private val maxHellos = 10
     private var helloCount = 0
     private val hello = "Hello"
     private val numberOfPings = 3
@@ -35,12 +36,30 @@ class Reboot(private val timeoutInSeconds: Int = 120) : RemoteOperationInstallat
 
                 is PingCommand -> {
                     if (result.success) {
-
                         if (hasRestarted) {
-                            hello()
+                            try {
+
+                                hello()
+                            } catch (e: IllegalArgumentException) {
+
+                                log.e(e)
+                                finish(false)
+                            } catch (e: IllegalStateException) {
+
+                                log.e(e)
+                                finish(false)
+                            }
                         } else {
+
                             log.v("Remote host is not restarted yet")
-                            ping()
+                            try {
+
+                                ping()
+                            } catch (e: IllegalStateException) {
+
+                                log.e(e)
+                                finish(false)
+                            }
                         }
                     } else {
 
@@ -50,7 +69,14 @@ class Reboot(private val timeoutInSeconds: Int = 120) : RemoteOperationInstallat
                             log.i("Remote host has been restarted")
                         }
                         if (pingCount <= (timeoutInSeconds / numberOfPings)) {
-                            ping()
+                            try {
+
+                                ping()
+                            } catch (e: IllegalStateException) {
+
+                                log.e(e)
+                                finish(false)
+                            }
                         } else {
                             log.e("Reboot timeout exceeded")
                             finish(false)
@@ -65,16 +91,42 @@ class Reboot(private val timeoutInSeconds: Int = 120) : RemoteOperationInstallat
         override fun onOperationPerformed(result: OperationResult) {
 
             when (result.operation) {
-                is EchoCommand -> {
+                is SleepCommand -> {
+                    try {
 
+                        hello()
+                    } catch (e: IllegalArgumentException) {
+
+                        log.e(e)
+                        finish(false)
+                    } catch (e: IllegalStateException) {
+
+                        log.e(e)
+                        finish(false)
+                    }
+                }
+                is EchoCommand -> {
                     if (result.success) {
+
                         finish(true)
                     } else {
 
                         if (helloCount <= maxHellos) {
-                            hello()
+                            try {
+
+                                hello(true)
+                            } catch (e: IllegalArgumentException) {
+
+                                log.e(e)
+                                finish(false)
+                            } catch (e: IllegalStateException) {
+
+                                log.e(e)
+                                finish(false)
+                            }
                         } else {
-                            log.e("Reboot timeout exceeded")
+
+                            log.e("Hello retries exceeded")
                             finish(false)
                         }
                     }
@@ -85,20 +137,8 @@ class Reboot(private val timeoutInSeconds: Int = 120) : RemoteOperationInstallat
 
     @Throws(IllegalStateException::class)
     override fun getFlow(): CommandFlow {
-        var rebootAllowed = false
-        try {
-            val path = PathBuilder()
-                    .addContext(Context.Server)
-                    .setKey(Key.RebootAllowed)
-                    .build()
 
-            rebootAllowed = Variable.get(path).toBoolean()
-        } catch (e: IllegalStateException) {
-
-            log.e(e)
-            finish(false)
-        }
-
+        val rebootAllowed = isRebootAllowed()
         connection?.let { conn ->
             terminal = conn.getTerminal()
             remote = conn.getRemote()
@@ -130,14 +170,31 @@ class Reboot(private val timeoutInSeconds: Int = 120) : RemoteOperationInstallat
     override fun getOperation() = RebootOperation()
 
     override fun finish(success: Boolean) {
+
         if (success && pingCount == 0) {
             try {
 
                 log.v("Waiting for remote host to restart")
-                ping()
+                if (isRebootAllowed()) {
+
+                    ping()
+                } else {
+
+                    terminal?.unsubscribe(pingCallback)
+                    connection?.unsubscribe(helloCallback)
+                    super.finish(success)
+                }
             } catch (e: InterruptedException) {
 
                 log.e(e)
+                terminal?.unsubscribe(pingCallback)
+                connection?.unsubscribe(helloCallback)
+                finish(false)
+            } catch (e: IllegalStateException) {
+
+                log.e(e)
+                terminal?.unsubscribe(pingCallback)
+                connection?.unsubscribe(helloCallback)
                 finish(false)
             }
         } else {
@@ -148,11 +205,12 @@ class Reboot(private val timeoutInSeconds: Int = 120) : RemoteOperationInstallat
         }
     }
 
+    @Throws(IllegalArgumentException::class, IllegalStateException::class)
     private fun ping() {
 
         pingCount++
         log.v("Ping no. $pingCount")
-        val host = remote?.host
+        val host = remote?.getHost()
         if (host == null) {
 
             log.e("No host to ping provided")
@@ -161,6 +219,7 @@ class Reboot(private val timeoutInSeconds: Int = 120) : RemoteOperationInstallat
 
             terminal?.let { term ->
                 try {
+
                     term.execute(PingCommand(host, numberOfPings))
                 } catch (e: IllegalStateException) {
 
@@ -175,11 +234,12 @@ class Reboot(private val timeoutInSeconds: Int = 120) : RemoteOperationInstallat
         }
     }
 
-    private fun hello() {
+    @Throws(IllegalArgumentException::class, IllegalStateException::class)
+    private fun hello(sleep: Boolean = false) {
 
         helloCount++
         log.v("Hello no. $helloCount")
-        val host = remote?.host
+        val host = remote?.getHost()
         if (host == null) {
 
             log.e("No host to hello provided")
@@ -191,7 +251,13 @@ class Reboot(private val timeoutInSeconds: Int = 120) : RemoteOperationInstallat
                     if (helloCount == 1) {
                         conn.subscribe(helloCallback)
                     }
-                    conn.execute(EchoCommand(hello))
+                    if (sleep) {
+
+                        conn.execute(SleepCommand(5))
+                    } else {
+
+                        conn.execute(EchoCommand(hello))
+                    }
                 } catch (e: IllegalStateException) {
 
                     log.e(e)
@@ -203,5 +269,23 @@ class Reboot(private val timeoutInSeconds: Int = 120) : RemoteOperationInstallat
                 }
             }
         }
+    }
+
+    private fun isRebootAllowed(): Boolean {
+
+        var rebootAllowed = false
+        try {
+            val path = PathBuilder()
+                    .addContext(Context.Server)
+                    .setKey(Key.RebootAllowed)
+                    .build()
+
+            rebootAllowed = Variable.get(path).toBoolean()
+        } catch (e: IllegalStateException) {
+
+            log.e(e)
+            finish(false)
+        }
+        return rebootAllowed
     }
 }

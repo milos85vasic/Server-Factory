@@ -2,17 +2,17 @@ package net.milosvasic.factory.component.packaging
 
 import net.milosvasic.factory.remote.Connection
 
-class AptGet(entryPoint: Connection) : PackageManager(entryPoint) {
+class Apt(entryPoint: Connection) : PackageManager(entryPoint) {
 
     override val applicationBinaryName: String
-        get() = "apt-get"
+        get() = "apt"
 
     override fun installCommand(): String {
-        return "export DEBIAN_FRONTEND=noninteractive; " + super.installCommand()
+        return "export DEBIAN_FRONTEND=noninteractive; " + super.installCommand() + " --fix-missing"
     }
 
     override fun uninstallCommand(): String {
-        return "export DEBIAN_FRONTEND=noninteractive; " + super.uninstallCommand()
+        return "export DEBIAN_FRONTEND=noninteractive; $applicationBinaryName remove -y"
     }
 
     override fun groupInstallCommand(): String {

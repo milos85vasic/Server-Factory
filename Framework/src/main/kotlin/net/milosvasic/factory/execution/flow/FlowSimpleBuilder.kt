@@ -21,6 +21,7 @@ abstract class FlowSimpleBuilder<T, D> : FlowBuilder<T, D, MutableList<Wrapper<T
         }
 
     override fun insertSubject() {
+
         currentSubject?.let {
             subjects.get().add(it)
         }
@@ -28,13 +29,16 @@ abstract class FlowSimpleBuilder<T, D> : FlowBuilder<T, D, MutableList<Wrapper<T
 
     @Throws(IllegalArgumentException::class, IllegalStateException::class)
     override fun tryNext() {
+
         if (subjects.get().isEmpty()) {
+
             throw IllegalArgumentException("No subjects provided")
         }
         if (subjectsIterator == null) {
             subjectsIterator = subjects.get().iterator()
         }
         subjectsIterator?.let { sIterator ->
+
             if (sIterator.hasNext()) {
                 currentSubject = sIterator.next()
             } else {
@@ -47,6 +51,7 @@ abstract class FlowSimpleBuilder<T, D> : FlowBuilder<T, D, MutableList<Wrapper<T
 
     @Throws(IllegalStateException::class, IllegalArgumentException::class)
     override fun process() {
+
         if (currentSubject == null) {
             throw IllegalStateException("Current subject is null")
         }

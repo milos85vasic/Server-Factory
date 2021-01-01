@@ -7,6 +7,7 @@ import net.milosvasic.factory.common.busy.BusyException
 import net.milosvasic.factory.common.busy.BusyWorker
 import net.milosvasic.factory.common.execution.Executor
 import net.milosvasic.factory.execution.TaskExecutor
+import net.milosvasic.factory.execution.flow.implementation.ObtainableTerminalCommand
 import net.milosvasic.factory.log
 import net.milosvasic.factory.operation.OperationResult
 import net.milosvasic.factory.operation.OperationResultListener
@@ -25,7 +26,9 @@ class Terminal : Executor<TerminalCommand> {
     @Synchronized
     @Throws(BusyException::class, IllegalArgumentException::class)
     override fun execute(what: TerminalCommand) {
-        if (what.command == String.EMPTY) {
+
+        if (what !is ObtainableTerminalCommand && what.command == String.EMPTY) {
+
             throw IllegalArgumentException("Empty terminal command")
         }
         BusyWorker.busy(busy)
@@ -35,11 +38,24 @@ class Terminal : Executor<TerminalCommand> {
                 what.configuration[CommandConfiguration.LOG_COMMAND]?.let {
                     logCommand = it
                 }
+
                 if (logCommand) {
-                    log.d(">>> ${what.command}")
+                    if (what is ObtainableTerminalCommand) {
+
+                        log.d(">>> ${what.obtainable.obtain().command}")
+
+                    } else {
+                        log.d(">>> ${what.command}")
+                    }
                 }
 
-                val process = runtime.exec(what.command)
+                val startTime = System.currentTimeMillis()
+                val process = if (what is ObtainableTerminalCommand) {
+
+                    runtime.exec(what.obtainable.obtain().command)
+                } else {
+                    runtime.exec(what.command)
+                }
                 val stdIn = BufferedReader(InputStreamReader(process.inputStream))
                 val stdErr = BufferedReader(InputStreamReader(process.errorStream))
 
@@ -61,11 +77,13 @@ class Terminal : Executor<TerminalCommand> {
                     try {
                         exitValue = process.exitValue()
                     } catch (e: IllegalThreadStateException) {
-                        if (logCommandResult) {
+                        if (logCommandResult && e.message != "process hasn't exited") {
                             log.w(e)
                         }
                     }
                 }
+                val time = System.currentTimeMillis() - startTime
+                log.v("    Executed in: $time millis")
                 val success = exitValue == 0
                 val result = OperationResult(what, success, inData, errorData = errData)
                 BusyWorker.free(busy)
@@ -94,10 +112,10 @@ class Terminal : Executor<TerminalCommand> {
         val result = if (data.operation is WrappedTerminalCommand) {
 
             OperationResult(
-                    data.operation.wrappedCommand,
-                    data.success,
-                    data.data,
-                    data.exception
+                data.operation.wrappedCommand,
+                data.success,
+                data.data,
+                data.exception
             )
         } else {
             data
@@ -110,9 +128,9 @@ class Terminal : Executor<TerminalCommand> {
     }
 
     private fun readToLog(
-            reader: BufferedReader,
-            obtainOutput: Boolean = false,
-            logCommandResult: Boolean = false
+        reader: BufferedReader,
+        obtainOutput: Boolean = false,
+        logCommandResult: Boolean = false
 
     ): String {
         val builder = StringBuilder()

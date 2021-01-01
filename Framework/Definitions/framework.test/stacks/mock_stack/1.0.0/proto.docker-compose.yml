@@ -5,7 +5,3 @@ services:
     image: library/hello-world
     container_name: hello-world
     restart: always
-
-
-
-

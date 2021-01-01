@@ -1,5 +1,8 @@
 {
   "name": "Mock configuration",
+  "uses": [
+    "framework.test/stacks/mock_stack:1.0.0"
+  ],
   "remote": {
     "port": 22,
     "user": "stub",
@@ -7,13 +10,11 @@
   },
   "variables": {
     "SERVER": {
-      "HOSTNAME": "test.local"
+      "HOSTNAME": "test.local",
+      "SERVER_HOME": "/stub"
     },
     "DOCKER": {
       "DOCKER_COMPOSE_PATH": "/usr/local/bin"
     }
-  },
-  "containers": [
-    "Mocks/Stack/Docker.json"
-  ]
+  }
 }

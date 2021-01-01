@@ -8,8 +8,20 @@ interface Context {
 
     companion object {
 
+        val System = object : Context {
+            override fun context() = "SYSTEM"
+        }
+
+        val Installation = object : Context {
+            override fun context() = "INSTALLATION"
+        }
+
         val Server = object : Context {
             override fun context() = "SERVER"
+        }
+
+        val Behavior = object : Context {
+            override fun context() = "BEHAVIOR"
         }
 
         val Ports = object : Context {

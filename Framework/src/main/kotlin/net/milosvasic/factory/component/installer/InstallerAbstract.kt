@@ -49,7 +49,8 @@ abstract class InstallerAbstract(entryPoint: Connection) :
 
             config?.let { softwareConfiguration ->
                 try {
-                    steps = softwareConfiguration.obtain(getEnvironmentName())
+                    val env = getEnvironmentName()
+                    steps = softwareConfiguration.obtain(env)
                     busy()
                     val flow = InstallationStepFlow(getToolkit())
                     steps.keys.forEach { key ->
@@ -91,6 +92,7 @@ abstract class InstallerAbstract(entryPoint: Connection) :
     @Synchronized
     @Throws(IllegalStateException::class)
     final override fun initialize() {
+
         checkInitialized()
         busy()
         initialization()
@@ -108,6 +110,7 @@ abstract class InstallerAbstract(entryPoint: Connection) :
     @Synchronized
     @Throws(IllegalStateException::class)
     override fun checkInitialized() {
+
         if (isInitialized()) {
             throw IllegalStateException("Installer has been already initialized")
         }

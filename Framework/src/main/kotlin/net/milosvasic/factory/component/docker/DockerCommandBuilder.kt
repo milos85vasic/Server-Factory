@@ -56,7 +56,7 @@ class DockerCommandBuilder : Build<String> {
     }
 
     private fun setName(): String {
-        name = ""
+        name = String.EMPTY
         if (containerName.isNotEmpty()) {
             name = "--name $containerName"
         }
