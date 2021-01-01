@@ -77,7 +77,7 @@ class Terminal : Executor<TerminalCommand> {
                     try {
                         exitValue = process.exitValue()
                     } catch (e: IllegalThreadStateException) {
-                        if (logCommandResult) {
+                        if (logCommandResult && e.message != "process hasn't exited") {
                             log.w(e)
                         }
                     }
