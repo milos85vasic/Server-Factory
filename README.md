@@ -1,6 +1,5 @@
 # Server Factory Framework
 
-Server Factory Framework is framework used by projects such as: [Mail Server Factory](https://github.com/milos85vasic/Mail-Server-Factory)
+All development and project releases are now located under [Server Factory](https://github.com/Server-Factory) repository:
 
-See the [current version](./version.txt) and
-[version code](./version_code.txt).
+https://github.com/Server-Factory/Core-Framework
